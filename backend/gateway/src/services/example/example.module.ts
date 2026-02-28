@@ -19,8 +19,7 @@ import { MICROSERVICES_CONFIG, MICROSERVICE_TOKENS } from '../../config/microser
     ClientsModule.register([
       {
         name: MICROSERVICE_TOKENS.EXAMPLE_SERVICE,
-        transport: MICROSERVICES_CONFIG.example.transport,
-        options: MICROSERVICES_CONFIG.example.options,
+        ...MICROSERVICES_CONFIG.example,
       },
     ]),
   ],

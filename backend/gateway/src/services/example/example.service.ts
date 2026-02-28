@@ -17,7 +17,7 @@ import { IExampleResponse } from './interfaces/example-service.interface';
 @Injectable()
 export class ExampleService {
   constructor(
-    @Inject(MICROSERVICE_TOKENS.AUTH_SERVICE) private readonly exampleClient: ClientProxy,
+    @Inject(MICROSERVICE_TOKENS.EXAMPLE_SERVICE) private readonly exampleClient: ClientProxy,
   ) {}
 
   /**

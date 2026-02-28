@@ -49,6 +49,28 @@ services:
   # MICROSERVICIOS
   # ===========================================
 
+  example-service:
+    container_name: example-service
+    build:
+      context: ./backend/services/example
+      dockerfile: Dockerfile.dev
+    environment:
+      SERVICE_URL: http://example-service:3005
+    volumes:
+      - ./backend/services/example/src:/app/src
+      - /app/node_modules
+    ports:
+      - "3005:3005"
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
   # Microservicio de Autenticación
   auth-service:
     container_name: auth-service
@@ -119,6 +141,7 @@ services:
 
       SERVICE_URL: gateway:3000
       GRAFANA_URL: http://grafana:3001
+      EXAMPLE_URL: http://example-service:3005
       #AUTH_SERVICE_URL: http://auth-service:3003
       #CHAT_SERVICE_URL: http://chat-service:3004
 
@@ -130,7 +153,8 @@ services:
     networks:
       - backend-net
       - service-net
-    #depends_on:
+    depends_on:
+      - example-service
       #- auth-service
       #- chat-service
     healthcheck:

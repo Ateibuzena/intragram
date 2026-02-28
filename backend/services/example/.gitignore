@@ -1,0 +1,17 @@
+# Base de datos SQLite
+db/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# Node
+node_modules/
+dist/
+.npm
+
+# OS
+.DS_Store
+Thumbs.db

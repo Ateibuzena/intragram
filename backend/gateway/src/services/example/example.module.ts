@@ -18,8 +18,9 @@ import { MICROSERVICES_CONFIG, MICROSERVICE_TOKENS } from '../../config/microser
     // Registra el cliente TCP para comunicarse con el microservicio example
     ClientsModule.register([
       {
-        name: MICROSERVICE_TOKENS.AUTH_SERVICE, // Usamos AUTH como ejemplo
-        ...MICROSERVICES_CONFIG.auth,
+        name: MICROSERVICE_TOKENS.EXAMPLE_SERVICE,
+        transport: MICROSERVICES_CONFIG.example.transport,
+        options: MICROSERVICES_CONFIG.example.options,
       },
     ]),
   ],

@@ -55,7 +55,6 @@ services:
     build:
       context: ./backend/services/auth
       dockerfile: Dockerfile.dev
-    restart: unless-stopped
     environment:
       SERVICE_URL=http://auth-service:3003
     volumes:
@@ -72,6 +71,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
 
   # Microservicio de Chat
   chat-service:
@@ -109,7 +109,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      # JWT
+    
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       # CORS
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
@@ -133,7 +133,6 @@ services:
     depends_on:
       - auth-service
       - chat-service
-      - example-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -190,3 +189,5 @@ networks:
 volumes:
   profile-data:
     name: profile-data
+  nginx-logs:
+    name: nginx-logs

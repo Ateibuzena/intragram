@@ -11,7 +11,6 @@ Backend de la red social Intragram para 42 Málaga, construido con arquitectura 
 - [Desarrollo](#-desarrollo)
 - [Microservicios](#-microservicios)
 - [API Gateway](#-api-gateway)
-- [Base de Datos](#-base-de-datos)
 
 ## 🏗️ Arquitectura
 
@@ -37,11 +36,6 @@ El backend utiliza una arquitectura de microservicios con las siguientes capas:
    ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐
    │ Auth │  │ Chat │  │Posts │  │ ... │
    └───┬──┘  └───┬──┘  └───┬──┘  └──────┘
-       │         │         │
-       ▼         ▼         ▼
-   ┌────────────────────────────┐
-   │   Bases de Datos (SQL)     │
-   └────────────────────────────┘
 ```
 
 ## 📁 Estructura del Proyecto

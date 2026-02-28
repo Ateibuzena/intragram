@@ -1,4 +1,4 @@
-# Makefile for Inception - clean, efficient, and friendly
+.PHONY: all build up down clean fclean re refresh
 
 COMPOSE = docker compose -f backend/docker-compose.yml frontend/docker-compose.yml
 DATA_DIR = /home/azubieta/data
@@ -66,5 +66,3 @@ refresh:
 	else \
 		echo "❎ No containers running to restart."; \
 	fi
-
-.PHONY: all build up down clean fclean re refresh

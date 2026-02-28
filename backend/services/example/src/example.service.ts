@@ -1,66 +1,68 @@
 /**
  * Servicio del Microservicio de Ejemplo
  * Contiene la lógica de negocio
- * Usa datos en memoria (para desarrollo sin complicaciones)
+ * Usa DatabaseService con sql.js (SQLite persistente)
  */
 
 import { Injectable } from '@nestjs/common';
+import { DatabaseService } from './database.service';
 
 @Injectable()
 export class ExampleService {
-  // Base de datos simulada en memoria
-  private examples: any[] = [
-    {
-      id: 1,
-      name: 'Ejemplo 1',
-      description: 'Este es el primer ejemplo de prueba',
-      category: 'demo',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: 'Ejemplo 2',
-      description: 'Segundo ejemplo con categoría',
-      category: 'tutorial',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      name: 'Ejemplo 3',
-      description: 'Tercer ejemplo sin categoría',
-      category: null,
-      created_at: new Date().toISOString(),
-    },
-  ];
+  constructor(private readonly db: DatabaseService) {}
 
   /**
    * Crear un nuevo ejemplo
    */
   create(data: any) {
-    const newExample = {
-      id: this.examples.length + 1,
-      ...data,
-      created_at: new Date().toISOString(),
-    };
-    this.examples.push(newExample);
-    return newExample;
+    const { name, description, category } = data;
+    return this.db.create(name, description, category);
   }
 
   /**
    * Obtener todos los ejemplos
    */
   findAll() {
-    return this.examples;
+    return this.db.findAll();
   }
 
   /**
    * Obtener ejemplo por ID
    */
   findById(id: string) {
-    const example = this.examples.find((e) => e.id === parseInt(id, 10));
+    const example = this.db.findById(parseInt(id, 10));
     if (!example) {
       throw new Error(`Example with id ${id} not found`);
     }
     return example;
+  }
+
+  /**
+   * Actualizar un ejemplo
+   */
+  update(id: string, data: any) {
+    const updated = this.db.update(parseInt(id, 10), data);
+    if (!updated) {
+      throw new Error(`Example with id ${id} not found`);
+    }
+    return updated;
+  }
+
+  /**
+   * Eliminar un ejemplo
+   */
+  delete(id: string) {
+    const deleted = this.db.delete(parseInt(id, 10));
+    if (!deleted) {
+      throw new Error(`Example with id ${id} not found`);
+    }
+    return { message: 'Example deleted successfully', id };
+  }
+
+  /**
+   * Buscar por categoría
+   */
+  findByCategory(category: string) {
+    return this.db.findByCategory(category);
   }
 }

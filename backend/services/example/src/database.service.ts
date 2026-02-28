@@ -148,11 +148,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       'INSERT INTO examples (name, description, category) VALUES (?, ?, ?)',
       [name, description || null, category || null]
     );
+    
+    // Obtener el ID del último insert
+    const idResult = this.db.exec('SELECT last_insert_rowid() as id');
+    if (!idResult.length || !idResult[0].values.length) {
+      throw new Error('Failed to get inserted ID');
+    }
+    
+    const id = idResult[0].values[0][0] as number;
     this.save();
     
-    const result = this.db.exec('SELECT last_insert_rowid()');
-    const id = result[0].values[0][0] as number;
-    return this.findById(id)!;
+    const created = this.findById(id);
+    if (!created) {
+      throw new Error(`Failed to retrieve created example with id ${id}`);
+    }
+    
+    return created;
   }
 
   /**

@@ -1,6 +1,6 @@
 .PHONY: all build up down clean fclean re refresh
 
-COMPOSE = docker compose -f backend/docker-compose.yml frontend/docker-compose.yml
+COMPOSE = docker compose -f docker-compose.yml
 DATA_DIR = /home/azubieta/data
 
 # ---------------------------

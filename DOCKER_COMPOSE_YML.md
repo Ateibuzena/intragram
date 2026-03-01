@@ -1,4 +1,23 @@
+version: '3.8'
+
 services:
+  # ===========================================
+  # FRONTEND
+  # ===========================================
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - frontend-net
+    restart: unless-stopped
+
   # ===========================================
   # HERRAMIENTAS DE MONITOREO (OPCIONAL)
   # ===========================================
@@ -45,7 +64,55 @@ services:
     networks:
       - service-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://example-service:3005/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Microservicio de Autenticación
+  auth-service:
+    container_name: auth-service
+    build:
+      context: ./backend/services/auth
+      dockerfile: Dockerfile.dev
+    environment:
+      SERVICE_URL: http://auth-service:3003
+    volumes:
+      - ./backend/services/auth/src:/app/src
+      - ./backend/services/auth/src/db:/app/db
+      - /app/node_modules
+    ports:
+      - "3003:3003"
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Microservicio de Chat
+  chat-service:
+    container_name: chat-service
+    build:
+      context: ./backend/services/chat
+      dockerfile: Dockerfile.dev
+    environment:
+      SERVICE_URL: http://chat-service:3004
+    volumes:
+      - ./backend/services/chat/src:/app/src
+      - ./backend/services/chat/src/db:/app/db
+      - /app/node_modules
+    ports:
+      - "3004:3004"
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -72,9 +139,9 @@ services:
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}      
 
-      # URLs de microservicios internos (usar nombre de servicio Docker)
-      EXAMPLE_URL: http://example-service:3005
+      SERVICE_URL: gateway:3000
       GRAFANA_URL: http://grafana:3001
+      EXAMPLE_URL: http://example-service:3005
       #AUTH_SERVICE_URL: http://auth-service:3003
       #CHAT_SERVICE_URL: http://chat-service:3004
 
@@ -84,12 +151,14 @@ services:
     ports:
       - "3000:3000"
     networks:
+      - backend-net
       - service-net
     depends_on:
       - example-service
-      - grafana
+      #- auth-service
+      #- chat-service
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://gateway:3000/test"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,13 +175,13 @@ services:
       context: ./backend/nginx
       dockerfile: Dockerfile
     ports:
-      - "8443:443"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./backend/nginx/config/nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx-logs:/var/log/nginx
     networks:
       - backend-net
-      - service-net
     depends_on:
       - gateway
     healthcheck:
@@ -127,6 +196,9 @@ services:
 # ===========================================
 
 networks:
+  frontend-net:
+    driver: bridge
+    name: frontend-net
   backend-net:
     driver: bridge
     name: backend-net
@@ -139,5 +211,7 @@ networks:
 # ===========================================
 
 volumes:
+  profile-data:
+    name: profile-data
   nginx-logs:
     name: nginx-logs

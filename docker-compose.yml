@@ -67,7 +67,7 @@ services:
     
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       # CORS
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
       # Rate limiting
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}      
@@ -84,6 +84,7 @@ services:
     ports:
       - "3000:3000"
     networks:
+      - backend-net
       - service-net
     depends_on:
       - example-service
@@ -112,7 +113,6 @@ services:
       - nginx-logs:/var/log/nginx
     networks:
       - backend-net
-      - service-net
     depends_on:
       - gateway
     healthcheck:

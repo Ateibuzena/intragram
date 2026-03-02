@@ -13,9 +13,9 @@ import { ExampleController } from './example.controller';
 import { ExampleService } from './example.service';
 
 @Module({
-  imports: [HttpModule],
-  controllers: [ExampleController],
-  providers: [ExampleService],
-  exports: [ExampleService], // Exportar para usar en otros módulos si es necesario
+	imports: [HttpModule],
+	controllers: [ExampleController],
+	providers: [ExampleService],
+	exports: [ExampleService], // Exportar para usar en otros módulos si es necesario
 })
-export class ExampleModule {}
+export class ExampleModule { }

@@ -9,10 +9,10 @@ import { ExampleService } from './example.service';
 import { DatabaseService } from './database.service';
 
 @Module({
-  imports: [
-    PrometheusModule.register(),
-  ],
-  controllers: [ExampleController],
-  providers: [DatabaseService, ExampleService],
+	imports: [
+		PrometheusModule.register(),
+	],
+	controllers: [ExampleController],
+	providers: [DatabaseService, ExampleService],
 })
-export class ExampleModule {}
+export class ExampleModule { }

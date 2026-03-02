@@ -1,25 +1,50 @@
-¿hago un reverse proxy desde el gateway al microservice example? ¿como se está haciendo y en qué archivo?
+# Gateway FAQ
 
-Sí, ya lo estás haciendo, pero no como reverse proxy HTTP clásico tipo Nginx.
-Tu gateway actúa como proxy de aplicación: recibe HTTP y reenvía por transporte TCP al microservicio example usando patrones de mensajes.
+Preguntas y respuestas sobre cómo fluye el tráfico entre `nginx`, `gateway` y microservicios.
 
-Dónde ocurre
+---
 
-Entrada HTTP en example.controller.ts: endpoints POST /example, GET /example, GET /example/:id.
-Reenvío al microservicio en example.service.ts: usa ClientProxy.send(...) con patrones create-example, get-examples, get-example-by-id, y emit(...) para eventos.
-Cliente del microservicio registrado en example.module.ts con ClientsModule.register(...).
-Config de conexión (host/port TCP) en microservices.config.ts.
-Lado receptor en example.controller.ts: @MessagePattern(...) y @EventPattern(...).
-Microservicio levantado en modo TCP en main.ts.
+## 1) ¿Hago un reverse proxy desde el gateway al microservice `example`?
 
-¿ como que gateway recibe http? no se supone que mi nginx recibia http y convertia a https y mandaba a gateway?
+Sí, pero a nivel de aplicación.
 
-las dos cosas son ciertas a la vez.
+- El `gateway` recibe peticiones HTTP.
+- Luego reenvía la petición al microservicio `example`.
 
-nginx recibe la conexión HTTPS del cliente en nginx.conf (listen 443 ssl;).
-En /api/, nginx hace proxy_pass http://gateway/ hacia el upstream gateway:3000, también en nginx.conf.
-El gateway es una app Nest HTTP normal y escucha en 3000 con app.listen(...), en main.ts.
-Por eso el gateway “recibe HTTP”, pero HTTP interno (de nginx a gateway), mientras que el cliente externo usa HTTPS.
-Además, nginx envía X-Forwarded-Proto: $scheme para que el backend sepa que el cliente original vino por HTTPS, en nginx.conf.
+### ¿Dónde ocurre?
 
-¿porque gateway esta en tcp y ayer tuvimos que cambiar example-service a http?
+- Entrada HTTP en `gateway/src/services/example/example.controller.ts` (`POST /example`, `GET /example`, `GET /example/:id`).
+- Reenvío del gateway al servicio en `gateway/src/services/example/example.service.ts`.
+- Configuración de URLs internas en `gateway/src/config/microservices.config.ts`.
+- Recepción en el microservicio en `services/example/src/example.controller.ts`.
+
+---
+
+## 2) ¿Cómo que gateway recibe HTTP? ¿No se suponía que nginx recibía HTTP y convertía a HTTPS?
+
+Las dos cosas son ciertas, pero en capas distintas:
+
+- `nginx` recibe HTTPS desde el cliente (puerto 443 dentro del contenedor, publicado como `8443` en host).
+- `nginx` hace proxy hacia `gateway` en la red interna Docker.
+- El `gateway` sigue siendo un servidor HTTP interno de Nest (`app.listen(...)`).
+
+En resumen:
+
+- **Cliente externo** → HTTPS → `nginx`
+- **Tráfico interno Docker** → HTTP → `gateway`
+
+Además, `nginx` envía cabeceras `X-Forwarded-*` para que el backend conozca el esquema/proxy original.
+
+---
+
+## 3) ¿Por qué antes gateway estaba en TCP y tuvimos que cambiar `example-service` a HTTP?
+
+Porque antes el flujo usaba transporte de microservicios de Nest (TCP + patrones de mensajes), y ahora se migró a comunicación HTTP entre servicios.
+
+Estado actual:
+
+- `example-service` expone endpoints HTTP.
+- `gateway` consume esos endpoints por HTTP.
+- Se eliminó la dependencia de TCP en el código activo para este flujo.
+
+Ventaja práctica: simplifica integración con observabilidad (`/metrics`, Prometheus) y hace más directo el troubleshooting con `curl` y logs HTTP.

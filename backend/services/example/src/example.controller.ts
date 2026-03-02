@@ -52,7 +52,7 @@ export class ExampleController {
 	}
 
 	/**
-	 * GET /example/health
+	 * GET /health
 	 * Verifica la salud del servicio
 	 */
 	@Get('health')

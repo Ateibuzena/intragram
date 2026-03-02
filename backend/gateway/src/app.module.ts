@@ -9,7 +9,6 @@ import { ExampleModule } from './services/example/example.module';
 @Module({
 	imports: [
 		MetricsModule, 
-		AppLoggerModule,
 		ExampleModule, // Módulo de ejemplo
 	],
 	controllers: [AppController],

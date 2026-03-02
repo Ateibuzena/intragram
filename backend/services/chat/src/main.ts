@@ -5,5 +5,5 @@
  * - Gestión de conversaciones
  * - Notificaciones en tiempo real (WebSocket)
  * - Historial de mensajes
- * Configura el servidor de microservicio (gRPC/TCP)
+ * Configura el servidor HTTP del microservicio
  */

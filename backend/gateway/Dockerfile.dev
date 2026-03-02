@@ -1,24 +1,15 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
+
+# curl para el healthcheck
+RUN apk add --no-cache curl
 
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
-
-FROM node:20-alpine AS production
-
-WORKDIR /usr/src/app
-
-ENV NODE_ENV=production
-
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-COPY --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npx", "nest", "start", "--watch"]

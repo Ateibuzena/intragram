@@ -1,38 +1,22 @@
 /**
- * Configuración de Microservicios
- * Centraliza la configuración de conexión a todos los microservicios
- * Usa TCP como protocolo de transporte
+ * Configuración de URLs internas entre servicios
  * Las variables de entorno se definen en .env.local o .env.docker
  */
 
-import { Transport, ClientOptions } from '@nestjs/microservices';
+const normalizeUrl = (url: string): string => url.replace(/\/$/, '');
 
-export const MICROSERVICES_CONFIG = {
-	auth: {
-		transport: Transport.TCP,
-		options: {
-			host: process.env.AUTH_SERVICE_HOST,
-			port: parseInt(process.env.AUTH_SERVICE_PORT || '3003'),
-		},
-	} as ClientOptions,
-	chat: {
-		transport: Transport.TCP,
-		options: {
-			host: process.env.CHAT_SERVICE_HOST,
-			port: parseInt(process.env.CHAT_SERVICE_PORT || '3004'),
-		},
-	} as ClientOptions,
-	example: {
-		transport: Transport.TCP,
-		options: {
-			host: process.env.EXAMPLE_SERVICE_HOST,
-			port: parseInt(process.env.EXAMPLE_SERVICE_PORT || '3005'),
-		},
-	} as ClientOptions,
-};
-// Nombres de los servicios para inyección
-export const MICROSERVICE_TOKENS = {
-	EXAMPLE_SERVICE: 'EXAMPLE_SERVICE',
-	AUTH_SERVICE: 'AUTH_SERVICE',
-	CHAT_SERVICE: 'CHAT_SERVICE',
+export const SERVICE_URLS = {
+	auth: normalizeUrl(
+		process.env.AUTH_SERVICE_URL ||
+			`http://${process.env.AUTH_SERVICE_HOST || 'auth-service'}:${process.env.AUTH_SERVICE_PORT || '3003'}`,
+	),
+	chat: normalizeUrl(
+		process.env.CHAT_SERVICE_URL ||
+			`http://${process.env.CHAT_SERVICE_HOST || 'chat-service'}:${process.env.CHAT_SERVICE_PORT || '3004'}`,
+	),
+	example: normalizeUrl(
+		process.env.EXAMPLE_SERVICE_URL ||
+		process.env.EXAMPLE_URL ||
+			`http://${process.env.EXAMPLE_SERVICE_HOST || 'example-service'}:${process.env.EXAMPLE_SERVICE_PORT || '3005'}`,
+	),
 };

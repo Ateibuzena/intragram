@@ -1,4 +1,4 @@
 /**
  * Controlador del Microservicio de Ejemplo
- * Escucha patrones de mensajes y eventos via TCP
+ * Expone endpoints y eventos para comunicación interna
  */

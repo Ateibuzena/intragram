@@ -1,53 +1,53 @@
 /**
  * Controlador del Microservicio de Ejemplo
- * Escucha patrones de mensajes y eventos via TCP
+ * Expone endpoints HTTP para comunicación entre servicios
  */
 
-import { Controller } from '@nestjs/common';
-import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
+import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ExampleService } from './example.service';
 
-@Controller()
+@Controller('example')
 export class ExampleController {
   constructor(private readonly exampleService: ExampleService) {}
 
   /**
-   * Patrón: 'create-example'
+   * POST /example
    * Crea un nuevo ejemplo y retorna el resultado
    */
-  @MessagePattern('create-example')
-  async createExample(@Payload() data: any) {
-    console.log('📨 Received create-example:', data);
+  @Post()
+  async createExample(@Body() data: any) {
+    console.log('📨 HTTP create example:', data);
     return this.exampleService.create(data);
   }
 
   /**
-   * Patrón: 'get-examples'
+   * GET /example
    * Obtiene todos los ejemplos
    */
-  @MessagePattern('get-examples')
-  async getExamples(@Payload() data: any) {
-    console.log('📨 Received get-examples');
+  @Get()
+  async getExamples() {
+    console.log('📨 HTTP get examples');
     return this.exampleService.findAll();
   }
 
   /**
-   * Patrón: 'get-example-by-id'
+   * GET /example/:id
    * Obtiene un ejemplo por ID
    */
-  @MessagePattern('get-example-by-id')
-  async getExampleById(@Payload() data: { id: string }) {
-    console.log('📨 Received get-example-by-id:', data.id);
-    return this.exampleService.findById(data.id);
+  @Get(':id')
+  async getExampleById(@Param('id') id: string) {
+    console.log('📨 HTTP get example by id:', id);
+    return this.exampleService.findById(id);
   }
 
   /**
-   * Evento: 'example.created'
-   * Recibe notificación de creación (no retorna nada)
+   * POST /example/events/created
+   * Recibe notificación de creación (fire-and-forget vía HTTP)
    */
-  @EventPattern('example.created')
-  async handleExampleCreated(@Payload() data: any) {
-    console.log('🎉 Event received - example.created:', data);
-    // Aquí podrías: enviar email, actualizar cache, notificar otros servicios, etc.
+  @Post('events/created')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async handleExampleCreated(@Body() data: any) {
+    console.log('🎉 HTTP event received - example.created:', data);
+    return { status: 'accepted' };
   }
 }

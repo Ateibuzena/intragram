@@ -73,16 +73,14 @@ services:
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}      
 
       # URLs de microservicios internos (usar nombre de servicio Docker)
-      EXAMPLE_URL: http://example-service:3005
+      EXAMPLE_SERVICE_URL: http://example-service:3005
       GRAFANA_URL: http://grafana:3001
-      #AUTH_SERVICE_URL: http://auth-service:3003
-      #CHAT_SERVICE_URL: http://chat-service:3004
+      AUTH_SERVICE_URL: http://auth-service:3003
+      CHAT_SERVICE_URL: http://chat-service:3004
 
     volumes:
       - ./backend/gateway/src:/app/src
       - /app/node_modules
-    ports:
-      - "3000:3000"
     networks:
       - backend-net
       - service-net

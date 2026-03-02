@@ -141,9 +141,9 @@ services:
 
       SERVICE_URL: gateway:3000
       GRAFANA_URL: http://grafana:3001
-      EXAMPLE_URL: http://example-service:3005
-      #AUTH_SERVICE_URL: http://auth-service:3003
-      #CHAT_SERVICE_URL: http://chat-service:3004
+      EXAMPLE_SERVICE_URL: http://example-service:3005
+      AUTH_SERVICE_URL: http://auth-service:3003
+      CHAT_SERVICE_URL: http://chat-service:3004
 
     volumes:
       - ./backend/gateway/src:/app/src

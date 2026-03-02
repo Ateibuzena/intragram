@@ -7,18 +7,19 @@
  * - Manejo de errores y logging
  */
 
-import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { Observable, firstValueFrom, timeout, catchError } from 'rxjs';
-import { MICROSERVICE_TOKENS } from '../../config/microservices.config';
+import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
+import { firstValueFrom } from 'rxjs';
+import { SERVICE_URLS } from '../../config/microservices.config';
 import { CreateExampleDto } from './dto/dto';
 import { IExampleResponse } from './interfaces/example-service.interface';
 
 @Injectable()
 export class ExampleService {
-  constructor(
-    @Inject(MICROSERVICE_TOKENS.EXAMPLE_SERVICE) private readonly exampleClient: ClientProxy,
-  ) {}
+  private readonly exampleBaseUrl = `${SERVICE_URLS.example}/example`;
+
+  constructor(private readonly httpService: HttpService) {}
 
   /**
    * Crear un nuevo ejemplo
@@ -26,20 +27,14 @@ export class ExampleService {
    */
   async createExample(createExampleDto: CreateExampleDto): Promise<IExampleResponse> {
     try {
-      // send() espera respuesta (request-response pattern)
-      const result = await firstValueFrom(
-        this.exampleClient
-          .send<IExampleResponse>('create-example', createExampleDto)
-          .pipe(
-            timeout(5000), // Timeout de 5 segundos
-            catchError((error) => {
-              throw new Error(`Error comunicando con microservicio: ${error.message}`);
-            }),
-          ),
+      const response = await firstValueFrom(
+        this.httpService.post<IExampleResponse>(this.exampleBaseUrl, createExampleDto, {
+          timeout: 5000,
+        }),
       );
-      return result;
+      return response.data;
     } catch (error) {
-      throw error;
+      this.handleHttpError(error, 'crear ejemplo');
     }
   }
 
@@ -49,19 +44,14 @@ export class ExampleService {
    */
   async getAllExamples(): Promise<IExampleResponse[]> {
     try {
-      const result = await firstValueFrom(
-        this.exampleClient
-          .send<IExampleResponse[]>('get-examples', {})
-          .pipe(
-            timeout(5000),
-            catchError((error) => {
-              throw new Error(`Error comunicando con microservicio: ${error.message}`);
-            }),
-          ),
+      const response = await firstValueFrom(
+        this.httpService.get<IExampleResponse[]>(this.exampleBaseUrl, {
+          timeout: 5000,
+        }),
       );
-      return result;
+      return response.data;
     } catch (error) {
-      throw error;
+      this.handleHttpError(error, 'obtener ejemplos');
     }
   }
 
@@ -70,19 +60,14 @@ export class ExampleService {
    */
   async getExampleById(id: string): Promise<IExampleResponse> {
     try {
-      const result = await firstValueFrom(
-        this.exampleClient
-          .send<IExampleResponse>('get-example-by-id', { id })
-          .pipe(
-            timeout(5000),
-            catchError((error) => {
-              throw new Error(`Error comunicando con microservicio: ${error.message}`);
-            }),
-          ),
+      const response = await firstValueFrom(
+        this.httpService.get<IExampleResponse>(`${this.exampleBaseUrl}/${id}`, {
+          timeout: 5000,
+        }),
       );
-      return result;
+      return response.data;
     } catch (error) {
-      throw error;
+      this.handleHttpError(error, 'obtener ejemplo');
     }
   }
 
@@ -91,7 +76,21 @@ export class ExampleService {
    * emit() NO espera respuesta (event pattern)
    */
   async notifyExampleCreated(data: any): Promise<void> {
-    // emit() no retorna nada, solo emite el evento
-    this.exampleClient.emit('example.created', data);
+    try {
+      await firstValueFrom(
+        this.httpService.post(`${this.exampleBaseUrl}/events/created`, data, {
+          timeout: 5000,
+        }),
+      );
+    } catch (error) {
+      this.handleHttpError(error, 'notificar creación de ejemplo');
+    }
+  }
+
+  private handleHttpError(error: unknown, action: string): never {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    const remoteMessage = axiosError.response?.data?.message;
+    const details = remoteMessage || axiosError.message;
+    throw new Error(`Error HTTP al ${action} en example-service: ${details}`);
   }
 }

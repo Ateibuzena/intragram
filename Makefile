@@ -5,7 +5,7 @@ DATA_DIR = /home/azubieta/data
 
 # ---------------------------
 # Main rule: build + up
-all: build up
+all: up
 
 # ---------------------------
 # Build all images with docker-compose

@@ -7,8 +7,6 @@ services:
     build:
         context: ./backend/observability/prometheus
         dockerfile: Dockerfile
-    ports:
-        - "9090:9090"
     networks:
         - service-net
     restart: unless-stopped
@@ -18,8 +16,6 @@ services:
     build:
         context: ./backend/observability/grafana
         dockerfile: Dockerfile
-    ports:
-        - "3001:3000"
     depends_on:
         - prometheus
     networks:
@@ -36,12 +32,10 @@ services:
       context: ./backend/services/example
       dockerfile: Dockerfile.dev
     environment:
-      SERVICE_URL: http://example-service:3005
+      SERVICE_URL: ${EXAMPLE_SERVICE_URL:-http://example-service:3005}
     volumes:
       - ./backend/services/example/src:/app/src
       - /app/node_modules
-    ports:
-      - "3005:3005"
     networks:
       - service-net
     healthcheck:
@@ -62,21 +56,21 @@ services:
       context: ./backend/gateway
       dockerfile: Dockerfile.dev
     environment:
-      NODE_ENV: development
-      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${GATEWAY_PORT:-3000}
     
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_SECRET: ${JWT_SECRET}
       # CORS
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      CORS_ORIGIN: ${CORS_ORIGIN}
       # Rate limiting
-      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
-      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}      
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
 
       # URLs de microservicios internos (usar nombre de servicio Docker)
-      EXAMPLE_SERVICE_URL: http://example-service:3005
-      GRAFANA_URL: http://grafana:3001
-      AUTH_SERVICE_URL: http://auth-service:3003
-      CHAT_SERVICE_URL: http://chat-service:3004
+      EXAMPLE_SERVICE_URL: ${EXAMPLE_SERVICE_URL:-http://example-service:3005}
+      GRAFANA_URL: ${GRAFANA_URL:-http://grafana:3001}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:3003}
+      CHAT_SERVICE_URL: ${CHAT_SERVICE_URL:-http://chat-service:3004}
 
     volumes:
       - ./backend/gateway/src:/app/src
@@ -105,7 +99,7 @@ services:
       context: ./backend/nginx
       dockerfile: Dockerfile
     ports:
-      - "8443:443"
+      - "${NGINX_HTTPS_PORT:-8443}:443"
     volumes:
       - ./backend/nginx/config/nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx-logs:/var/log/nginx

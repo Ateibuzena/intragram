@@ -29,3 +29,22 @@ Validación mínima y completa.
 - Métricas de servicios desde red interna:
   - `docker compose exec prometheus wget -qO- http://gateway:3000/metrics | head`
   - `docker compose exec prometheus wget -qO- http://example-service:3005/metrics | head`
+
+
+**Prometheus (terminal)**
+
+- Estado del contenedor: docker compose ps prometheus
+- Config cargada y proceso vivo: docker compose logs --tail 80 prometheus
+- Targets scrapeados:
+  - docker compose exec prometheus wget -qO- http://localhost:9090/api/v1/targets
+- Query rápida de disponibilidad:
+  - docker compose exec prometheus wget -qO- "http://localhost:9090/api/v1/query?query=up"
+- Query específica de tus servicios:
+  - docker compose exec prometheus wget -qO- "http://localhost:9090/api/v1/query?query=up%7Bjob%3D%22nestjs_app%22%7D"
+- Prueba en navegador:
+  - https://localhost:8443/prometheus/
+  - https://localhost:8443/grafana/
+- Validación rápida terminal:
+  - curl -k -I https://localhost:8443/prometheus/
+  - curl -k -I https://localhost:8443/grafana/
+

@@ -9,6 +9,10 @@ services:
         dockerfile: Dockerfile
     networks:
         - service-net
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.external-url=https://localhost:8443/prometheus/
+      - --web.route-prefix=/
     restart: unless-stopped
 
   grafana:
@@ -16,6 +20,9 @@ services:
     build:
         context: ./backend/observability/grafana
         dockerfile: Dockerfile
+    environment:
+      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     depends_on:
         - prometheus
     networks:

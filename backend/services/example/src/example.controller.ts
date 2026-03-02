@@ -6,7 +6,7 @@
 import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ExampleService } from './example.service';
 
-@Controller('example')
+@Controller()
 export class ExampleController {
 	constructor(private readonly exampleService: ExampleService) { }
 
@@ -14,7 +14,7 @@ export class ExampleController {
 	 * POST /example
 	 * Crea un nuevo ejemplo y retorna el resultado
 	 */
-	@Post()
+	@Post('example')
 	async createExample(@Body() data: any) {
 		console.log('📨 HTTP create example:', data);
 		return this.exampleService.create(data);
@@ -24,7 +24,7 @@ export class ExampleController {
 	 * GET /example
 	 * Obtiene todos los ejemplos
 	 */
-	@Get()
+	@Get('example')
 	async getExamples() {
 		console.log('📨 HTTP get examples');
 		return this.exampleService.findAll();
@@ -34,7 +34,7 @@ export class ExampleController {
 	 * GET /example/:id
 	 * Obtiene un ejemplo por ID
 	 */
-	@Get(':id')
+	@Get('example/:id')
 	async getExampleById(@Param('id') id: string) {
 		console.log('📨 HTTP get example by id:', id);
 		return this.exampleService.findById(id);
@@ -44,7 +44,7 @@ export class ExampleController {
 	 * POST /example/events/created
 	 * Recibe notificación de creación (fire-and-forget vía HTTP)
 	 */
-	@Post('events/created')
+	@Post('example/events/created')
 	@HttpCode(HttpStatus.ACCEPTED)
 	async handleExampleCreated(@Body() data: any) {
 		console.log('🎉 HTTP event received - example.created:', data);

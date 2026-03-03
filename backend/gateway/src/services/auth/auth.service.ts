@@ -6,3 +6,150 @@
  * - Generación de tokens JWT
  * - Gestión de sesiones de usuario
  */
+
+import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
+import { firstValueFrom } from 'rxjs';
+import { SERVICE_URLS } from '../../config/microservices.config';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { IAuthResponse } from './interfaces/auth-service.interface';
+
+@Injectable()
+export class AuthService {
+	private readonly authBaseUrl = SERVICE_URLS.auth;
+
+	constructor(private readonly httpService: HttpService) {}
+
+	/**
+	 * Registrar un nuevo usuario
+	 * Reenvía la petición al microservicio de autenticación
+	 */
+	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IAuthResponse>(
+					`${this.authBaseUrl}/auth/register`,
+					registerDto,
+					{
+						timeout: 10000,
+						headers: {
+							'X-Forwarded-For': ip || '',
+							'X-Original-User-Agent': userAgent || '',
+						},
+					},
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'registrar usuario');
+		}
+	}
+
+	/**
+	 * Iniciar sesión
+	 */
+	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IAuthResponse>(
+					`${this.authBaseUrl}/auth/login`,
+					loginDto,
+					{
+						timeout: 10000,
+						headers: {
+							'X-Forwarded-For': ip || '',
+							'X-Original-User-Agent': userAgent || '',
+						},
+					},
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'iniciar sesión');
+		}
+	}
+
+	/**
+	 * Renovar access token con refresh token
+	 */
+	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IAuthResponse>(
+					`${this.authBaseUrl}/auth/refresh`,
+					{ refresh_token: refreshToken },
+					{
+						timeout: 10000,
+						headers: {
+							'X-Forwarded-For': ip || '',
+							'X-Original-User-Agent': userAgent || '',
+						},
+					},
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'renovar token');
+		}
+	}
+
+	/**
+	 * Cerrar sesión
+	 */
+	async logout(refreshToken: string): Promise<{ message: string }> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<{ message: string }>(
+					`${this.authBaseUrl}/auth/logout`,
+					{ refresh_token: refreshToken },
+					{ timeout: 5000 },
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'cerrar sesión');
+		}
+	}
+
+	/**
+	 * Validar un access token (para uso interno - guards)
+	 */
+	async validateToken(accessToken: string): Promise<{ valid: boolean; payload: any }> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<{ valid: boolean; payload: any }>(
+					`${this.authBaseUrl}/auth/validate`,
+					{ access_token: accessToken },
+					{ timeout: 5000 },
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'validar token');
+		}
+	}
+
+	/**
+	 * Manejo centralizado de errores HTTP
+	 * Re-lanza el error del microservicio preservando el status code
+	 */
+	private handleHttpError(error: unknown, action: string): never {
+		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;
+
+		// Si el microservicio respondió con un error, preservar su status y mensaje
+		if (axiosError.response?.data) {
+			const { statusCode, message } = axiosError.response.data;
+			throw Object.assign(new Error(message || `Error al ${action}`), {
+				statusCode: statusCode || axiosError.response.status,
+			});
+		}
+
+		// Error de conexión
+		throw Object.assign(
+			new Error(`Error de conexión al ${action} en auth-service: ${axiosError.message}`),
+			{ statusCode: 503 },
+		);
+	}
+}

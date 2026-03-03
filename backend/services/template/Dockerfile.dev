@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# curl para el healthcheck
+RUN apk add --no-cache curl
+
+COPY package*.json ./
+RUN npm ci
+
+COPY tsconfig.json ./
+COPY src ./src
+
+# ⚠️ Cambiar este puerto al del nuevo servicio
+EXPOSE 300X
+
+CMD ["npm", "run", "start:watch"]

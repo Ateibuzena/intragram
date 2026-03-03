@@ -1,10 +1,11 @@
 /**
- * DTO de Registro
- * Define y valida los datos de entrada para registro de nuevos usuarios:
- * - email: Correo electrónico único
- * - username: Nombre de usuario único
- * - password: Contraseña con requisitos de seguridad
- * - display_name: Nombre para mostrar (opcional)
+ * DTO de Registro de Usuario
+ * Validación estricta de todos los campos de entrada
+ * 
+ * Seguridad:
+ * - Username: 3-30 chars, solo alfanuméricos y guiones bajos
+ * - Email: formato válido, longitud máxima
+ * - Password: mínimo 8 chars, requiere mayúscula, minúscula, número y especial
  */
 
 import { IsString, IsEmail, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
@@ -22,11 +23,19 @@ export class RegisterDto {
 	@MaxLength(255, { message: 'El email no puede exceder 255 caracteres' })
 	email!: string;
 
+	/**
+	 * Requisitos de contraseña:
+	 * - Mínimo 8 caracteres
+	 * - Al menos una mayúscula
+	 * - Al menos una minúscula
+	 * - Al menos un número
+	 * - Al menos un carácter especial
+	 */
 	@IsString({ message: 'La contraseña debe ser un texto' })
 	@MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
 	@MaxLength(128, { message: 'La contraseña no puede exceder 128 caracteres' })
 	@Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_.])[A-Za-z\d@$!%*?&#+\-_.]{8,}$/, {
-		message: 'La contraseña debe incluir: una mayúscula, una minúscula, un número y un carácter especial',
+		message: 'La contraseña debe incluir al menos: una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&#+-.)',
 	})
 	password!: string;
 

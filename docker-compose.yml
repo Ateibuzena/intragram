@@ -33,8 +33,61 @@ services:
     restart: unless-stopped
 
   # ===========================================
+  # BASES DE DATOS
+  # ===========================================
+
+  auth-db:
+    container_name: auth-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER:-auth_user}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-auth_password}
+      POSTGRES_DB: ${AUTH_DB_NAME:-auth_db}
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-auth_user} -d ${AUTH_DB_NAME:-auth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ===========================================
   # MICROSERVICIOS
   # ===========================================
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: ./backend/services/auth
+      dockerfile: Dockerfile.dev
+    environment:
+      PORT: 3003
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      DB_HOST: auth-db
+      DB_PORT: 5432
+      DB_USERNAME: ${AUTH_DB_USER:-auth_user}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_password}
+      DB_DATABASE: ${AUTH_DB_NAME:-auth_db}
+    volumes:
+      - ./backend/services/auth/src:/app/src
+      - /app/node_modules
+    networks:
+      - service-net
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://auth-service:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
   example-service:
     container_name: example-service
@@ -90,6 +143,7 @@ services:
       - service-net
     depends_on:
       - example-service
+      - auth-service
       - grafana
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/test"]
@@ -143,3 +197,5 @@ networks:
 volumes:
   nginx-logs:
     name: nginx-logs
+  auth-db-data:
+    name: auth-db-data

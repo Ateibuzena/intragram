@@ -1,0 +1,199 @@
+{
+	"annotations": {
+		"list": []
+	},
+	"editable": true,
+	"graphTooltip": 0,
+	"panels": [
+		{
+			"type": "stat",
+			"title": "Auth Service Up",
+			"targets": [
+				{
+					"expr": "up{instance=\"auth-service:3003\"}",
+					"legendFormat": "up"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"type": "value",
+							"options": {
+								"0": {
+									"text": "DOWN"
+								},
+								"1": {
+									"text": "UP"
+								}
+							}
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							},
+							{
+								"color": "green",
+								"value": 1
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 0,
+				"w": 6,
+				"h": 6
+			}
+		},
+		{
+			"type": "stat",
+			"title": "Uptime (minutes)",
+			"targets": [
+				{
+					"expr": "(time() - process_start_time_seconds{instance=\"auth-service:3003\"}) / 60",
+					"legendFormat": "uptime"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "m"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"x": 6,
+				"y": 0,
+				"w": 6,
+				"h": 6
+			}
+		},
+		{
+			"type": "timeseries",
+			"title": "CPU Usage (seconds/s)",
+			"targets": [
+				{
+					"expr": "rate(process_cpu_user_seconds_total{instance=\"auth-service:3003\"}[1m]) + rate(process_cpu_system_seconds_total{instance=\"auth-service:3003\"}[1m])",
+					"legendFormat": "cpu total"
+				}
+			],
+			"gridPos": {
+				"x": 12,
+				"y": 0,
+				"w": 12,
+				"h": 8
+			}
+		},
+		{
+			"type": "timeseries",
+			"title": "Memory RSS (MB)",
+			"targets": [
+				{
+					"expr": "process_resident_memory_bytes{instance=\"auth-service:3003\"} / 1024 / 1024",
+					"legendFormat": "rss"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "decmbytes"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 8,
+				"w": 12,
+				"h": 8
+			}
+		},
+		{
+			"type": "timeseries",
+			"title": "Node.js Heap (MB)",
+			"targets": [
+				{
+					"expr": "nodejs_heap_size_used_bytes{instance=\"auth-service:3003\"} / 1024 / 1024",
+					"legendFormat": "heap used"
+				},
+				{
+					"expr": "nodejs_heap_size_total_bytes{instance=\"auth-service:3003\"} / 1024 / 1024",
+					"legendFormat": "heap total"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "decmbytes"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"x": 12,
+				"y": 8,
+				"w": 12,
+				"h": 8
+			}
+		},
+		{
+			"type": "timeseries",
+			"title": "Event Loop Lag p99 (ms)",
+			"targets": [
+				{
+					"expr": "nodejs_eventloop_lag_p99_seconds{instance=\"auth-service:3003\"} * 1000",
+					"legendFormat": "lag p99"
+				}
+			],
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ms"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"x": 0,
+				"y": 16,
+				"w": 12,
+				"h": 8
+			}
+		},
+		{
+			"type": "timeseries",
+			"title": "Prometheus Scrape Duration (s)",
+			"targets": [
+				{
+					"expr": "scrape_duration_seconds{instance=\"auth-service:3003\", job=\"nestjs_app\"}",
+					"legendFormat": "scrape duration"
+				}
+			],
+			"gridPos": {
+				"x": 12,
+				"y": 16,
+				"w": 12,
+				"h": 8
+			}
+		}
+	],
+	"schemaVersion": 36,
+	"style": "dark",
+	"tags": [
+		"auth-service",
+		"nestjs",
+		"prometheus"
+	],
+	"templating": {
+		"list": []
+	},
+	"time": {
+		"from": "now-15m",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "Auth Service Observability",
+	"uid": "auth-service-observability",
+	"version": 1
+}

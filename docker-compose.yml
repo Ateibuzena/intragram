@@ -65,7 +65,6 @@ services:
       context: ./backend/services/auth
       dockerfile: Dockerfile.dev
     environment:
-      PORT: 3003
       NODE_ENV: ${NODE_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
       DB_HOST: auth-db

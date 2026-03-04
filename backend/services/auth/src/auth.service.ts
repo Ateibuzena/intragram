@@ -61,7 +61,7 @@ const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
 
-interface TokenPayload {
+export interface TokenPayload {
 	sub: string;    // user id
 	username: string;
 	email: string;

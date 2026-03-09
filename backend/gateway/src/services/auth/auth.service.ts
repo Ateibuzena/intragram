@@ -130,6 +130,48 @@ export class AuthService {
 			this.handleHttpError(error, 'validar token');
 		}
 	}
+	
+		/**
+	 * Obtener URL de autorización OAuth 42
+	 */
+	async getOAuth42AuthUrl(): Promise<{ url: string }> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<{ url: string }>(
+					`${this.authBaseUrl}/auth/42`,
+					{ timeout: 5000 },
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener URL de OAuth 42');
+		}
+	}
+
+	/**
+	 * Manejar callback de OAuth 42
+	 */
+	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IAuthResponse>(
+					`${this.authBaseUrl}/auth/42/callback`,
+					{
+						params: { code },
+						timeout: 15000,
+						headers: {
+							'X-Forwarded-For': ip || '',
+							'X-Original-User-Agent': userAgent || '',
+						},
+					},
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'procesar callback de OAuth 42');
+		}
+	}
+
 
 	/**
 	 * Manejo centralizado de errores HTTP

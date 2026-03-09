@@ -48,6 +48,7 @@ import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import axios from 'axios';
 
 // ─── Constantes de seguridad ───────────────────────
 const BCRYPT_SALT_ROUNDS = 12;
@@ -477,6 +478,83 @@ export class AuthService implements OnModuleInit {
 		}
 		return deleted;
 	}
+	// ═══════════════════════════════════════════════
+	//  OAUTH 42
+	// ═══════════════════════════════════════════════
+
+	/**
+	 * Obtener URL de autorización de 42
+	 */
+	getOAuth42AuthUrl(): string {
+		const clientId = process.env.OAUTH_42_CLIENT_ID;
+		const redirectUri = process.env.OAUTH_42_REDIRECT_URI || 'http://localhost:3000/auth/42/callback';
+		
+		if (!clientId) {
+			throw new Error('OAUTH_42_CLIENT_ID no configurado');
+		}
+
+		return `https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=public`;
+	}
+
+	/**
+	 * Procesar callback de OAuth 42
+	 * - Intercambiar código por access_token
+	 * - Obtener datos del usuario de 42
+	 * - Crear/actualizar usuario local
+	 * - Generar tokens propios
+	 */
+	async handleOAuth42Callback(
+		code: string,
+		ip?: string,
+		userAgent?: string,
+	): Promise<AuthResponse> {
+		const axios = require('axios');
+
+		try {
+			// 1. Intercambiar código por access token de 42
+			const tokenResponse = await axios.post('https://api.intra.42.fr/oauth/token', {
+				grant_type: 'authorization_code',
+				client_id: process.env.OAUTH_42_CLIENT_ID,
+				client_secret: process.env.OAUTH_42_CLIENT_SECRET,
+				code,
+				redirect_uri: process.env.OAUTH_42_REDIRECT_URI,
+			});
+
+			const { access_token } = tokenResponse.data;
+
+			// 2. Obtener datos del usuario de 42
+			const userResponse = await axios.get('https://api.intra.42.fr/v2/me', {
+				headers: { Authorization: `Bearer ${access_token}` },
+			});
+
+			const user42 = userResponse.data;
+
+			// 3. Mock de usuario (sin BD - para desarrollo)
+			const user = {
+				id: user42.id.toString(),
+				username: user42.login.toLowerCase(),
+				email: user42.email.toLowerCase(),
+				display_name: user42.usual_full_name || user42.login,
+				is_active: true,
+				failed_login_attempts: 0,
+				last_login: new Date(),
+				password: '',
+				created_at: new Date(),
+				updated_at: new Date(),
+				locked_until: null,
+			};
+
+			console.log(`✅ Login OAuth 42 exitoso (mock): ${user.username} (${user.id})`);
+
+
+			// 4. Generar tokens propios
+			return this.generateAuthResponse(user, ip, userAgent);
+		} catch (error) {
+			console.error('❌ Error en OAuth 42:', error.response?.data || error.message);
+			throw new UnauthorizedError('Error al autenticar con 42');
+		}
+	}
+
 }
 
 // ═══════════════════════════════════════════════

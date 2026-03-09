@@ -17,6 +17,9 @@ import {
 	HttpCode,
 	HttpStatus,
 	HttpException,
+	Get,
+	Query,
+	Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -25,7 +28,7 @@ import { IAuthResponse } from './interfaces/auth-service.interface';
 
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(private readonly authService: AuthService) { }
 
 	/**
 	 * POST /auth/register
@@ -106,4 +109,66 @@ export class AuthController {
 			);
 		}
 	}
+
+	/**
+	 * GET /auth/42/login
+	 * Redirigir directamente al login de 42
+	 */
+	@Get('42/login')
+	async oauth42Redirect(@Res() res: any) {
+		try {
+			const { url } = await this.authService.getOAuth42AuthUrl();
+			return res.redirect(url);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al redirigir a OAuth 42',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+ * GET /auth/42
+ * Redirigir directamente a 42
+ */
+	@Get('42')
+	async oauth42Login(@Res() res: any) {
+		try {
+			const { url } = await this.authService.getOAuth42AuthUrl();
+			return res.redirect(url); // ← REDIRIGIR en vez de devolver JSON
+		} catch (error: any) {
+			return res.redirect('http://localhost:5173?error=oauth_init_failed');
+		}
+	}
+
+
+	/**
+	 * GET /auth/42/callback
+	 * Callback de OAuth 42 - redirige al frontend con tokens
+	 */
+	@Get('42/callback')
+	@HttpCode(HttpStatus.FOUND)
+	async oauth42Callback(
+		@Query('code') code: string,
+		@Ip() ip: string,
+		@Headers('user-agent') userAgent: string,
+		@Res() res: any,
+	) {
+		if (!code) {
+			// Redirigir al frontend con error
+			return res.redirect('http://localhost:5173?error=no_code');
+		}
+
+		try {
+			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
+
+			// Redirigir al frontend con tokens
+			const frontendUrl = `http://localhost:5173?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			return res.redirect(frontendUrl);
+		} catch (error: any) {
+			// Redirigir al frontend con error
+			return res.redirect('http://localhost:5173?error=auth_failed');
+		}
+	}
+
 }

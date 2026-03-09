@@ -26,6 +26,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	HttpException,
+	Query,
 } from '@nestjs/common';
 import { AuthService, ConflictError, UnauthorizedError, ForbiddenError } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -34,7 +35,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller()
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(private readonly authService: AuthService) { }
 
 	/**
 	 * POST /auth/register
@@ -123,6 +124,45 @@ export class AuthController {
 			this.handleError(error);
 		}
 	}
+	/**
+ * GET /auth/42
+ * Iniciar flujo OAuth con 42
+ */
+	@Get('auth/42')
+	oauth42Login() {
+		try {
+			const authUrl = this.authService.getOAuth42AuthUrl();
+			return { url: authUrl };
+		} catch (error) {
+			this.handleError(error);
+		}
+	}
+
+	/**
+	 * GET /auth/42/callback
+	 * Callback de OAuth 42
+	 */
+	@Get('auth/42/callback')
+	@HttpCode(HttpStatus.OK)
+	async oauth42Callback(
+		@Query('code') code: string,
+		@Ip() ip: string,
+		@Headers('user-agent') userAgent: string,
+	) {
+		if (!code) {
+			throw new HttpException(
+				{ statusCode: HttpStatus.BAD_REQUEST, message: 'Código OAuth no proporcionado' },
+				HttpStatus.BAD_REQUEST,
+			);
+		}
+
+		try {
+			return await this.authService.handleOAuth42Callback(code, ip, userAgent);
+		} catch (error) {
+			this.handleError(error);
+		}
+	}
+
 
 	/**
 	 * GET /health

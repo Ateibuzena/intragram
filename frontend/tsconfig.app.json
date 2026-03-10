@@ -1,28 +1,45 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "types": ["vite/client"],
-    "skipLibCheck": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo", 
+    // Archivo interno de TypeScript para optimizar compilaciones incrementales
+
+    "target": "ES2022", 
+    // A qué versión de JavaScript va a compilar TypeScript
+
+    "useDefineForClassFields": true, 
+    // Maneja cómo se crean los campos de las clases en JS moderno
+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], 
+    // Librerías disponibles: ES2022 + DOM (para usar document, window, etc.)
+
+    "module": "ESNext", 
+    // Sistema de módulos moderno (import/export)
+
+    "types": ["vite/client"], 
+    // Tipos adicionales para Vite (import.meta, etc.)
+
+    "skipLibCheck": true, 
+    // Ignora la revisión de tipos de los archivos de librerías externas
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
+    "moduleResolution": "bundler", 
+    "allowImportingTsExtensions": true, 
+    "verbatimModuleSyntax": true, 
+    "moduleDetection": "force", 
+    "noEmit": true, 
+    "jsx": "react-jsx", 
+    // JSX moderno para React 17+ / TSX
+    /* Fin bundler */
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    /* Linting y estrictos */
+    "strict": true, 
+    "noUnusedLocals": true, 
+    "noUnusedParameters": true, 
+    "erasableSyntaxOnly": true, 
+    "noFallthroughCasesInSwitch": true, 
+    "noUncheckedSideEffectImports": true 
+    // Ayudan a mantener tu código limpio y seguro
   },
-  "include": ["src"]
+  "include": ["src"] 
+  // Solo compilar TypeScript dentro de src
 }

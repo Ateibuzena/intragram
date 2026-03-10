@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer components {
+    .chat {
+        @apply fixed top-0 left-0 w-full z-20 bg-transparent p-4 flex justify-between items-center;
+    }
+
+    .chat-left {
+        @apply text-2xl font-bold text-pink-600;
+    }
+
+    .chat-right {
+        @apply flex space-x-6;
+    }
+}

@@ -1,14 +1,26 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Chat from './pages/chat/Chat.tsx'
+import Navbar from "./common/components/Navbar.tsx";
+import Footer from "./common/components/Footer.tsx";
 
-export default function App()
-{
-	return (
-		<BrowserRouter>
+import Home from "./pages/Home/Home.tsx";
+import Chat from "./pages/Chat/Chat.tsx";
+
+export default function App() {
+  return (
+	<BrowserRouter>
+
+		<Navbar />
+
+		<main>
 			<Routes>
+				<Route path="/" element={<Home />} />
 				<Route path="/chat" element={<Chat />} />
 			</Routes>
-		</BrowserRouter>
-	)
+		</main>
+
+		<Footer />
+
+	</BrowserRouter>
+  );
 }

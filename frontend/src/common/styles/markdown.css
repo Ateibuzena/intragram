@@ -1,0 +1,44 @@
+#modal-readme h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+#modal-readme h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+#modal-readme h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+#modal-readme p {
+    margin: 0.5rem 0;
+}
+
+#modal-readme ul, 
+#modal-readme ol {
+    margin-left: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+#modal-readme blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 1rem;
+    color: #555;
+    margin: 1rem 0;
+}
+
+#modal-readme code {
+    background: #eee;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+#modal-readme pre {
+    background: #f4f4f4;
+    padding: 0.8rem;
+    border-radius: 6px;
+    overflow-x: auto;
+}

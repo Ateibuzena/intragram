@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@layer components {
+    .footer {
+        @apply fixed bottom-0 w-full bg-transparent p-4 text-center z-50;
+    }
+
+
+    .footer-name {
+        @apply text-2xl font-bold text-pink-600;
+    }
+
+    .footer-list {
+        @apply flex justify-center space-x-6 mt-2;
+    }
+
+    .footer-element {
+        @apply font-bold text-pink-400 hover:text-pink-600 transition;
+    }
+}

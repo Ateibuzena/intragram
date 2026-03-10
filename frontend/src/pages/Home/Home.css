@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+@layer components {
+	
+	.home-section {
+		@apply relative flex items-center justify-center h-screen text-center px-10;
+	}
+
+	.home-background {
+		@apply absolute w-full h-full object-cover;
+	}
+
+	.home-overlay {
+		@apply absolute inset-0;
+		background: rgba(0, 0, 0, 0.5); /* negro semi-transparente */
+		/* Opcional: degradado si quieres un efecto más elegante */
+		/* background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6)); */
+		z-index: 5; /* debajo del contenido pero encima del video */
+	}
+
+	.home-content {
+		@apply relative z-10 flex flex-col items-center justify-center;
+		opacity: 0;
+		animation: fadeInUp 1s ease forwards;
+		animation-delay: 0.5s;
+	}
+
+	.home-title {
+		@apply text-7xl font-bold mb-4 text-pink-400;
+	}
+
+	.home-description {
+		@apply text-3xl font-bold pb-4 text-pink-600;
+	}
+
+	.home-button {
+		@apply mt-6 px-6 py-3 bg-pink-400 text-white font-bold rounded hover:bg-pink-600 transition;
+	}
+}

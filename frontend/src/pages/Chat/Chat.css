@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer components {
+    .chat-container {
+        @apply flex flex-col h-screen;
+    }
+}

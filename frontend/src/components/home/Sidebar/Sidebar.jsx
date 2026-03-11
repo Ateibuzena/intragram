@@ -1,98 +1,71 @@
-import { useAuth } from '../../../hooks/useAuth';
+const FILTERS = [
+  { key: 'perfil',   label: 'Mi perfil', icon: '👤' },
+  { key: 'reciente', label: 'Reciente',  icon: '🕐' },
+  { key: 'amigos',   label: 'Amigos',    icon: '👥' },
+  { key: 'seguidos', label: 'Seguidos',  icon: '⭐' },
+];
 
-export default function Sidebar() {
-  const { user } = useAuth();
-
-  const suggestedUsers = [
-    { login: 'jdoe', displayName: 'John Doe', avatar: 'https://ui-avatars.com/api/?name=JD&background=00BCD4&color=fff' },
-    { login: 'asmith', displayName: 'Anna Smith', avatar: 'https://ui-avatars.com/api/?name=AS&background=00BCD4&color=fff' },
-    { login: 'mgarcia', displayName: 'María García', avatar: 'https://ui-avatars.com/api/?name=MG&background=00BCD4&color=fff' },
-  ];
-
+export default function Sidebar({ activeFilter, setActiveFilter }) {
   return (
-    <div className="space-y-4">
-      {/* Perfil del usuario - OSCURO */}
-      <div className="bg-dark-secondary rounded-xl border border-white border-opacity-10 p-6">
-        <div className="flex flex-col items-center text-center">
-          <img
-            src={user?.avatar || 'https://ui-avatars.com/api/?name=U&background=00BCD4&color=fff'}
-            alt={user?.login}
-            className="w-20 h-20 rounded-full ring-4 ring-primary mb-4"
-          />
-          <p className="text-sm text-textLight-tertiary mb-4">@{user?.login || 'username'}</p>
-          
-          {/* Estadísticas */}
-          <div className="flex gap-8 w-full justify-center border-t border-white border-opacity-10 pt-4">
-            <div className="text-center">
-              <p className="font-bold text-lg text-white">Posts</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-lg text-white">Seguidores</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-lg text-white">Siguiendo</p>
-            </div>
-          </div>
-        </div>
+    // group: los hijos reaccionan al hover del aside con group-hover:
+    // w-14 por defecto, se expande a w-48 al hacer hover
+    // transition-all duration-300: animación suave del ancho
+<aside className="
+  group
+  w-14 hover:w-48
+  h-screen sticky top-0
+  bg-ft-card border-r border-ft-border
+  flex flex-col py-3
+  transition-all duration-300 ease-spring
+  overflow-hidden flex-shrink-0
+">
+
+      {/* Icono de "menú" que indica que el sidebar es expandible */}
+      <div className="flex items-center justify-center w-14 h-10 mb-3 text-ft-muted">
+        <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
       </div>
 
-      {/* Usuarios sugeridos - OSCURO */}
-      <div className="bg-dark-secondary rounded-xl border border-white border-opacity-10 p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-white">Suggestions For You</h3>
-          <button className="text-xs text-textLight-tertiary hover:text-white">See All</button>
-        </div>
-        <div className="space-y-3">
-          {suggestedUsers.map(suggested => (
-            <div key={suggested.login} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img
-                  src={suggested.avatar}
-                  alt={suggested.login}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div>
-                  <p className="font-medium text-sm text-white">@{suggested.login}</p>
-                </div>
-              </div>
-              <button className="text-xs font-semibold bg-primary hover:bg-primary-600 text-white px-4 py-1.5 rounded-lg transition">
-                Seguir
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <div className="w-8 border-t border-ft-border mx-auto mb-2" />
 
-      {/* Estadísticas globales - OSCURO */}
-      <div className="bg-dark-secondary rounded-xl border border-white border-opacity-10 p-4">
-        <div className="space-y-3 text-center">
-          <div className="py-2 border-b border-white border-opacity-10">
-            <p className="text-textLight-tertiary text-sm">42 posts</p>
-          </div>
-          <div className="py-2 border-b border-white border-opacity-10">
-            <p className="text-textLight-tertiary text-sm">128 posts</p>
-          </div>
-          <div className="py-2">
-            <p className="text-textLight-tertiary text-sm">256 posts</p>
-          </div>
-        </div>
-      </div>
+      <nav className="flex flex-col gap-1 px-2">
+        {FILTERS.map((f, i) => (
+          <div key={f.key}>
+            {i === 1 && <div className="w-full border-t border-ft-border my-1.5" />}
+            <button
+              onClick={() => setActiveFilter(f.key)}
+              className={`
+                relative flex items-center gap-3
+                w-full px-2 py-2.5 rounded-xl
+                transition-all duration-200
+                ${activeFilter === f.key
+                  ? 'bg-ft-cyan/15 text-ft-cyan'
+                  : 'text-ft-muted hover:bg-ft-hover hover:text-ft-text'
+                }
+              `}
+            >
+              {activeFilter === f.key && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-ft-cyan rounded-r-full" />
+              )}
 
-      {/* Footer */}
-      <div className="px-2">
-        <div className="text-xs text-textLight-tertiary space-x-2">
-          <a href="#" className="hover:underline">About</a>
-          <span>·</span>
-          <a href="#" className="hover:underline">Help</a>
-          <span>·</span>
-          <a href="#" className="hover:underline">API</a>
-          <span>·</span>
-          <a href="#" className="hover:underline">Privacy</a>
-          <span>·</span>
-          <a href="#" className="hover:underline">Terms</a>
-          <p className="mt-2">© 2026 42 NETWORK</p>
-        </div>
-      </div>
-    </div>
+              {/* Icono: siempre centrado en w-14, se desplaza a la izquierda al expandir */}
+              <span className="text-base flex-shrink-0 w-5 text-center">{f.icon}</span>
+
+              {/* Texto: invisible cuando cerrado, aparece al hover del aside */}
+              <span className="
+                text-sm font-semibold whitespace-nowrap
+                opacity-0 group-hover:opacity-100
+                max-w-0 group-hover:max-w-xs
+                overflow-hidden
+                transition-all duration-300
+              ">
+                {f.label}
+              </span>
+            </button>
+          </div>
+        ))}
+      </nav>
+    </aside>
   );
 }

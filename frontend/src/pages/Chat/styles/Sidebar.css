@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@layer components {
+
+    .sidebar {
+        @apply flex flex-col w-64 h-screen p-4 bg-gray-900 text-white;
+    }
+
+    .sidebar-top {
+        @apply flex flex-col gap-4 mb-6; /* espacio vertical entre botón y buscador */
+    }
+
+    .sidebar-btn {
+        @apply flex items-center justify-center w-12 h-12 bg-gray-800 rounded-xl hover:bg-gray-700 transition;
+    }
+
+    .sidebar-grid {
+        @apply grid grid-cols-2 gap-4 mb-6;
+    }
+
+    .sidebar-bottom {
+        @apply mt-auto flex items-center justify-center;
+    }
+
+}

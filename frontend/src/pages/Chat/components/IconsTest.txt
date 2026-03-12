@@ -1,0 +1,45 @@
+import "../styles/Sidebar.css";
+import type { SVGProps } from "react";
+
+export const IcInstagram = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M7.75 2C4.67893 2 2 4.67893 2 7.75V16.25C2 19.3211 4.67893 22 7.75 22H16.25C19.3211 22 22 19.3211 22 16.25V7.75C22 4.67893 19.3211 2 16.25 2H7.75ZM12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8ZM17.5 7C18.3284 7 19 6.32843 19 5.5C19 4.67157 18.3284 4 17.5 4C16.6716 4 16 4.67157 16 5.5C16 6.32843 16.6716 7 17.5 7Z" />
+  </svg>
+);
+
+export const IcHome = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M10.7071 2.29289C11.0976 1.90237 11.7308 1.90237 12.1213 2.29289L21.7071 11.8787C22.0976 12.2692 22.0976 12.9024 21.7071 13.2929C21.3166 13.6834 20.6834 13.6834 20.2929 13.2929L12 5L3.70711 13.2929C3.31658 13.6834 2.68342 13.6834 2.29289 13.2929C1.90237 12.9024 1.90237 12.2692 2.29289 11.8787L10.7071 2.29289Z" />
+  </svg>
+);
+
+export const IcReels = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+  </svg>
+);
+
+export const IcSearch = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <circle cx="10" cy="10" r="6" />
+    <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+);
+
+export const IcHeart = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 21.35l-1.45-1.32C5.4 15.35 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.85-8.55 12.83L12 21.35z"/>
+  </svg>
+);
+
+export const IcPlus = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2z"/>
+  </svg>
+);
+
+export const IcMenu = ({ className }: SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M3 12h18v2H3zm0-5h18v2H3zm0 10h18v2H3z"/>
+  </svg>
+);

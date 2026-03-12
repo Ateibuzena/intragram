@@ -1,8 +1,10 @@
 import "./Chat.css";
+import Sidebar from "./components/Sidebar";
 
 export default function Chat() {
     return (
         <div className="chat-container">
+            <Sidebar />
             <h1>Chat</h1>
         
             <div className="chat-left">

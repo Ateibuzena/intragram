@@ -1,0 +1,47 @@
+import "../styles/Sidebar.css";
+import { IcInstagram, IcHome, IcReels, IcHeart, IcSearch, IcPlus, IcMenu } from "./IconsTest";
+
+export default function Sidebar() {
+  return (
+    <nav className="sidebar">
+
+      <div className="sidebar-top">
+        <button className="sidebar-btn">
+          <IcInstagram className="sidebar-icon"/>
+        </button>
+
+        <button className="sidebar-btn">
+          <IcHome className="sidebar-icon"/>
+        </button>
+
+        <button className="sidebar-btn">
+          <IcReels className="sidebar-icon"/>
+        </button>
+
+        <button className="sidebar-btn">
+          <IcHeart className="sidebar-icon"/>
+          <span className="sidebar-notification">3</span>
+        </button>
+
+        <button className="sidebar-btn">
+          <IcSearch className="sidebar-icon"/>
+        </button>
+
+        <button className="sidebar-btn">
+          <IcPlus className="sidebar-icon"/>
+        </button>
+      </div>
+
+      <div className="sidebar-bottom">
+        <button className="sidebar-btn">
+          <IcMenu className="sidebar-icon"/>
+        </button>
+
+        <button className="sidebar-btn">
+          <img className="sidebar-icon rounded-full" src="/assets/profile.jpg" alt="Profile"/>
+        </button>
+      </div>
+
+    </nav>
+  );
+}

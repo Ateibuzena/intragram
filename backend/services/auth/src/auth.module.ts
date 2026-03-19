@@ -1,66 +1,40 @@
 /**
  * Módulo principal del Microservicio de Autenticación
- * Configuración MOCK para desarrollo sin PostgreSQL
+ * Configura TypeORM con PostgreSQL y expone el servicio de autenticación
  */
 
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
-// Mock de repositorios para desarrollo sin BD
-const mockUserRepository = {
-	findOne: async () => null,
-	create: (data: any) => data,
-	save: async (data: any) => ({ ...data, id: 'mock-id' }),
-	update: async () => ({ affected: 1 }),
-	createQueryBuilder: () => ({
-		addSelect: () => ({
-			where: () => ({
-				getOne: async () => null,
-			}),
-		}),
-	}),
-	query: async () => [{ '1': 1 }],
-};
-
-const mockRefreshTokenRepository = {
-	create: (data: any) => data,
-	save: async (data: any) => ({ ...data, id: 'mock-token-id' }),
-	update: async () => ({ affected: 1 }),
-	findOne: async () => null,
-	createQueryBuilder: () => ({
-		delete: () => ({
-			where: () => ({
-				orWhere: () => ({
-					execute: async () => ({ affected: 0 }),
-				}),
-			}),
-		}),
-	}),
-};
-
 @Module({
 	imports: [
-		// Métricas Prometheus
+		TypeOrmModule.forRoot({
+			type: 'postgres',
+			host: process.env.DB_HOST || 'auth-db',
+			port: parseInt(process.env.DB_PORT || '5432', 10),
+			username: process.env.DB_USERNAME || 'auth_user',
+			password: process.env.DB_PASSWORD || 'auth_password',
+			database: process.env.DB_DATABASE || 'auth_db',
+			entities: [UserEntity, RefreshTokenEntity],
+			synchronize: process.env.NODE_ENV !== 'production',
+			logging: process.env.NODE_ENV === 'development',
+			extra: {
+				max: 10,
+				connectionTimeoutMillis: 5000,
+				statement_timeout: 10000,
+			},
+		}),
+		TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
 		PrometheusModule.register(),
 	],
 	controllers: [AuthController],
-	providers: [
-		AuthService,
-		// Providers mock de repositorios
-		{
-			provide: getRepositoryToken(UserEntity),
-			useValue: mockUserRepository,
-		},
-		{
-			provide: getRepositoryToken(RefreshTokenEntity),
-			useValue: mockRefreshTokenRepository,
-		},
-	],
+	providers: [AuthService],
+	exports: [AuthService],
 })
 export class AuthModule {}
 

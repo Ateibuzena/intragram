@@ -10,6 +10,10 @@ export const SERVICE_URLS = {
 		process.env.AUTH_SERVICE_URL ||
 			`http://${process.env.AUTH_SERVICE_HOST || 'auth-service'}:${process.env.AUTH_SERVICE_PORT || '3003'}`,
 	),
+	users: normalizeUrl(
+		process.env.USERS_SERVICE_URL ||
+			`http://${process.env.USERS_SERVICE_HOST || 'users-service'}:${process.env.USERS_SERVICE_PORT || '3006'}`,
+	),
 	chat: normalizeUrl(
 		process.env.CHAT_SERVICE_URL ||
 			`http://${process.env.CHAT_SERVICE_HOST || 'chat-service'}:${process.env.CHAT_SERVICE_PORT || '3004'}`,

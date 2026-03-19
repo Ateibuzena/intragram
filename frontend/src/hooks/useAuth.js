@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
+const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:8443/api';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -24,8 +25,8 @@ export function AuthProvider({ children }) {
     if (token && userStr) {
       try {
         const userData = JSON.parse(decodeURIComponent(userStr));
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
         setUser(userData);
         setLoading(false);
         // Limpiar la URL
@@ -39,16 +40,16 @@ export function AuthProvider({ children }) {
     }
 
     // Si no hay token en URL, verificar localStorage
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUser = localStorage.getItem('auth_user');
 
     if (storedToken && storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (err) {
         console.error('Error al cargar usuario guardado:', err);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
       }
     }
 
@@ -57,12 +58,12 @@ export function AuthProvider({ children }) {
 
   const login = () => {
     // Redirigir al backend para iniciar OAuth
-    window.location.href = 'http://localhost:3000/auth/42';
+    window.location.href = `${API_URL}/auth/42/login`;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
     setUser(null);
   };
 

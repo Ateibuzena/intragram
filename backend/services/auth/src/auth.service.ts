@@ -508,8 +508,6 @@ export class AuthService implements OnModuleInit {
 		ip?: string,
 		userAgent?: string,
 	): Promise<AuthResponse> {
-		const axios = require('axios');
-
 		try {
 			// 1. Intercambiar código por access token de 42
 			const tokenResponse = await axios.post('https://api.intra.42.fr/oauth/token', {
@@ -529,12 +527,21 @@ export class AuthService implements OnModuleInit {
 
 			const user42 = userResponse.data;
 
-			// 3. Mock de usuario (sin BD - para desarrollo)
+			// 3. Persistir/actualizar perfil en users-service
+			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
+			const upsertResponse = await axios.post(
+				`${usersServiceUrl}/users/oauth/42/upsert`,
+				user42,
+				{ timeout: 10000 },
+			);
+
+			const profile = upsertResponse.data;
+
 			const user = {
-				id: user42.id.toString(),
-				username: user42.login.toLowerCase(),
-				email: user42.email.toLowerCase(),
-				display_name: user42.usual_full_name || user42.login,
+				id: profile.id,
+				username: (profile.login || user42.login || '').toLowerCase(),
+				email: (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase(),
+				display_name: profile.display_name || user42.usual_full_name || user42.login,
 				is_active: true,
 				failed_login_attempts: 0,
 				last_login: new Date(),
@@ -542,14 +549,14 @@ export class AuthService implements OnModuleInit {
 				created_at: new Date(),
 				updated_at: new Date(),
 				locked_until: null,
-			};
+			} as UserEntity;
 
-			console.log(`✅ Login OAuth 42 exitoso (mock): ${user.username} (${user.id})`);
+			console.log(`✅ Login OAuth 42 exitoso: ${user.username} (${user.id})`);
 
 
 			// 4. Generar tokens propios
 			return this.generateAuthResponse(user, ip, userAgent);
-		} catch (error) {
+		} catch (error: any) {
 			console.error('❌ Error en OAuth 42:', error.response?.data || error.message);
 			throw new UnauthorizedError('Error al autenticar con 42');
 		}

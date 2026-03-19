@@ -1,66 +1,128 @@
-# Auth Service - Microservicio de Autenticación
+# Auth Service - Microservicio de Autenticacion
 
-## Descripción
-Microservicio de autenticación con PostgreSQL que gestiona el registro, login, y manejo de sesiones con JWT.
+## Resumen de lo que hemos hecho
+- Implementado auth completo con NestJS + TypeORM + PostgreSQL.
+- Registro y login por `username` o `email`.
+- JWT de acceso (15 min) + refresh token (7 dias).
+- Rotacion de refresh token en cada `/auth/refresh`.
+- Bloqueo temporal de cuenta tras 5 intentos fallidos (15 min).
+- Integracion OAuth 42:
+  - `GET /auth/42` y `GET /auth/42/login` para iniciar el flujo.
+  - `GET /auth/42/callback` para procesar `code`, consultar 42, sincronizar perfil via users-service y generar tokens propios.
+- Captura de IP y User-Agent en sesiones (refresh token metadata).
 
 ## Stack
-- **NestJS** (TypeScript)
-- **PostgreSQL** (base de datos)
-- **TypeORM** (ORM)
-- **bcrypt** (hashing de contraseñas)
-- **jsonwebtoken** (JWT)
+- NestJS (TypeScript)
+- PostgreSQL
+- TypeORM
+- bcrypt
+- jsonwebtoken
+- axios (OAuth 42 + llamada interna a users-service)
 
-## Endpoints
+## Rutas disponibles
 
-| Método | Ruta            | Descripción                        |
-|--------|-----------------|------------------------------------|
-| POST   | /auth/register  | Registro de nuevo usuario          |
-| POST   | /auth/login     | Inicio de sesión                   |
-| POST   | /auth/refresh   | Renovar access token               |
-| POST   | /auth/logout    | Cerrar sesión                      |
-| POST   | /auth/validate  | Validar token (uso interno)        |
-| GET    | /health         | Health check                       |
+### Expuestas en el gateway (recomendado)
+Base URL local: `https://localhost:8443/api`
 
-## Medidas de seguridad
-- Contraseñas hasheadas con bcrypt (12 rounds)
-- JWT con access token (15 min) + refresh token (7 días)
-- Rotación de refresh tokens
-- Bloqueo de cuenta tras 5 intentos fallidos (15 min)
-- Protección contra timing attacks
-- Mensajes de error genéricos
-- Queries parametrizadas (no SQL injection)
-- Validación estricta de DTOs
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| POST | /auth/register | Registro local |
+| POST | /auth/login | Login local |
+| POST | /auth/refresh | Rotacion de refresh token |
+| POST | /auth/logout | Revoca refresh token |
+| GET | /auth/42 | Inicio OAuth 42 (redirige) |
+| GET | /auth/42/login | Inicio OAuth 42 (redirige) |
+| GET | /auth/42/callback | Callback OAuth 42 |
 
-## Ejemplos de peticiones (JSON)
+### Expuestas en el microservicio auth (interno)
+Base URL interna: `http://localhost:3003`
 
-### POST /auth/register — Registro de nuevo usuario
+| Metodo | Ruta | Descripcion |
+|---|---|---|
+| POST | /auth/register | Registro local |
+| POST | /auth/login | Login local |
+| POST | /auth/refresh | Rotacion de refresh token |
+| POST | /auth/logout | Revoca refresh token |
+| POST | /auth/validate | Validacion de JWT (uso interno) |
+| GET | /auth/42 | Devuelve URL OAuth de 42 |
+| GET | /auth/42/callback | Callback OAuth 42 |
+| GET | /health | Health check |
 
-**Request:**
-```json
-{
-  "username": "testuser",
-  "email": "test@example.com",
-  "password": "Test1234!",
-  "display_name": "Test User"
-}
+## Flujo funcional
+1. Registro/Login local emite `access_token` y `refresh_token`.
+2. `access_token` se usa para autorizacion de requests de corta vida.
+3. `refresh_token` se usa en `/auth/refresh` para emitir nuevo par de tokens.
+4. OAuth 42:
+   - Auth consulta `https://api.intra.42.fr/oauth/token` y `https://api.intra.42.fr/v2/me`.
+   - Auth sincroniza perfil en users-service (`POST /users/oauth/42/upsert`).
+   - Auth construye respuesta de autenticacion propia.
+
+## Ejemplos de peticiones (curl)
+
+### 1) Registrar usuario local
+```bash
+curl -k -X POST "https://localhost:8443/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username":"testuser",
+    "email":"test@example.com",
+    "password":"Test1234!",
+    "display_name":"Test User"
+  }'
 ```
 
-| Campo          | Tipo   | Obligatorio | Reglas                                                                 |
-|---------------|--------|-------------|------------------------------------------------------------------------|
-| `username`     | string | Sí          | 3-30 chars, solo letras, números y `_`                                 |
-| `email`        | string | Sí          | Formato email válido, máx 255 chars                                    |
-| `password`     | string | Sí          | 8-128 chars, requiere mayúscula, minúscula, número y especial          |
-| `display_name` | string | No          | Máx 100 chars                                                          |
+### 2) Login local
+```bash
+curl -k -X POST "https://localhost:8443/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "identifier":"testuser",
+    "password":"Test1234!"
+  }'
+```
 
-**Response (201):**
+### 3) Refresh token
+```bash
+curl -k -X POST "https://localhost:8443/api/auth/refresh" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token":"<REFRESH_TOKEN>"
+  }'
+```
+
+### 4) Logout
+```bash
+curl -k -X POST "https://localhost:8443/api/auth/logout" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token":"<REFRESH_TOKEN>"
+  }'
+```
+
+### 5) Iniciar OAuth 42
+Abre esta URL en navegador:
+```text
+https://localhost:8443/api/auth/42/login
+```
+
+### 6) Validar JWT (solo auth-service, uso interno)
+```bash
+curl -X POST "http://localhost:3003/auth/validate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "access_token":"<ACCESS_TOKEN>"
+  }'
+```
+
+## Respuesta de auth (estructura)
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "bca5d78552532ae4c7f538f8a3d845a4fd64f623...",
+  "access_token": "...",
+  "refresh_token": "...",
   "token_type": "Bearer",
   "expires_in": 900,
   "user": {
-    "id": "c192e278-7192-423e-b1e8-90a544577f04",
+    "id": "uuid",
     "username": "testuser",
     "email": "test@example.com",
     "display_name": "Test User"
@@ -68,186 +130,31 @@ Microservicio de autenticación con PostgreSQL que gestiona el registro, login, 
 }
 ```
 
----
+## Errores comunes
+- `401 Credenciales invalidas`: usuario/email/password incorrectos.
+- `403 Cuenta bloqueada temporalmente`: supero limite de intentos fallidos.
+- `401 Refresh token invalido/expirado`: token revocado o vencido.
 
-### POST /auth/login — Inicio de sesión
+## Variables de entorno relevantes
+| Variable | Default | Descripcion |
+|---|---|---|
+| PORT | 3003 | Puerto del auth-service |
+| DB_HOST | auth-db | Host PostgreSQL auth |
+| DB_PORT | 5432 | Puerto PostgreSQL |
+| DB_USERNAME | auth_user | Usuario DB |
+| DB_PASSWORD | auth_password | Password DB |
+| DB_DATABASE | auth_db | Nombre DB |
+| JWT_SECRET | dev-secret-change-in-production | Secreto JWT |
+| OAUTH_42_CLIENT_ID | - | Client ID OAuth 42 |
+| OAUTH_42_CLIENT_SECRET | - | Client Secret OAuth 42 |
+| OAUTH_42_REDIRECT_URI | https://localhost:8443/api/auth/42/callback | Callback OAuth |
+| USERS_SERVICE_URL | http://users-service:3006 | URL interna users-service |
 
-**Request (con username):**
-```json
-{
-  "identifier": "testuser",
-  "password": "Test1234!"
-}
-```
-
-**Request (con email):**
-```json
-{
-  "identifier": "test@example.com",
-  "password": "Test1234!"
-}
-```
-
-| Campo        | Tipo   | Obligatorio | Reglas                              |
-|-------------|--------|-------------|-------------------------------------|
-| `identifier` | string | Sí          | Username o email, 3-255 chars       |
-| `password`   | string | Sí          | 1-128 chars                         |
-
-**Response (200):**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "bcbfe4a682747c78d9f051deea3d4d6c9c1d9ef6...",
-  "token_type": "Bearer",
-  "expires_in": 900,
-  "user": {
-    "id": "c192e278-7192-423e-b1e8-90a544577f04",
-    "username": "testuser",
-    "email": "test@example.com",
-    "display_name": "Test User"
-  }
-}
-```
-
-**Error — credenciales inválidas (401):**
-```json
-{
-  "statusCode": 401,
-  "message": "Credenciales inválidas"
-}
-```
-
-**Error — cuenta bloqueada tras 5 intentos fallidos (403):**
-```json
-{
-  "statusCode": 403,
-  "message": "Cuenta bloqueada temporalmente. Inténtalo más tarde"
-}
-```
-
----
-
-### POST /auth/refresh — Renovar access token
-
-**Request:**
-```json
-{
-  "refresh_token": "bcbfe4a682747c78d9f051deea3d4d6c9c1d9ef6..."
-}
-```
-
-| Campo           | Tipo   | Obligatorio | Reglas               |
-|----------------|--------|-------------|----------------------|
-| `refresh_token` | string | Sí          | Token no vacío       |
-
-**Response (200):**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "d453c50447805f173e9acfc387074f57819fa721...",
-  "token_type": "Bearer",
-  "expires_in": 900,
-  "user": {
-    "id": "c192e278-7192-423e-b1e8-90a544577f04",
-    "username": "testuser",
-    "email": "test@example.com",
-    "display_name": "Test User"
-  }
-}
-```
-
-> **Nota:** El refresh token anterior se revoca automáticamente y se genera uno nuevo (rotación de tokens).
-
-**Error — token expirado o inválido (401):**
-```json
-{
-  "statusCode": 401,
-  "message": "Refresh token inválido"
-}
-```
-
----
-
-### POST /auth/logout — Cerrar sesión
-
-**Request:**
-```json
-{
-  "refresh_token": "bcbfe4a682747c78d9f051deea3d4d6c9c1d9ef6..."
-}
-```
-
-| Campo           | Tipo   | Obligatorio | Reglas               |
-|----------------|--------|-------------|----------------------|
-| `refresh_token` | string | Sí          | Token no vacío       |
-
-**Response (200):**
-```json
-{
-  "message": "Sesión cerrada correctamente"
-}
-```
-
----
-
-### POST /auth/validate — Validar access token (uso interno del gateway)
-
-**Request:**
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-| Campo          | Tipo   | Obligatorio | Reglas               |
-|---------------|--------|-------------|----------------------|
-| `access_token` | string | Sí          | JWT válido           |
-
-**Response (200):**
-```json
-{
-  "valid": true,
-  "payload": {
-    "sub": "c192e278-7192-423e-b1e8-90a544577f04",
-    "username": "testuser",
-    "email": "test@example.com",
-    "iat": 1772558879,
-    "exp": 1772559779
-  }
-}
-```
-
-**Error — token inválido o expirado (401):**
-```json
-{
-  "statusCode": 401,
-  "message": "Token expirado"
-}
-```
-
----
-
-### GET /health — Health check
-
-**Response (200):**
-```json
-{
-  "status": "ok",
-  "database": "connected",
-  "timestamp": "2026-03-03T17:25:57.000Z"
-}
-```
-
----
-
-## Variables de entorno
-| Variable     | Default              | Descripción              |
-|-------------|----------------------|--------------------------|
-| PORT        | 3003                 | Puerto del servicio      |
-| DB_HOST     | auth-db              | Host de PostgreSQL       |
-| DB_PORT     | 5432                 | Puerto de PostgreSQL     |
-| DB_USERNAME | auth_user            | Usuario de PostgreSQL    |
-| DB_PASSWORD | auth_password        | Contraseña de PostgreSQL |
-| DB_DATABASE | auth_db              | Nombre de la BBDD        |
-| JWT_SECRET  | (requerido en prod)  | Secreto para firmar JWT  |
-| NODE_ENV    | development          | Entorno de ejecución     |
+## Checklist rapido de pruebas
+1. `GET http://localhost:3003/health`
+2. `GET http://localhost:3006/health`
+3. `POST /api/auth/register`
+4. `POST /api/auth/login`
+5. `POST /api/auth/refresh`
+6. `POST /api/auth/logout`
+7. `GET /api/auth/42/login`

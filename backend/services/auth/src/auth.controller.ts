@@ -28,7 +28,7 @@ import {
 	HttpException,
 	Query,
 } from '@nestjs/common';
-import { AuthService, ConflictError, UnauthorizedError, ForbiddenError } from './auth.service';
+import { AuthService, ConflictError, UnauthorizedError, ForbiddenError, TokenPayload } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -116,7 +116,7 @@ export class AuthController {
 	 */
 	@Post('auth/validate')
 	@HttpCode(HttpStatus.OK)
-	async validateToken(@Body('access_token') accessToken: string) {
+	async validateToken(@Body('access_token') accessToken: string): Promise<{ valid: boolean; payload: TokenPayload }> {
 		try {
 			const payload = await this.authService.validateToken(accessToken);
 			return { valid: true, payload };

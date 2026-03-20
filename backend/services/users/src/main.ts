@@ -14,8 +14,9 @@ async function bootstrap() {
 	const port = parseInt(process.env.PORT || '3006', 10);
 	await app.listen(port, '0.0.0.0');
 
-	console.log(`👤 Users Microservice HTTP listening on port ${port}`);
-	console.log(`📊 Prometheus metrics available at http://localhost:${port}/metrics`);
+	console.log(`Users Microservice HTTP listening on port ${port}`);
+	console.log(`Prometheus metrics available at http://localhost:${port}/metrics`);
+	console.log(`Health check available at http://localhost:${port}/health`);
 }
 
 bootstrap();

@@ -18,6 +18,7 @@ async function bootstrap() {
 
 	console.log(`Chat Microservice HTTP/WS listening on port ${port}`);
 	console.log(`Prometheus metrics available at http://localhost:${port}/metrics`);
+	console.log(`Health check available at http://localhost:${port}/health`);
 }
 
 void bootstrap();

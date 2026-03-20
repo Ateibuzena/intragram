@@ -13,7 +13,6 @@ Cliente (Frontend)
       │
       ├──► Auth Service      (puerto 3003) ──► PostgreSQL
       ├──► Chat Service      (puerto 3004)
-      ├──► Example Service   (puerto 3005)
       └──► Nuevo Servicio    (puerto 300X)
 ```
 
@@ -37,9 +36,9 @@ Asignar un **puerto único** al servicio (ej: `3006`). Los puertos actuales son:
 |-----------------|--------|
 | Gateway         | 3000   |
 | Grafana         | 3001   |
+| Chat Service    | 3002   |
 | Auth Service    | 3003   |
-| Chat Service    | 3004   |
-| Example Service | 3005   |
+| Users Service   | 3006   |
 
 ### 2. Registrar la URL en el Gateway
 

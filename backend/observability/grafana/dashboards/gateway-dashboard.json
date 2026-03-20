@@ -4,13 +4,14 @@
 		"list": []
 	},
 	"editable": true,
+	"uid": "gateway-service-observability",
 	"panels": [
 		{
 			"type": "timeseries",
 			"title": "HTTP Request Duration (p95)",
 			"targets": [
 				{
-					"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))",
+					"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{instance=\"gateway:3000\"}[1m])) by (le))",
 					"legendFormat": "p95 latency"
 				}
 			],
@@ -26,7 +27,7 @@
 			"title": "Total Requests",
 			"targets": [
 				{
-					"expr": "sum(request_count_total)",
+					"expr": "sum(request_count_total{instance=\"gateway:3000\"})",
 					"legendFormat": "requests"
 				}
 			],
@@ -42,7 +43,7 @@
 			"title": "Active Users",
 			"targets": [
 				{
-					"expr": "active_users",
+					"expr": "active_users{instance=\"gateway:3000\"}",
 					"legendFormat": "users"
 				}
 			],

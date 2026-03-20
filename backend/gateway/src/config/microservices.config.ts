@@ -16,11 +16,6 @@ export const SERVICE_URLS = {
 	),
 	chat: normalizeUrl(
 		process.env.CHAT_SERVICE_URL ||
-			`http://${process.env.CHAT_SERVICE_HOST || 'chat-service'}:${process.env.CHAT_SERVICE_PORT || '3004'}`,
-	),
-	example: normalizeUrl(
-		process.env.EXAMPLE_SERVICE_URL ||
-		process.env.EXAMPLE_URL ||
-			`http://${process.env.EXAMPLE_SERVICE_HOST || 'example-service'}:${process.env.EXAMPLE_SERVICE_PORT || '3005'}`,
+			`http://${process.env.CHAT_SERVICE_HOST || 'chat-service'}:${process.env.CHAT_SERVICE_PORT || '3009'}`,
 	),
 };

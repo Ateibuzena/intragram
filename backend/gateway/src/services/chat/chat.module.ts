@@ -1,6 +1,11 @@
-/**
- * Módulo de Chat del Gateway
- * Configura la integración del gateway con el microservicio de chat
- * Define la integración HTTP para comunicación con el servicio Chat
- * Importa ChatController y ChatService
- */
+import { Module } from '@nestjs/common';
+import { ChatController } from './chat.controller';
+import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
+
+@Module({
+	controllers: [ChatController],
+	providers: [ChatService, ChatGateway],
+	exports: [ChatService],
+})
+export class ChatModule {}

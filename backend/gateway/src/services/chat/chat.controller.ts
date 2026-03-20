@@ -1,8 +1,12 @@
-/**
- * Controlador de Chat
- * Define los endpoints del API Gateway relacionados con mensajería:
- * - POST /chat/send - Enviar mensaje
- * - GET /chat/conversations - Listar conversaciones
- * - GET /chat/messages/:id - Obtener mensajes de una conversación
- * Delega las peticiones al microservicio de chat
- */
+import { Controller, Get } from '@nestjs/common';
+import { ChatService } from './chat.service';
+
+@Controller('chat')
+export class ChatController {
+	constructor(private readonly chatService: ChatService) {}
+
+	@Get('health')
+	getHealth() {
+		return this.chatService.getBridgeStatus();
+	}
+}

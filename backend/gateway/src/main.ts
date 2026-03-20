@@ -22,5 +22,10 @@ async function bootstrap() {
 
 	await app.listen(process.env.PORT ?? 3000);
 	console.log(`🚀 Gateway is running on http://localhost:${process.env.PORT ?? 3000}`);
+
+	app.enableCors({
+		origin: ['https://localhost:8443'],
+		credentials: true,
+	});
 }
 bootstrap();

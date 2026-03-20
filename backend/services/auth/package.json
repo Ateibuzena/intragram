@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "start:dev": "ts-node -r dotenv/config src/main.ts",
-    "start:watch": "nodemon --watch src --exec 'ts-node -r dotenv/config src/main.ts'"
+		"start:dev": "ts-node -r dotenv/config src/main.ts",
+		"start:watch": "nodemon --watch src --exec 'ts-node -r dotenv/config src/main.ts'"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

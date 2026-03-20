@@ -1,15 +1,25 @@
 services:
-  # ===========================================
-  # HERRAMIENTAS DE MONITOREO (OPCIONAL)
-  # ===========================================
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    networks:
+      - frontend-net
+    restart: unless-stopped
+
+  # ==============================
+  # MONITOREO (OPCIONAL)
+  # ==============================
   prometheus:
     container_name: prometheus
     build:
-        context: ./backend/observability/prometheus
-        dockerfile: Dockerfile
+      context: ./backend/observability/prometheus
+      dockerfile: Dockerfile
     networks:
-        - backend-net
-        - service-net
+      - backend-net
+      - service-net
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --web.external-url=https://localhost:8443/prometheus/
@@ -19,36 +29,43 @@ services:
   grafana:
     container_name: grafana
     build:
-        context: ./backend/observability/grafana
-        dockerfile: Dockerfile
+      context: ./backend/observability/grafana
+      dockerfile: Dockerfile
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-provisioning:/etc/grafana/provisioning
     environment:
+      GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
-      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
+      GF_SERVER_ROOT_URL: /grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 10s
+      retries: 5
     depends_on:
-        - prometheus
+      - prometheus
     networks:
-        - backend-net
-        - service-net
+      - backend-net
+      - service-net
     restart: unless-stopped
 
-  # ===========================================
+  # ==============================
   # BASES DE DATOS
-  # ===========================================
-
+  # ==============================
   auth-db:
     container_name: auth-db
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${AUTH_DB_USER:-auth_user}
-      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-auth_password}
-      POSTGRES_DB: ${AUTH_DB_NAME:-auth_db}
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
     volumes:
       - auth-db-data:/var/lib/postgresql/data
     networks:
       - service-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-auth_user} -d ${AUTH_DB_NAME:-auth_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,24 +76,71 @@ services:
     container_name: users-db
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${USERS_DB_USER:-users_user}
-      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD:-users_password}
-      POSTGRES_DB: ${USERS_DB_NAME:-users_db}
+      POSTGRES_USER: ${USERS_DB_USER}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+      POSTGRES_DB: ${USERS_DB_NAME}
     volumes:
       - users-db-data:/var/lib/postgresql/data
     networks:
       - service-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${USERS_DB_USER:-users_user} -d ${USERS_DB_NAME:-users_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${USERS_DB_USER} -d ${USERS_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     restart: unless-stopped
 
-  # ===========================================
+  chat-db:
+    container_name: chat-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${CHAT_DB_USER}
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+      POSTGRES_DB: ${CHAT_DB_NAME}
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CHAT_DB_USER} -d ${CHAT_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ==============================
   # MICROSERVICIOS
-  # ===========================================
+  # ==============================
+  chat-service:
+    container_name: chat-service
+    build:
+      context: ./backend/services/chat
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: chat-db
+      DB_PORT: 5432
+      DB_USERNAME: ${CHAT_DB_USER}
+      DB_PASSWORD: ${CHAT_DB_PASSWORD}
+      DB_DATABASE: ${CHAT_DB_NAME}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL}
+    volumes:
+      - ./backend/services/chat/src:/app/src
+      - /app/node_modules
+    networks:
+      - service-net
+    depends_on:
+      chat-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://chat-service:3009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
   auth-service:
     container_name: auth-service
@@ -84,17 +148,17 @@ services:
       context: ./backend/services/auth
       dockerfile: Dockerfile.dev
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      NODE_ENV: ${NODE_ENV}
+      JWT_SECRET: ${JWT_SECRET}
       OAUTH_42_CLIENT_ID: ${OAUTH_42_CLIENT_ID}
       OAUTH_42_CLIENT_SECRET: ${OAUTH_42_CLIENT_SECRET}
-      OAUTH_42_REDIRECT_URI: ${OAUTH_42_REDIRECT_URI:-https://localhost:8443/api/auth/42/callback}
+      OAUTH_42_REDIRECT_URI: ${OAUTH_42_REDIRECT_URI}
       DB_HOST: auth-db
       DB_PORT: 5432
-      DB_USERNAME: ${AUTH_DB_USER:-auth_user}
-      DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_password}
-      DB_DATABASE: ${AUTH_DB_NAME:-auth_db}
-      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-http://users-service:3006}
+      DB_USERNAME: ${AUTH_DB_USER}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      DB_DATABASE: ${AUTH_DB_NAME}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL}
     volumes:
       - ./backend/services/auth/src:/app/src
       - /app/node_modules
@@ -118,12 +182,12 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       PORT: 3006
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: ${NODE_ENV}
       DB_HOST: users-db
       DB_PORT: 5432
-      DB_USERNAME: ${USERS_DB_USER:-users_user}
-      DB_PASSWORD: ${USERS_DB_PASSWORD:-users_password}
-      DB_DATABASE: ${USERS_DB_NAME:-users_db}
+      DB_USERNAME: ${USERS_DB_USER}
+      DB_PASSWORD: ${USERS_DB_PASSWORD}
+      DB_DATABASE: ${USERS_DB_NAME}
     volumes:
       - ./backend/services/users/src:/app/src
       - /app/node_modules
@@ -140,53 +204,25 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  example-service:
-    container_name: example-service
-    build:
-      context: ./backend/services/example
-      dockerfile: Dockerfile.dev
-    environment:
-      SERVICE_URL: ${EXAMPLE_SERVICE_URL:-http://example-service:3005}
-    volumes:
-      - ./backend/services/example/src:/app/src
-      - /app/node_modules
-    networks:
-      - service-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://example-service:3005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-
-  # ===========================================
-  # API GATEWAY
-  # ===========================================
-
+  # ==============================
+  # API GATEWAY (solo interno)
+  # ==============================
   gateway:
     container_name: gateway
     build:
       context: ./backend/gateway
       dockerfile: Dockerfile.dev
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${GATEWAY_PORT:-3000}
-    
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${GATEWAY_PORT}
       JWT_SECRET: ${JWT_SECRET}
-      # CORS
       CORS_ORIGIN: ${CORS_ORIGIN}
-      # Rate limiting
       RATE_LIMIT_TTL: ${RATE_LIMIT_TTL}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
-
-      # URLs de microservicios internos (usar nombre de servicio Docker)
-      EXAMPLE_SERVICE_URL: ${EXAMPLE_SERVICE_URL:-http://example-service:3005}
-      GRAFANA_URL: ${GRAFANA_URL:-http://grafana:3001}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://auth-service:3003}
-      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-http://users-service:3006}
-      CHAT_SERVICE_URL: ${CHAT_SERVICE_URL:-http://chat-service:3004}
-
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL}
+      CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
+      GRAFANA_URL: ${GRAFANA_URL}
     volumes:
       - ./backend/gateway/src:/app/src
       - /app/node_modules
@@ -194,9 +230,9 @@ services:
       - backend-net
       - service-net
     depends_on:
-      - example-service
       - auth-service
       - users-service
+      - chat-service
       - grafana
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/test"]
@@ -206,23 +242,24 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # ===========================================
-  # NGINX - REVERSE PROXY
-  # ===========================================
-
+  # ==============================
+  # NGINX - PUNTO DE ENTRADA ABSOLUTO
+  # ==============================
   nginx:
     container_name: nginx
     build:
       context: ./backend/nginx
       dockerfile: Dockerfile
     ports:
-      - "${NGINX_HTTPS_PORT:-8443}:443"
+      - "${NGINX_HTTPS_PORT}:443"
     volumes:
       - ./backend/nginx/config/nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx-logs:/var/log/nginx
     networks:
       - backend-net
+      - frontend-net
     depends_on:
+      - frontend
       - gateway
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -231,26 +268,24 @@ services:
       retries: 3
     restart: unless-stopped
 
-# ===========================================
+# ==============================
 # REDES
-# ===========================================
-
+# ==============================
 networks:
   backend-net:
     driver: bridge
-    name: backend-net
   service-net:
     driver: bridge
-    name: service-net
+  frontend-net:
+    driver: bridge
 
-# ===========================================
-# VOLÚMENES PERSISTENTES
-# ===========================================
-
+# ==============================
+# VOLUMENES PERSISTENTES
+# ==============================
 volumes:
-  nginx-logs:
-    name: nginx-logs
   auth-db-data:
-    name: auth-db-data
   users-db-data:
-    name: users-db-data
+  chat-db-data:
+  grafana-data:
+  grafana-provisioning:
+  nginx-logs:

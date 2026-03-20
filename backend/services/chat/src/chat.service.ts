@@ -10,41 +10,34 @@ export type StoredChatMessage = {
 @Injectable()
 export class ChatService {
 	private readonly conversations = new Map<string, StoredChatMessage[]>();
-	private readonly clientSockets = new Map<string, Set<string>>();
-	private readonly socketClients = new Map<string, string>();
+	private readonly userToSockets = new Map<string, Set<string>>();
+	private readonly socketToUser = new Map<string, string>();
 
-	registerSocket(clientId: string, socketId: string): void {
-		this.socketClients.set(socketId, clientId);
-
-		const currentSockets = this.clientSockets.get(clientId) ?? new Set<string>();
-		currentSockets.add(socketId);
-		this.clientSockets.set(clientId, currentSockets);
+	registerSocket(userId: string, socketId: string): void {
+		this.socketToUser.set(socketId, userId);
+		const sockets = this.userToSockets.get(userId) ?? new Set<string>();
+		sockets.add(socketId);
+		this.userToSockets.set(userId, sockets);
 	}
 
 	unregisterSocket(socketId: string): void {
-		const clientId = this.socketClients.get(socketId);
-		if (!clientId) {
-			return;
-		}
+		const userId = this.socketToUser.get(socketId);
+		if (!userId) return;
 
-		this.socketClients.delete(socketId);
-		const sockets = this.clientSockets.get(clientId);
-		if (!sockets) {
-			return;
-		}
+		this.socketToUser.delete(socketId);
+		const sockets = this.userToSockets.get(userId);
+		if (!sockets) return;
 
 		sockets.delete(socketId);
-		if (sockets.size === 0) {
-			this.clientSockets.delete(clientId);
-		}
+		if (!sockets.size) this.userToSockets.delete(userId);
+	}
+
+	getSocketsForUser(userId: string): string[] {
+		return [...(this.userToSockets.get(userId) ?? [])];
 	}
 
 	getConnectedUsers(): string[] {
-		return [...this.clientSockets.keys()];
-	}
-
-	getSocketsForClient(clientId: string): string[] {
-		return [...(this.clientSockets.get(clientId) ?? new Set<string>())];
+		return [...this.userToSockets.keys()];
 	}
 
 	getPairKey(userA: string, userB: string): string {

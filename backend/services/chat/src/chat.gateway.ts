@@ -1,6 +1,7 @@
 import {
 	ConnectedSocket,
 	MessageBody,
+	OnGatewayConnection,
 	OnGatewayDisconnect,
 	SubscribeMessage,
 	WebSocketGateway,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { ChatService } from './chat.service';
+import { AuthService } from '../../auth/src/auth.service'; // ruta exacta a tu auth.service.ts
 
 type RegisterPayload = {
 	clientId: string;
@@ -33,26 +35,39 @@ type SendMessagePayload = {
 })
 export class ChatGateway implements OnGatewayDisconnect {
 	@WebSocketServer()
-	private readonly server!: Server;
+	private readonly server: Server;
 
-	constructor(private readonly chatService: ChatService) {}
+	constructor(
+		private readonly chatService: ChatService,
+		private readonly authService: AuthService
+	) {}
 
-	handleDisconnect(client: Socket): void {
-		this.chatService.unregisterSocket(client.id);
-		this.broadcastUsers();
-	}
-
-	@SubscribeMessage('register')
-	handleRegister(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() payload: RegisterPayload,
-	): void {
-		if (!payload?.clientId?.trim()) {
+	async handleConnection(client: Socket): Promise<void> {
+		const token = client.handshake.auth.token;
+		if (!token) {
+			console.warn('Conexión sin token, desconectando socket:', client.id);
+			client.disconnect(true);
 			return;
 		}
 
-		this.chatService.registerSocket(payload.clientId.trim(), client.id);
-		this.broadcastUsers();
+		try {
+			// Validar el token y obtener el userId
+			const playload = await this.authService.validateToken(token);
+			const userId = playload.sub;
+
+			// Registrar el socket seguro
+			this.chatService.registerSocket(userId, client.id);
+			console.log(`Usuario ${userId} conectado en socket ${client.id}`);
+		}
+		catch (err) {
+			console.error('Error al verificar el token:', err);
+			client.disconnect(true);
+		}
+	}
+
+	handleDisconnect(client: Socket): void {
+		this.chatService.unregisterSocket(client.id);
+		console.log(`Socket ${client.id} desconectado`);
 	}
 
 	@SubscribeMessage('join_private_chat')
@@ -88,7 +103,7 @@ export class ChatGateway implements OnGatewayDisconnect {
 			payload.message.trim(),
 		);
 
-		const receiverSocketIds = this.chatService.getSocketsForClient(payload.receiver.trim());
+		const receiverSocketIds = this.chatService.getSocketsForUser(payload.receiver.trim());
 		for (const socketId of receiverSocketIds) {
 			this.server.to(socketId).emit('receive_message', {
 				sender: message.sender,
@@ -96,7 +111,7 @@ export class ChatGateway implements OnGatewayDisconnect {
 			});
 		}
 
-		const senderSocketIds = this.chatService.getSocketsForClient(payload.sender.trim());
+		const senderSocketIds = this.chatService.getSocketsForUser(payload.sender.trim());
 		for (const socketId of senderSocketIds) {
 			if (socketId !== client.id) {
 				this.server.to(socketId).emit('receive_message', {

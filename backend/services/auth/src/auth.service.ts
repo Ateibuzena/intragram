@@ -102,8 +102,8 @@ export class AuthService implements OnModuleInit {
 	}
 
 	async onModuleInit() {
-		console.log('🔐 AuthService inicializado correctamente');
-		console.log(`📊 Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
+		console.log('AuthService inicializado correctamente');
+		console.log(`Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
 	}
 
 	// ═══════════════════════════════════════════════
@@ -153,7 +153,7 @@ export class AuthService implements OnModuleInit {
 		});
 
 		const savedUser = await this.userRepo.save(user);
-		console.log(`✅ Usuario registrado: ${savedUser.username} (${savedUser.id})`);
+		console.log(`Usuario registrado: ${savedUser.username} (${savedUser.id})`);
 
 		// Generar tokens
 		return this.generateAuthResponse(savedUser, ip, userAgent);
@@ -220,7 +220,7 @@ export class AuthService implements OnModuleInit {
 		// Login exitoso: resetear intentos fallidos
 		await this.handleSuccessfulLogin(user);
 
-		console.log(`✅ Login exitoso: ${user.username} (${user.id})`);
+		console.log(`Login exitoso: ${user.username} (${user.id})`);
 
 		return this.generateAuthResponse(user, ip, userAgent);
 	}
@@ -302,7 +302,7 @@ export class AuthService implements OnModuleInit {
 			{ is_revoked: true },
 		);
 
-		console.log(`🔒 Todas las sesiones revocadas para usuario: ${userId}`);
+		console.log(`Todas las sesiones revocadas para usuario: ${userId}`);
 		return { message: 'Todas las sesiones cerradas correctamente' };
 	}
 
@@ -435,7 +435,7 @@ export class AuthService implements OnModuleInit {
 			lockUntil.setMinutes(lockUntil.getMinutes() + LOCKOUT_DURATION_MINUTES);
 			updateData.locked_until = lockUntil;
 
-			console.log(`🔒 Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
+			console.log(`Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
 		}
 
 		await this.userRepo.update(user.id, updateData);
@@ -474,7 +474,7 @@ export class AuthService implements OnModuleInit {
 
 		const deleted = result.affected || 0;
 		if (deleted > 0) {
-			console.log(`🧹 ${deleted} tokens expirados/revocados eliminados`);
+			console.log(`${deleted} tokens expirados/revocados eliminados`);
 		}
 		return deleted;
 	}
@@ -551,13 +551,13 @@ export class AuthService implements OnModuleInit {
 				locked_until: null,
 			} as UserEntity;
 
-			console.log(`✅ Login OAuth 42 exitoso: ${user.username} (${user.id})`);
+			console.log(`Login OAuth 42 exitoso: ${user.username} (${user.id})`);
 
 
 			// 4. Generar tokens propios
 			return this.generateAuthResponse(user, ip, userAgent);
 		} catch (error: any) {
-			console.error('❌ Error en OAuth 42:', error.response?.data || error.message);
+			console.error('Error en OAuth 42:', error.response?.data || error.message);
 			throw new UnauthorizedError('Error al autenticar con 42');
 		}
 	}

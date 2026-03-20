@@ -198,7 +198,7 @@ export class AuthController {
 		}
 
 		// Error inesperado - log interno, respuesta genérica
-		console.error('❌ Error interno no manejado:', error);
+		console.error('Error interno no manejado:', error);
 		throw new HttpException(
 			{ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error interno del servidor' },
 			HttpStatus.INTERNAL_SERVER_ERROR,

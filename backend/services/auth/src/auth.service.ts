@@ -346,7 +346,7 @@ export class AuthService implements OnModuleInit {
 	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
 		try {
 			// Verificar conexión a la BBDD
-			await this.userRepo.query('SELECT 1');
+			await this.userRepo.query('SELECT 4');
 			return {
 				status: 'ok',
 				database: 'connected',

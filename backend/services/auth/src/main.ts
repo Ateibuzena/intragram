@@ -7,6 +7,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AuthModule } from './auth.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AuthModule);
@@ -20,6 +21,8 @@ async function bootstrap() {
 			enableImplicitConversion: false, // No convertir tipos implícitamente
 		},
 	}));
+
+	app.use(cookieParser()); // Para manejar cookies (access token)
 
 	const port = parseInt(process.env.PORT || '3003', 10);
 	await app.listen(port, '0.0.0.0');

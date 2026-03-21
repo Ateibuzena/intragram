@@ -28,10 +28,12 @@ import {
 	HttpException,
 	Query,
 } from '@nestjs/common';
-import { AuthService, ConflictError, UnauthorizedError, ForbiddenError, TokenPayload } from './auth.service';
+import { AuthResponse, AuthService, ConflictError, UnauthorizedError, ForbiddenError, TokenPayload } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { Res } from '@nestjs/common';
+import { Response } from 'express';
 
 @Controller()
 export class AuthController {
@@ -43,13 +45,28 @@ export class AuthController {
 	 */
 	@Post('auth/register')
 	@HttpCode(HttpStatus.CREATED)
-	async register(
-		@Body() registerDto: RegisterDto,
+	async register(@Body() registerDto: RegisterDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+		@Res({ passthrough: true }) res: Response): Promise<{ user: AuthResponse['user']; message: string }>
+	{
 		try {
-			return await this.authService.register(registerDto, ip, userAgent);
+			const data: AuthResponse = await this.authService.register(registerDto, ip, userAgent);
+			res.cookie('access_token', data.access_token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'strict',
+				maxAge: 15 * 60 * 1000, // 15 minutos
+			});
+
+			res.cookie('refresh_token', data.refresh_token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'strict',
+				maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+			});
+
+			return { user: data.user, message: 'User registered successfully' };
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -65,7 +82,7 @@ export class AuthController {
 		@Body() loginDto: LoginDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
 		} catch (error) {
@@ -83,7 +100,7 @@ export class AuthController {
 		@Body() refreshTokenDto: RefreshTokenDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.refreshToken(
 				refreshTokenDto.refresh_token,
@@ -101,7 +118,7 @@ export class AuthController {
 	 */
 	@Post('auth/logout')
 	@HttpCode(HttpStatus.OK)
-	async logout(@Body() refreshTokenDto: RefreshTokenDto) {
+	async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ message: string }> {
 		try {
 			return await this.authService.logout(refreshTokenDto.refresh_token);
 		} catch (error) {
@@ -119,7 +136,9 @@ export class AuthController {
 	async validateToken(@Body('access_token') accessToken: string): Promise<{ valid: boolean; payload: TokenPayload }> {
 		try {
 			const payload = await this.authService.validateToken(accessToken);
-			return { valid: true, payload };
+			return { 
+				valid: true,
+				payload };
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -148,7 +167,7 @@ export class AuthController {
 		@Query('code') code: string,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		if (!code) {
 			throw new HttpException(
 				{ statusCode: HttpStatus.BAD_REQUEST, message: 'Código OAuth no proporcionado' },
@@ -169,7 +188,7 @@ export class AuthController {
 	 * Health check para Docker y monitoreo
 	 */
 	@Get('health')
-	async health() {
+	async health(): Promise<{ status: string }> {
 		return this.authService.getHealth();
 	}
 
@@ -196,7 +215,7 @@ export class AuthController {
 				HttpStatus.FORBIDDEN,
 			);
 		}
-
+	
 		// Error inesperado - log interno, respuesta genérica
 		console.error('Error interno no manejado:', error);
 		throw new HttpException(

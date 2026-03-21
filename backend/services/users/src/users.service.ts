@@ -119,7 +119,7 @@ export class UsersService {
 
 	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
 		try {
-			await this.userProfileRepo.query('SELECT 1');
+			await this.userProfileRepo.query('SELECT 3');
 			return {
 				status: 'ok',
 				database: 'connected',

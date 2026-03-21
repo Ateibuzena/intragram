@@ -12,6 +12,11 @@ export default defineConfig({
         ws: true,
         secure: false,
       },
-    },  
+    },
+    hmr: {
+      protocol: 'wss',
+      host: 'localhost',
+      port: 8443,
+    }, 
   },
 })

@@ -10,6 +10,8 @@
 		"start:watch": "ts-node-dev --poll --respawn --transpile-only src/main.ts"
 	},
 	"dependencies": {
+		"cookie-parser": "^1.4.6",
+		"jsonwebtoken": "^9.0.0",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/platform-express": "^11.0.1",

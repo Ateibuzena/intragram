@@ -5,6 +5,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+      - /app/node_modules
     networks:
       - frontend-net
     restart: unless-stopped
@@ -288,3 +291,4 @@ volumes:
   grafana-data:
   grafana-provisioning:
   nginx-logs:
+  frontend-data:

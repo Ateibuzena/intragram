@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { ChatService } from './chat.service';
-import { AuthService } from '../../auth/src/auth.service'; // ruta exacta a tu auth.service.ts
 
 // DTOs para los mensajes entrantes
 type RegisterPayload = {
@@ -49,12 +48,12 @@ export class ChatGateway implements OnGatewayDisconnect {
 
 	// Inyectamos el servicio de chat y el servicio de autenticación para validar tokens y gestionar la lógica de chat
 	constructor(
-		private readonly chatService: ChatService,
-		private readonly authService: AuthService
+		private readonly chatService: ChatService
 	) {}
 
 	// Método que se ejecuta cuando un cliente se conecta al WebSocket
-	async handleConnection(client: Socket): Promise<void> {
+	async handleConnection(client: Socket): Promise<void>
+	{
 		// Extraemos el token del handshake del cliente
 		const token = client.handshake.auth.token;
 		if (!token) {
@@ -65,8 +64,21 @@ export class ChatGateway implements OnGatewayDisconnect {
 
 		try {
 			// Validar el token y obtener el userId
-			const playload = await this.authService.validateToken(token);
-			const userId = playload.sub;
+			const res = await fetch('http://gateway:3000/auth/validate', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`,
+				},
+			});
+
+			const data = await res.json();
+
+			if (!data.valid) {
+				throw new Error('Token inválido');
+			}
+
+			const userId = data.sub;
 
 			// Registrar el socket seguro
 			this.chatService.registerSocket(userId, client.id);
@@ -79,12 +91,12 @@ export class ChatGateway implements OnGatewayDisconnect {
 			}
 
 			// Guardar la expiración del socket (ejemplo: 1 hora)
-			if (playload.exp) {
+			if (data.exp) {
 				// Guardamos la expiración del socket en milisegundos
-				this.socketExpirations.set(client.id, playload.exp * 1000); // convertir a ms
+				this.socketExpirations.set(client.id, data.exp * 1000); // convertir a ms
 
 				// Programar desconexión automática al expirar el token
-				const msUntilExpiration = playload.exp * 1000 - Date.now();
+				const msUntilExpiration = data.exp * 1000 - Date.now();
 				setTimeout(() => {
 					if (this.socketExpirations.has(client.id)) {
 						console.log(`Token expirado para socket ${client.id}, desconectando...`);
@@ -93,9 +105,8 @@ export class ChatGateway implements OnGatewayDisconnect {
 					}
 				}, msUntilExpiration);
 			}
-		}
-		catch (err) {
-			console.error('Error al verificar el token:', err);
+		} catch (err) {
+			console.error('Error al validar el token:', err);
 			client.disconnect(true);
 		}
 	}
@@ -116,10 +127,8 @@ export class ChatGateway implements OnGatewayDisconnect {
 	}
 
 	@SubscribeMessage('join_private_chat')
-	handleJoinPrivateChat(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() payload: JoinPrivateChatPayload,
-	): void {
+	handleJoinPrivateChat(@ConnectedSocket() client: Socket, @MessageBody() payload: JoinPrivateChatPayload): void
+	{
 		if (!payload?.clientId?.trim() || !payload?.peerId?.trim()) {
 			return;
 		}
@@ -134,10 +143,8 @@ export class ChatGateway implements OnGatewayDisconnect {
 	}
 
 	@SubscribeMessage('send_message')
-	async handleSendMessage(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() payload: SendMessagePayload,
-	): Promise<void> {
+	async handleSendMessage( @ConnectedSocket() client: Socket, @MessageBody() payload: SendMessagePayload): Promise<void>
+	{
 		if (!payload?.sender?.trim() || !payload?.receiver?.trim() || !payload?.message?.trim()) {
 			return;
 		}

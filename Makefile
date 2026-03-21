@@ -1,7 +1,6 @@
 .PHONY: all build up down clean fclean re refresh
 
 COMPOSE = docker compose -f docker-compose.yml
-DATA_DIR = /home/azubieta/data
 
 # ---------------------------
 # Main rule: build + up
@@ -38,8 +37,6 @@ clean:
 	-@docker volume rm $$(docker volume ls -q) 2>/dev/null || echo "❎ No volumes to remove."
 	@echo "🌐 Removing custom networks..."
 	-@docker network rm $$(docker network ls -q | grep -vE "bridge|host|none") 2>/dev/null || echo "❎ No custom networks to remove."
-	@echo "🧼 Deleting local data directory..."
-	-@rm -rf $(DATA_DIR) && echo "✅ Data folder deleted." || echo "❎ No data folder to delete."
 	@echo "✨ Clean completed!"
 
 # ---------------------------

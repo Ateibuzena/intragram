@@ -233,7 +233,6 @@ services:
       - auth-service
       - users-service
       - chat-service
-      - grafana
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/test"]
       interval: 30s

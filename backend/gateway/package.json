@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
 		"start:dev": "ts-node -r dotenv/config src/main.ts",
-		"start:watch": "nodemon --watch src --exec 'ts-node -r dotenv/config src/main.ts'"
+		"start:watch": "ts-node-dev --poll --respawn --transpile-only src/main.ts"
     
   },
   "dependencies": {
@@ -32,6 +32,7 @@
     ,"socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "ts-node-dev": "^2.0.0",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",

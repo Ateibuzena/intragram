@@ -7,7 +7,7 @@
 		"build": "tsc",
 		"start": "node dist/main.js",
 		"start:dev": "ts-node -r dotenv/config src/main.ts",
-		"start:watch": "nodemon --watch src --exec 'ts-node -r dotenv/config src/main.ts'"
+		"start:watch": "ts-node-dev --poll --respawn --transpile-only src/main.ts"
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.0.1",
@@ -25,6 +25,7 @@
 		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
+    "ts-node-dev": "^2.0.0",
 		"@types/node": "^22.10.7",
 		"nodemon": "^3.0.2",
 		"ts-node": "^10.9.2",

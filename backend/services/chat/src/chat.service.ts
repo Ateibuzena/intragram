@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
 
 export type StoredChatMessage = {
 	sender: string;
@@ -7,8 +8,36 @@ export type StoredChatMessage = {
 	timestamp: string;
 };
 
+export interface TokenPayload {
+	sub: string;    // user id
+	username: string;
+	email: string;
+	iat?: number;
+	exp?: number;
+}
+
 @Injectable()
 export class ChatService {
+
+	private readonly jwtSecret: string;
+
+	constructor() {
+		// JWT secret desde variable de entorno (obligatorio en producción)
+		this.jwtSecret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+		if (!process.env.JWT_SECRET) {
+			console.warn('⚠️  WARNING: JWT_SECRET is not set. Using default secret. This should be changed in production!');
+		}
+	}
+	// Funcion para validar el token de autenticación (placeholder, implementar según tu lógica de auth)
+	validateToken(token: string): any 
+	{
+		const payload = jwt.verify(token, this.jwtSecret) as TokenPayload;
+		console.log("Payload del token validado:", payload);
+		if (payload && typeof payload === 'object' && 'sub' in payload) {
+			return payload ;
+		}
+		return null;
+	}
 
 	// Mapa para almacenar las conversaciones entre pares de usuarios. La clave es una combinación ordenada de los IDs de los usuarios (e.g., "userA_userB").
 	private readonly conversations = new Map<string, StoredChatMessage[]>();

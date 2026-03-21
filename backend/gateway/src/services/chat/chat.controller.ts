@@ -5,6 +5,7 @@ import { ChatService } from './chat.service';
 export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
 
+	
 	@Get('health')
 	getHealth() {
 		return this.chatService.getBridgeStatus();

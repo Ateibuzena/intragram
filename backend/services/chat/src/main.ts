@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ChatModule } from './chat.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
 	const app = await NestFactory.create(ChatModule);
@@ -12,6 +13,8 @@ async function bootstrap() {
 			transform: true,
 		}),
 	);
+
+	app.use(cookieParser()); // Para manejar cookies (access token)
 
 	const port = parseInt(process.env.PORT || '3009', 10);
 	await app.listen(port, '0.0.0.0');

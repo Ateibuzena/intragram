@@ -9,8 +9,8 @@ export default function Register() {
     const [isAuth, setIsAuth] = useState<boolean | null>(null);
 
     const userData = {
-        username: "usuari",
-        email: "usuar@example.com",
+        username: "usuario",
+        email: "usuario@example.com",
         password: "Password1@",
         display_name: "Usuario Ejemplo"
     };

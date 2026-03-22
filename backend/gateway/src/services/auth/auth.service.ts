@@ -12,9 +12,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { SERVICE_URLS } from '../../config/microservices.config';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { IAuthResponse } from './interfaces/auth-service.interface';
+import { LoginDto, RegisterDto, AuthResponse, TokenValidationResult } from '@intragram/shared';
 
 @Injectable()
 export class AuthService {
@@ -26,10 +24,10 @@ export class AuthService {
 	 * Registrar un nuevo usuario
 	 * Reenvía la petición al microservicio de autenticación
 	 */
-	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.post<IAuthResponse>(
+				this.httpService.post<AuthResponse>(
 					`${this.authBaseUrl}/auth/register`,
 					registerDto,
 					{
@@ -50,10 +48,10 @@ export class AuthService {
 	/**
 	 * Iniciar sesión
 	 */
-	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.post<IAuthResponse>(
+				this.httpService.post<AuthResponse>(
 					`${this.authBaseUrl}/auth/login`,
 					loginDto,
 					{
@@ -74,10 +72,10 @@ export class AuthService {
 	/**
 	 * Renovar access token con refresh token
 	 */
-	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.post<IAuthResponse>(
+				this.httpService.post<AuthResponse>(
 					`${this.authBaseUrl}/auth/refresh`,
 					{ refresh_token: refreshToken },
 					{
@@ -116,10 +114,10 @@ export class AuthService {
 	/**
 	 * Validar un access token (para uso interno - guards)
 	 */
-	async validateToken(accessToken: string): Promise<{ valid: boolean; payload: any }> {
+	async validateToken(accessToken: string): Promise<TokenValidationResult> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.post<{ valid: boolean; payload: any }>(
+				this.httpService.post<TokenValidationResult>(
 					`${this.authBaseUrl}/auth/validate`,
 					{ access_token: accessToken },
 					{ timeout: 5000 },
@@ -151,10 +149,10 @@ export class AuthService {
 	/**
 	 * Manejar callback de OAuth 42
 	 */
-	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<IAuthResponse> {
+	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.get<IAuthResponse>(
+				this.httpService.get<AuthResponse>(
 					`${this.authBaseUrl}/auth/42/callback`,
 					{
 						params: { code },

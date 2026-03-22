@@ -28,10 +28,8 @@ import {
 	HttpException,
 	Query,
 } from '@nestjs/common';
-import { AuthResponse, AuthService, ConflictError, UnauthorizedError, ForbiddenError, TokenPayload } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthService, ConflictError, UnauthorizedError, ForbiddenError } from './auth.service';
+import { AuthResponse, LoginDto, RegisterDto, RefreshTokenDto, TokenValidationResult } from '@intragram/shared';
 import { Res } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -50,6 +48,7 @@ export class AuthController {
 		@Headers('user-agent') userAgent: string,
 		@Res({ passthrough: true }) res: Response): Promise<{ user: AuthResponse['user']; message: string }>
 	{
+		console.log("Received registration request with data:", registerDto);
 		try {
 			const data: AuthResponse = await this.authService.register(registerDto, ip, userAgent);
 			res.cookie('access_token', data.access_token, {
@@ -83,6 +82,7 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
+		console.log("Received login request with data:", loginDto);
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
 		} catch (error) {
@@ -101,6 +101,7 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
+		console.log("Received token refresh request with data:", refreshTokenDto);
 		try {
 			return await this.authService.refreshToken(
 				refreshTokenDto.refresh_token,
@@ -119,6 +120,7 @@ export class AuthController {
 	@Post('auth/logout')
 	@HttpCode(HttpStatus.OK)
 	async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ message: string }> {
+		console.log("Received logout request with data:", refreshTokenDto);
 		try {
 			return await this.authService.logout(refreshTokenDto.refresh_token);
 		} catch (error) {
@@ -133,10 +135,11 @@ export class AuthController {
 	 */
 	@Post('auth/validate')
 	@HttpCode(HttpStatus.OK)
-	async validateToken(@Body('access_token') accessToken: string): Promise<{ valid: boolean; payload: TokenPayload }> {
+	async validateToken(@Body('access_token') accessToken: string): Promise<TokenValidationResult> {
+		console.log("Received token validation request with data:", accessToken);
 		try {
 			const payload = await this.authService.validateToken(accessToken);
-			return { 
+			return {
 				valid: true,
 				payload };
 		} catch (error) {
@@ -149,6 +152,7 @@ export class AuthController {
  */
 	@Get('auth/42')
 	oauth42Login() {
+		console.log("Received OAuth 42 login request");
 		try {
 			const authUrl = this.authService.getOAuth42AuthUrl();
 			return { url: authUrl };
@@ -168,6 +172,7 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
+		console.log("Received OAuth 42 callback request with data:", code);
 		if (!code) {
 			throw new HttpException(
 				{ statusCode: HttpStatus.BAD_REQUEST, message: 'Código OAuth no proporcionado' },
@@ -189,6 +194,7 @@ export class AuthController {
 	 */
 	@Get('health')
 	async health(): Promise<{ status: string }> {
+		console.log("Received health check request");
 		return this.authService.getHealth();
 	}
 

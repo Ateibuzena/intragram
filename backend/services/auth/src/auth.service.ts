@@ -46,8 +46,7 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
 import axios from 'axios';
 
 // ─── Constantes de seguridad ───────────────────────
@@ -61,27 +60,6 @@ const LOCKOUT_DURATION_MINUTES = 15;
 const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
-
-export interface TokenPayload {
-	sub: string;    // user id
-	username: string;
-	email: string;
-	iat?: number;
-	exp?: number;
-}
-
-export interface AuthResponse {
-	access_token: string;
-	refresh_token: string;
-	token_type: string;
-	expires_in: number;
-	user: {
-		id: string;
-		username: string;
-		email: string;
-		display_name: string | null;
-	};
-}
 
 @Injectable()
 export class AuthService implements OnModuleInit {

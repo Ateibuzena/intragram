@@ -22,9 +22,7 @@ import {
 	Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { IAuthResponse } from './interfaces/auth-service.interface';
+import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse } from '@intragram/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -40,7 +38,9 @@ export class AuthController {
 		@Body() registerDto: RegisterDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
+		console.log("Received registration request with data:", registerDto);
+
 		try {
 			return await this.authService.register(registerDto, ip, userAgent);
 		} catch (error: any) {
@@ -61,7 +61,8 @@ export class AuthController {
 		@Body() loginDto: LoginDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
+		console.log("Received login request with data:", loginDto);
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
 		} catch (error: any) {
@@ -79,12 +80,13 @@ export class AuthController {
 	@Post('refresh')
 	@HttpCode(HttpStatus.OK)
 	async refresh(
-		@Body('refresh_token') refreshToken: string,
+		@Body() refreshTokenDto: RefreshTokenDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
+		console.log("Received token refresh request with data:", refreshTokenDto);
 		try {
-			return await this.authService.refreshToken(refreshToken, ip, userAgent);
+			return await this.authService.refreshToken(refreshTokenDto.refresh_token, ip, userAgent);
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al renovar token',
@@ -100,6 +102,7 @@ export class AuthController {
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
 	async logout(@Body('refresh_token') refreshToken: string) {
+		console.log("Received logout request with data:", refreshToken);
 		try {
 			return await this.authService.logout(refreshToken);
 		} catch (error: any) {
@@ -116,6 +119,7 @@ export class AuthController {
 	 */
 	@Get('42/login')
 	async oauth42Redirect(@Res() res: any) {
+		console.log("Received OAuth 42 login redirect request");
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
 			return res.redirect(url);
@@ -133,6 +137,7 @@ export class AuthController {
  */
 	@Get('42')
 	async oauth42Login(@Res() res: any) {
+		console.log("Received OAuth 42 login request");
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
 			return res.redirect(url); // ← REDIRIGIR en vez de devolver JSON
@@ -154,6 +159,7 @@ export class AuthController {
 		@Headers('user-agent') userAgent: string,
 		@Res() res: any,
 	) {
+		console.log("Received OAuth 42 callback request with data:", code);
 		if (!code) {
 			// Redirigir al frontend con error
 			return res.redirect('http://localhost:5173?error=no_code');

@@ -1,17 +1,6 @@
-/**
- * DTO de Login
- * Define y valida los datos de entrada para inicio de sesión:
- * - identifier: username o email del usuario
- * - password: Contraseña del usuario
- * Incluye validaciones de formato y requerimientos
- */
-
 import { IsString, MinLength, MaxLength } from 'class-validator';
 
 export class LoginDto {
-	/**
-	 * Puede ser username o email
-	 */
 	@IsString({ message: 'El identificador debe ser un texto' })
 	@MinLength(3, { message: 'El identificador debe tener al menos 3 caracteres' })
 	@MaxLength(255, { message: 'El identificador no puede exceder 255 caracteres' })

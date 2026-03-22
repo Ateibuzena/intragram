@@ -1,12 +1,3 @@
-/**
- * DTO de Registro
- * Define y valida los datos de entrada para registro de nuevos usuarios:
- * - email: Correo electrónico único
- * - username: Nombre de usuario único
- * - password: Contraseña con requisitos de seguridad
- * - display_name: Nombre para mostrar (opcional)
- */
-
 import { IsString, IsEmail, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
 
 export class RegisterDto {

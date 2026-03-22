@@ -1,8 +1,3 @@
-/**
- * DTO de Refresh Token
- * Permite renovar el access token usando un refresh token válido
- */
-
 import { IsString, IsNotEmpty } from 'class-validator';
 
 export class RefreshTokenDto {

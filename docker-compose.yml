@@ -148,8 +148,8 @@ services:
   auth-service:
     container_name: auth-service
     build:
-      context: ./backend/services/auth
-      dockerfile: Dockerfile.dev
+      context: ./backend
+      dockerfile: services/auth/Dockerfile.dev
     environment:
       NODE_ENV: ${NODE_ENV}
       JWT_SECRET: ${JWT_SECRET}
@@ -163,7 +163,8 @@ services:
       DB_DATABASE: ${AUTH_DB_NAME}
       USERS_SERVICE_URL: ${USERS_SERVICE_URL}
     volumes:
-      - ./backend/services/auth/src:/app/src
+      - ./backend/services/auth/src:/app/services/auth/src
+      - ./backend/shared:/app/shared
       - /app/node_modules
     networks:
       - service-net
@@ -213,8 +214,8 @@ services:
   gateway:
     container_name: gateway
     build:
-      context: ./backend/gateway
-      dockerfile: Dockerfile.dev
+      context: ./backend
+      dockerfile: gateway/Dockerfile.dev
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: ${GATEWAY_PORT}
@@ -227,7 +228,8 @@ services:
       CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       GRAFANA_URL: ${GRAFANA_URL}
     volumes:
-      - ./backend/gateway/src:/app/src
+      - ./backend/gateway/src:/app/gateway/src
+      - ./backend/shared:/app/shared
       - /app/node_modules
     networks:
       - backend-net

@@ -10,8 +10,9 @@ COPY services/users/package.json ./services/users/package.json
 COPY shared/package.json ./shared/package.json
 RUN npm install
 
-COPY services/auth/ ./services/auth/
 COPY shared/ ./shared/
+COPY services/auth/ ./services/auth/
+RUN npm run build -w shared
 RUN npm run build -w services/auth
 
 FROM node:20-alpine
@@ -28,6 +29,7 @@ COPY services/users/package.json ./services/users/package.json
 COPY shared/package.json ./shared/package.json
 RUN npm install --omit=dev && npm cache clean --force
 
+COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/services/auth/dist ./services/auth/dist
 
 EXPOSE 3003

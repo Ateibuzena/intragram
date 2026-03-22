@@ -139,7 +139,7 @@ services:
       chat-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://chat-service:3009/health"]
+      test: ["CMD", "curl", "-f", "http://chat-service:3009/chat/health"]
       interval: 30s
       timeout: 10s
       retries: 3

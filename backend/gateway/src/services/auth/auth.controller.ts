@@ -35,6 +35,8 @@ import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse } from '@intragram
 
 @Controller('auth')
 export class AuthController {
+	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://localhost:8443';
+
 	constructor(private readonly authService: AuthService) {}
 
 	/**
@@ -144,7 +146,7 @@ export class AuthController {
 			const { url } = await this.authService.getOAuth42AuthUrl();
 			return res.redirect(url);
 		} catch (error: any) {
-			return res.redirect('http://localhost:5173?error=oauth_init_failed');
+			return res.redirect(`${this.frontendUrl}?error=oauth_init_failed`);
 		}
 	}
 	/**
@@ -160,16 +162,16 @@ export class AuthController {
 		@Res() res: any,
 	) {
 		if (!code) {
-			return res.redirect('http://localhost:5173?error=no_code');
+			return res.redirect(`${this.frontendUrl}?error=no_code`);
 		}
 
 		try {
 			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
 
-			const frontendUrl = `http://localhost:5173?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
-			return res.redirect(frontendUrl);
+			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			return res.redirect(redirectUrl);
 		} catch (error: any) {
-			return res.redirect('http://localhost:5173?error=auth_failed');
+			return res.redirect(`${this.frontendUrl}?error=auth_failed`);
 		}
 	}
 }

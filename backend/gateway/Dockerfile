@@ -14,6 +14,7 @@ RUN npm install
 
 COPY gateway/ ./gateway/
 COPY shared/ ./shared/
+RUN npm run build -w shared
 RUN npm run build -w gateway
 
 FROM node:20-alpine AS production
@@ -30,6 +31,7 @@ COPY services/users/package.json ./services/users/package.json
 COPY shared/package.json ./shared/package.json
 RUN npm install --omit=dev && npm cache clean --force
 
+COPY --from=builder /usr/src/app/shared ./shared
 COPY --from=builder /usr/src/app/gateway/dist ./gateway/dist
 
 EXPOSE 3000

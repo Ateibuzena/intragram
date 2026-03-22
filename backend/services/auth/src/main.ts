@@ -1,7 +1,6 @@
 /**
- * Archivo principal del Microservicio de Autenticación
- * Configura el servidor HTTP con validación global de DTOs
- * y medidas de seguridad (CORS deshabilitado por ser servicio interno)
+ * Punto de arranque del auth-service.
+ * Configura validación global y middleware mínimo para el servicio interno.
  */
 
 import { NestFactory } from '@nestjs/core';
@@ -12,17 +11,16 @@ import cookieParser from 'cookie-parser';
 async function bootstrap() {
 	const app = await NestFactory.create(AuthModule);
 
-	// Validación global de DTOs - Seguridad contra inyección de datos
 	app.useGlobalPipes(new ValidationPipe({
-		whitelist: true,            // Elimina propiedades no definidas en el DTO
-		forbidNonWhitelisted: true, // Rechaza peticiones con propiedades extra
-		transform: true,            // Transforma automáticamente los tipos
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true,
 		transformOptions: {
-			enableImplicitConversion: false, // No convertir tipos implícitamente
+			enableImplicitConversion: false,
 		},
 	}));
 
-	app.use(cookieParser()); // Para manejar cookies (access token)
+	app.use(cookieParser());
 
 	const port = parseInt(process.env.PORT || '3003', 10);
 	await app.listen(port, '0.0.0.0');

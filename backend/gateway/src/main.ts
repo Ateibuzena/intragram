@@ -1,4 +1,7 @@
-/*Activar interceptor global*/
+/**
+ * Punto de arranque del gateway.
+ * Configura validación global, métricas e interceptores de CORS.
+ */
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -9,23 +12,21 @@ import { MetricsService } from './observability/metrics/metrics.service';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
-	// Habilitar validación global de DTOs
 	app.useGlobalPipes(new ValidationPipe({
-		whitelist: true, // Elimina propiedades no definidas en el DTO
-		forbidNonWhitelisted: true, // Lanza error si hay propiedades extra
-		transform: true, // Transforma automáticamente los tipos
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true,
 	}));
 
-	// Interceptor de métricas
 	const metricsService = app.get(MetricsService);
 	app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
-
-	await app.listen(process.env.PORT ?? 3000);
-	console.log(`Gateway is running on http://localhost:${process.env.PORT ?? 3000}`);
 
 	app.enableCors({
 		origin: ['https://localhost:8443'],
 		credentials: true,
 	});
+
+	await app.listen(process.env.PORT ?? 3000);
+	console.log(`Gateway is running on http://localhost:${process.env.PORT ?? 3000}`);
 }
 bootstrap();

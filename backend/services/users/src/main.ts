@@ -1,3 +1,8 @@
+/**
+ * Punto de arranque del users-service.
+ * Configura validación global y levanta el servidor HTTP.
+ */
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { UsersModule } from './users.module';

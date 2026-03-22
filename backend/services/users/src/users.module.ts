@@ -1,3 +1,8 @@
+/**
+ * Módulo principal del users-service.
+ * Configura TypeORM y expone el controlador y servicio de usuarios.
+ */
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';

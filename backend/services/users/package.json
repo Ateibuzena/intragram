@@ -10,6 +10,7 @@
     "start:watch": "ts-node-dev --poll --respawn --transpile-only src/main.ts"
   },
   "dependencies": {
+    "@intragram/shared":   "1.0.0",
     "@nestjs/typeorm": "^11.0.0",
     "pg":              "^8.13.1",
     "typeorm":         "^0.3.20"

@@ -40,7 +40,7 @@
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
@@ -79,6 +79,9 @@ export class AuthService implements OnModuleInit {
 		}
 	}
 
+	/**
+	 * Log de arranque útil para validar configuración sensible en runtime.
+	 */
 	async onModuleInit() {
 		console.log('AuthService inicializado correctamente');
 		console.log(`Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
@@ -101,11 +104,11 @@ export class AuthService implements OnModuleInit {
 	): Promise<AuthResponse> {
 		const { username, email, password, display_name } = registerDto;
 
-		// Normalizar datos
+		// Normaliza datos de entrada para comparar y persistir con consistencia.
 		const normalizedUsername = username.toLowerCase().trim();
 		const normalizedEmail = email.toLowerCase().trim();
 
-		// Verificar si el usuario ya existe (username o email)
+		// Verifica unicidad por username o email antes de crear.
 		const existingUser = await this.userRepo.findOne({
 			where: [
 				{ username: normalizedUsername },
@@ -439,8 +442,9 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Limpiar refresh tokens expirados (mantenimiento)
-	 * Se recomienda ejecutar periódicamente con un cron job
+	 * Elimina refresh tokens expirados o revocados.
+	 *
+	 * Esta rutina es de mantenimiento y se puede ejecutar desde un cron job.
 	 */
 	async cleanupExpiredTokens(): Promise<number> {
 		const result = await this.refreshTokenRepo
@@ -461,12 +465,14 @@ export class AuthService implements OnModuleInit {
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Obtener URL de autorización de 42
+	 * Construye la URL de autorización de 42 para iniciar el flujo OAuth.
+	 *
+	 * No hace I/O; solo arma la URL con las variables de entorno.
 	 */
 	getOAuth42AuthUrl(): string {
 		const clientId = process.env.OAUTH_42_CLIENT_ID;
 		const redirectUri = process.env.OAUTH_42_REDIRECT_URI || 'http://localhost:3000/auth/42/callback';
-		
+
 		if (!clientId) {
 			throw new Error('OAUTH_42_CLIENT_ID no configurado');
 		}
@@ -475,11 +481,13 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Procesar callback de OAuth 42
-	 * - Intercambiar código por access_token
-	 * - Obtener datos del usuario de 42
-	 * - Crear/actualizar usuario local
-	 * - Generar tokens propios
+	 * Procesa el callback de OAuth 42 y transforma el login externo en sesión propia.
+	 *
+	 * Flujo:
+	 * 1. Intercambia el code por un access token de 42.
+	 * 2. Consulta el perfil remoto del usuario.
+	 * 3. Sincroniza el perfil local en users-service.
+	 * 4. Emite nuestros propios tokens JWT.
 	 */
 	async handleOAuth42Callback(
 		code: string,
@@ -487,7 +495,7 @@ export class AuthService implements OnModuleInit {
 		userAgent?: string,
 	): Promise<AuthResponse> {
 		try {
-			// 1. Intercambiar código por access token de 42
+			// Paso 1: intercambiar el code por access token de 42.
 			const tokenResponse = await axios.post('https://api.intra.42.fr/oauth/token', {
 				grant_type: 'authorization_code',
 				client_id: process.env.OAUTH_42_CLIENT_ID,
@@ -498,14 +506,14 @@ export class AuthService implements OnModuleInit {
 
 			const { access_token } = tokenResponse.data;
 
-			// 2. Obtener datos del usuario de 42
+			// Paso 2: obtener el perfil del usuario autenticado en 42.
 			const userResponse = await axios.get('https://api.intra.42.fr/v2/me', {
 				headers: { Authorization: `Bearer ${access_token}` },
 			});
 
 			const user42 = userResponse.data;
 
-			// 3. Persistir/actualizar perfil en users-service
+			// Paso 3: sincronizar el perfil local en users-service.
 			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
 			const upsertResponse = await axios.post(
 				`${usersServiceUrl}/users/oauth/42/upsert`,
@@ -515,6 +523,7 @@ export class AuthService implements OnModuleInit {
 
 			const profile = upsertResponse.data;
 
+			// El perfil local alimenta nuestra identidad interna, no la respuesta externa.
 			const user = {
 				id: profile.id,
 				username: (profile.login || user42.login || '').toLowerCase(),
@@ -531,8 +540,7 @@ export class AuthService implements OnModuleInit {
 
 			console.log(`Login OAuth 42 exitoso: ${user.username} (${user.id})`);
 
-
-			// 4. Generar tokens propios
+			// Paso 4: generar tokens propios del sistema.
 			return this.generateAuthResponse(user, ip, userAgent);
 		} catch (error: any) {
 			console.error('Error en OAuth 42:', error.response?.data || error.message);

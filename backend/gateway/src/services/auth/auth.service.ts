@@ -1,10 +1,6 @@
 /**
- * Servicio de Autenticación del Gateway
- * Maneja la comunicación entre el gateway y el microservicio de autenticación
- * Implementa la lógica de proxy para:
- * - Validación de credenciales
- * - Generación de tokens JWT
- * - Gestión de sesiones de usuario
+ * Servicio de autenticación del gateway.
+ * Reenvía operaciones al auth-service y normaliza sus respuestas.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -21,8 +17,7 @@ export class AuthService {
 	constructor(private readonly httpService: HttpService) {}
 
 	/**
-	 * Registrar un nuevo usuario
-	 * Reenvía la petición al microservicio de autenticación
+	 * Reenvía el registro al auth-service.
 	 */
 	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -46,7 +41,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Iniciar sesión
+	 * Reenvía el login al auth-service.
 	 */
 	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -70,7 +65,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Renovar access token con refresh token
+	 * Reenvía la renovación de tokens al auth-service.
 	 */
 	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -94,7 +89,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Cerrar sesión
+	 * Reenvía el logout al auth-service.
 	 */
 	async logout(refreshToken: string): Promise<{ message: string }> {
 		try {
@@ -112,7 +107,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Validar un access token (para uso interno - guards)
+	 * Valida un access token para uso interno del gateway.
 	 */
 	async validateToken(accessToken: string): Promise<TokenValidationResult> {
 		try {
@@ -129,8 +124,8 @@ export class AuthService {
 		}
 	}
 	
-		/**
-	 * Obtener URL de autorización OAuth 42
+	/**
+	 * Obtiene la URL de autorización OAuth 42.
 	 */
 	async getOAuth42AuthUrl(): Promise<{ url: string }> {
 		try {
@@ -147,7 +142,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Manejar callback de OAuth 42
+	 * Procesa el callback OAuth de 42.
 	 */
 	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -172,13 +167,12 @@ export class AuthService {
 
 
 	/**
-	 * Manejo centralizado de errores HTTP
-	 * Re-lanza el error del microservicio preservando el status code
+	 * Normaliza errores HTTP del auth-service.
 	 */
 	private handleHttpError(error: unknown, action: string): never {
 		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;
 
-		// Si el microservicio respondió con un error, preservar su status y mensaje
+		// Si el microservicio respondió con un error, preserva su status y mensaje.
 		if (axiosError.response?.data) {
 			const { statusCode, message } = axiosError.response.data;
 			throw Object.assign(new Error(message || `Error al ${action}`), {
@@ -186,7 +180,7 @@ export class AuthService {
 			});
 		}
 
-		// Error de conexión
+		// Error de conexión.
 		throw Object.assign(
 			new Error(`Error de conexión al ${action} en auth-service: ${axiosError.message}`),
 			{ statusCode: 503 },

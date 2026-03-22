@@ -1,4 +1,7 @@
-/*Conectar módulos*/
+/**
+ * Módulo raíz del gateway.
+ * Compone observabilidad, autenticación y proxy hacia los microservicios.
+ */
 
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -10,11 +13,11 @@ import { ChatModule } from './services/chat/chat.module';
 
 @Module({
 	imports: [
-		MetricsModule, 
-		AuthModule,    // Módulo de autenticación
+		MetricsModule,
+		AuthModule,
 		UsersModule,
 		ChatModule,
 	],
 	controllers: [AppController],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,6 +1,6 @@
 /**
- * Configuración de URLs internas entre servicios
- * Las variables de entorno se definen en .env.local o .env.docker
+ * URLs internas entre microservicios.
+ * Las variables de entorno se resuelven con valores por defecto seguros.
  */
 
 const normalizeUrl = (url: string): string => url.replace(/\/$/, '');

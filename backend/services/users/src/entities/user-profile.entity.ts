@@ -1,3 +1,8 @@
+/**
+ * Entidad de perfil de usuario del users-service.
+ * Guarda la identidad sincronizada desde OAuth42 y el perfil editable local.
+ */
+
 import {
 	Entity,
 	PrimaryGeneratedColumn,

@@ -30,12 +30,10 @@ import {
 } from '@nestjs/common';
 import { AuthService, ConflictError, UnauthorizedError, ForbiddenError } from './auth.service';
 import { AuthResponse, LoginDto, RegisterDto, RefreshTokenDto, TokenValidationResult } from '@intragram/shared';
-import { Res } from '@nestjs/common';
-import { Response } from 'express';
 
 @Controller()
 export class AuthController {
-	constructor(private readonly authService: AuthService) { }
+	constructor(private readonly authService: AuthService) {}
 
 	/**
 	 * POST /auth/register
@@ -43,30 +41,14 @@ export class AuthController {
 	 */
 	@Post('auth/register')
 	@HttpCode(HttpStatus.CREATED)
-	async register(@Body() registerDto: RegisterDto,
+	async register(
+		@Body() registerDto: RegisterDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-		@Res({ passthrough: true }) res: Response): Promise<{ user: AuthResponse['user']; message: string }>
-	{
-		console.log("Received registration request with data:", registerDto);
+	): Promise<AuthResponse> {
 		try {
-			const data: AuthResponse = await this.authService.register(registerDto, ip, userAgent);
-			res.cookie('access_token', data.access_token, {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'strict',
-				maxAge: 15 * 60 * 1000, // 15 minutos
-			});
-
-			res.cookie('refresh_token', data.refresh_token, {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'strict',
-				maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-			});
-
-			return { user: data.user, message: 'User registered successfully' };
-		} catch (error) {
+			return await this.authService.register(registerDto, ip, userAgent);
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -82,10 +64,9 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received login request with data:", loginDto);
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -101,14 +82,13 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received token refresh request with data:", refreshTokenDto);
 		try {
 			return await this.authService.refreshToken(
 				refreshTokenDto.refresh_token,
 				ip,
 				userAgent,
 			);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -120,10 +100,9 @@ export class AuthController {
 	@Post('auth/logout')
 	@HttpCode(HttpStatus.OK)
 	async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ message: string }> {
-		console.log("Received logout request with data:", refreshTokenDto);
 		try {
 			return await this.authService.logout(refreshTokenDto.refresh_token);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -136,27 +115,26 @@ export class AuthController {
 	@Post('auth/validate')
 	@HttpCode(HttpStatus.OK)
 	async validateToken(@Body('access_token') accessToken: string): Promise<TokenValidationResult> {
-		console.log("Received token validation request with data:", accessToken);
 		try {
 			const payload = await this.authService.validateToken(accessToken);
 			return {
 				valid: true,
-				payload };
-		} catch (error) {
+				payload,
+			};
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
+
 	/**
- * GET /auth/42
- * Iniciar flujo OAuth con 42
- */
+	 * GET /auth/42
+	 * Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
+	 */
 	@Get('auth/42')
-	oauth42Login() {
-		console.log("Received OAuth 42 login request");
+	oauth42Login(): { url: string } {
 		try {
-			const authUrl = this.authService.getOAuth42AuthUrl();
-			return { url: authUrl };
-		} catch (error) {
+			return { url: this.authService.getOAuth42AuthUrl() };
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -172,7 +150,6 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received OAuth 42 callback request with data:", code);
 		if (!code) {
 			throw new HttpException(
 				{ statusCode: HttpStatus.BAD_REQUEST, message: 'Código OAuth no proporcionado' },
@@ -182,7 +159,7 @@ export class AuthController {
 
 		try {
 			return await this.authService.handleOAuth42Callback(code, ip, userAgent);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -194,7 +171,6 @@ export class AuthController {
 	 */
 	@Get('health')
 	async health(): Promise<{ status: string }> {
-		console.log("Received health check request");
 		return this.authService.getHealth();
 	}
 
@@ -221,8 +197,8 @@ export class AuthController {
 				HttpStatus.FORBIDDEN,
 			);
 		}
-	
-		// Error inesperado - log interno, respuesta genérica
+
+		// Error inesperado: log interno y respuesta genérica al cliente.
 		console.error('Error interno no manejado:', error);
 		throw new HttpException(
 			{ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error interno del servidor' },

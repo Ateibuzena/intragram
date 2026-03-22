@@ -1,113 +1,176 @@
+/**
+ * Servicio de chat en memoria para intragram.
+ * Logica de negocio para manejar conversaciones y mensajes entre usuarios.
+ * 
+ * Funcionalidades:
+ * - Health check del servicio
+ * - Listar conversaciones de un usuario
+ * - Crear conversación entre dos usuarios
+ * - Listar mensajes de una conversación
+ * - Enviar mensaje a una conversación
+ */
+
 import { Injectable } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
-
-export type StoredChatMessage = {
-	sender: string;
-	receiver: string;
-	message: string;
-	timestamp: string;
-};
-
-export interface TokenPayload {
-	sub: string;    // user id
-	username: string;
-	email: string;
-	iat?: number;
-	exp?: number;
-}
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 
 @Injectable()
 export class ChatService {
+	// Estado en memoria para conversaciones y mensajes.
+	private readonly connectedUsers = new Set<string>();
+	private readonly conversations = new Map<string, {
+		id: string;
+		participants: string[];
+		created_at: string;
+		updated_at: string;
+		last_message: string | null;
+		last_message_at: string | null;
+	}>();
+	private readonly messages = new Map<string, Array<{
+		id: string;
+		conversationId: string;
+		senderId: string;
+		message: string;
+		attachments: string[];
+		created_at: string;
+	}>>();
 
-	private readonly jwtSecret: string;
-
-	constructor() {
-		// JWT secret desde variable de entorno (obligatorio en producción)
-		this.jwtSecret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
-		if (!process.env.JWT_SECRET) {
-			console.warn('⚠️  WARNING: JWT_SECRET is not set. Using default secret. This should be changed in production!');
-		}
-	}
-	// Funcion para validar el token de autenticación (placeholder, implementar según tu lógica de auth)
-	validateToken(token: string): any 
-	{
-		const payload = jwt.verify(token, this.jwtSecret) as TokenPayload;
-		console.log("Payload del token validado:", payload);
-		if (payload && typeof payload === 'object' && 'sub' in payload) {
-			return payload ;
-		}
-		return null;
-	}
-
-	// Mapa para almacenar las conversaciones entre pares de usuarios. La clave es una combinación ordenada de los IDs de los usuarios (e.g., "userA_userB").
-	private readonly conversations = new Map<string, StoredChatMessage[]>();
-
-	// Mapa para gestionar la relación entre usuarios y sus sockets conectados
-	private readonly userToSockets = new Map<string, Set<string>>();
-
-	// Mapa inverso para obtener el usuario asociado a un socket
-	private readonly socketToUser = new Map<string, string>();
-
-	// Función para registrar un nuevo socket para un usuario
-	registerSocket(userId: string, socketId: string): void {
-		this.socketToUser.set(socketId, userId);
-		const sockets = this.userToSockets.get(userId) ?? new Set<string>();
-		sockets.add(socketId);
-		this.userToSockets.set(userId, sockets);
-	}
-
-	// Función para eliminar un socket cuando un cliente se desconecta
-	unregisterSocket(socketId: string): void {
-		const userId = this.socketToUser.get(socketId);
-		if (!userId) return;
-
-		this.socketToUser.delete(socketId);
-		const sockets = this.userToSockets.get(userId);
-		if (!sockets) return;
-
-		sockets.delete(socketId);
-		if (!sockets.size) this.userToSockets.delete(userId);
-	}
-
-	// Función para obtener los sockets conectados de un usuario
-	getSocketsForUser(userId: string): string[] {
-		return [...(this.userToSockets.get(userId) ?? [])];
-	}
-
-	// Función para obtener la lista de usuarios actualmente conectados
+	/**
+	 * Devuelve la lista de usuarios conectados.
+	 */
 	getConnectedUsers(): string[] {
-		return [...this.userToSockets.keys()];
+		return [...this.connectedUsers];
 	}
 
-	getUserIdBySocket(socketId: string): string | undefined {
-		return this.socketToUser.get(socketId);
+	/**
+	 * Health check del servicio.
+	 */
+	getHealth(): { service: string; status: string; connectedUsers: number } {
+		return {
+			service: 'chat-service',
+			status: 'ok',
+			connectedUsers: this.getConnectedUsers().length,
+		};
 	}
 
-	// Función para generar una clave única para un par de usuarios, independientemente del orden
-	getPairKey(userA: string, userB: string): string {
-		return [userA, userB].sort().join('_');
+	/**
+	 * Lista las conversaciones accesibles para el usuario autenticado.
+	 */
+	getConversations(userId: string) {
+		this.assertUser(userId);
+		return [...this.conversations.values()].filter((conversation) => conversation.participants.includes(userId));
 	}
 
-	// Función para agregar un mensaje a la conversación entre dos usuarios
-	appendMessage(sender: string, receiver: string, message: string): StoredChatMessage {
-		const storedMessage: StoredChatMessage = {
-			sender,
-			receiver,
-			message,
-			timestamp: new Date().toISOString(),
+	/**
+	 * Crea o reutiliza una conversación entre dos participantes.
+	 */
+	createConversation(userId: string, dto: CreateConversationDto) {
+		this.assertUser(userId);
+		this.assertRecipient(dto.recipientId);
+
+		const participants = [...new Set([userId.trim(), dto.recipientId.trim()])];
+		if (participants.length < 2) {
+			throw new BadRequestException('Conversation requires two participants');
+		}
+
+		const existingConversation = [...this.conversations.values()].find((conversation) => {
+			return conversation.participants.length === 2
+				&& conversation.participants.includes(participants[0])
+				&& conversation.participants.includes(participants[1]);
+		});
+
+		if (existingConversation) {
+			return { conversation: existingConversation };
+		}
+
+		const now = new Date().toISOString();
+		const conversation = {
+			id: randomUUID(),
+			participants,
+			created_at: now,
+			updated_at: now,
+			last_message: null,
+			last_message_at: null,
 		};
 
-		const pairKey = this.getPairKey(sender, receiver);
-		const history = this.conversations.get(pairKey) ?? [];
-		history.push(storedMessage);
-		this.conversations.set(pairKey, history);
+		this.conversations.set(conversation.id, conversation);
+		this.messages.set(conversation.id, []);
 
-		return storedMessage;
+		return { conversation };
 	}
 
-	// Función para obtener el historial de mensajes entre dos usuarios
-	getConversation(clientId: string, peerId: string): StoredChatMessage[] {
-		const pairKey = this.getPairKey(clientId, peerId);
-		return this.conversations.get(pairKey) ?? [];
+	/**
+	 * Devuelve el historial de mensajes de una conversación accesible.
+	 */
+	getMessages(userId: string, conversationId: string) {
+		const conversation = this.getAccessibleConversation(userId, conversationId);
+		return this.messages.get(conversation.id) ?? [];
+	}
+
+	/**
+	 * Agrega un mensaje a la conversación y actualiza el resumen.
+	 */
+	sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
+		const conversation = this.getAccessibleConversation(userId, conversationId);
+
+		if (!dto.message?.trim()) {
+			throw new BadRequestException('Message cannot be empty');
+		}
+
+		const message = {
+			id: randomUUID(),
+			conversationId: conversation.id,
+			senderId: userId,
+			message: dto.message.trim(),
+			attachments: dto.attachments ?? [],
+			created_at: new Date().toISOString(),
+		};
+
+		const history = this.messages.get(conversation.id) ?? [];
+		history.push(message);
+		this.messages.set(conversation.id, history);
+
+		conversation.last_message = message.message;
+		conversation.last_message_at = message.created_at;
+		conversation.updated_at = message.created_at;
+
+		return { message };
+	}
+
+	/**
+	 * Valida que la conversación exista y que el usuario forme parte de ella.
+	 */
+	private getAccessibleConversation(userId: string, conversationId: string) {
+		this.assertUser(userId);
+		const conversation = this.conversations.get(conversationId);
+
+		if (!conversation) {
+			throw new NotFoundException('Conversation not found');
+		}
+
+		if (!conversation.participants.includes(userId)) {
+			throw new ForbiddenException('You do not belong to this conversation');
+		}
+
+		return conversation;
+	}
+
+	/**
+	 * Valida que el id de usuario no venga vacío.
+	 */
+	private assertUser(userId: string) {
+		if (!userId || !userId.trim()) {
+			throw new BadRequestException('x-user-id header missing');
+		}
+	}
+
+	/**
+	 * Valida que el receptor venga informado.
+	 */
+	private assertRecipient(recipientId: string) {
+		if (!recipientId || !recipientId.trim()) {
+			throw new BadRequestException('recipientId is required');
+		}
 	}
 }

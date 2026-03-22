@@ -1,3 +1,22 @@
+/**
+ * Controlador de usuarios del users-service.
+ * Expone endpoints para gestión de perfiles y sincronización con OAuth42.
+ * Maneja errores con HttpException y códigos HTTP adecuados.
+ 
+ * Endpoints:
+ * - POST /users/oauth/42/upsert → Crea o actualiza perfil desde OAuth42
+ * - GET  /users/:id           → Busca perfil por ID interno
+ * - GET  /users/42/:fortyTwoId → Busca perfil por ID de 42
+ * - GET  /users/login/:login   → Busca perfil por login
+ * - PATCH /users/:id/profile   → Actualiza campos editables del perfil
+ * - GET  /health               → Health check para Docker
+ * 
+ * Seguridad:
+ * - Validación de datos con DTOs y pipes de NestJS
+ * - Manejo de errores que no revela información interna
+ * - Códigos HTTP correctos para cada tipo de error
+ */
+
 import {
 	Body,
 	Controller,
@@ -10,13 +29,15 @@ import {
 	Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto } from './dto/upsert-oauth42-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
-	constructor(private readonly usersService: UsersService) {}
+	constructor(private readonly usersService: UsersService) { }
 
+	/**
+	 * Crea o actualiza el perfil local a partir de OAuth42.
+	 */
 	@Post('users/oauth/42/upsert')
 	@HttpCode(HttpStatus.OK)
 	async upsertOAuth42(@Body() profile: UpsertOAuth42UserDto) {
@@ -30,6 +51,9 @@ export class UsersController {
 		}
 	}
 
+	/**
+	 * Busca un perfil por su identificador interno.
+	 */
 	@Get('users/:id')
 	async findById(@Param('id') id: string) {
 		try {
@@ -39,6 +63,9 @@ export class UsersController {
 		}
 	}
 
+	/**
+	 * Busca un perfil por su id de 42.
+	 */
 	@Get('users/42/:fortyTwoId')
 	async findBy42Id(@Param('fortyTwoId') fortyTwoId: string) {
 		try {
@@ -48,6 +75,9 @@ export class UsersController {
 		}
 	}
 
+	/**
+	 * Busca un perfil por su login.
+	 */
 	@Get('users/login/:login')
 	async findByLogin(@Param('login') login: string) {
 		try {
@@ -57,6 +87,9 @@ export class UsersController {
 		}
 	}
 
+	/**
+	 * Actualiza los campos editables del perfil local.
+	 */
 	@Patch('users/:id/profile')
 	async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto) {
 		try {
@@ -69,6 +102,9 @@ export class UsersController {
 		}
 	}
 
+	/**
+	 * Health check del users-service.
+	 */
 	@Get('health')
 	async health() {
 		return this.usersService.getHealth();

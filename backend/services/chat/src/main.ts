@@ -1,3 +1,8 @@
+/**
+ * Punto de arranque del chat-service.
+ * Configura validación global y arranca el servidor HTTP.
+ */
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ChatModule } from './chat.module';
@@ -14,14 +19,14 @@ async function bootstrap() {
 		}),
 	);
 
-	app.use(cookieParser()); // Para manejar cookies (access token)
+	app.use(cookieParser());
 
 	const port = parseInt(process.env.PORT || '3009', 10);
 	await app.listen(port, '0.0.0.0');
 
-	console.log(`Chat Microservice HTTP/WS listening on port ${port}`);
+	console.log(`Chat Microservice HTTP listening on port ${port}`);
 	console.log(`Prometheus metrics available at http://localhost:${port}/metrics`);
-	console.log(`Health check available at http://localhost:${port}/health`);
+	console.log(`Health check available at http://localhost:${port}/chat/health`);
 }
 
 void bootstrap();

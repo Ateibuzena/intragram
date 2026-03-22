@@ -1,6 +1,6 @@
 /**
- * Módulo principal del Microservicio de Autenticación
- * Configura TypeORM con PostgreSQL y expone el servicio de autenticación
+ * Módulo principal del auth-service.
+ * Configura TypeORM, controladores y servicios de autenticación.
  */
 
 import { Module } from '@nestjs/common';

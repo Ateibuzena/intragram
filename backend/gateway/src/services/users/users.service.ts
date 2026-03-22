@@ -1,18 +1,25 @@
+/**
+ * Servicio de Usuarios del Gateway
+ * Reenvía operaciones al users-service y normaliza sus respuestas.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
 import { SERVICE_URLS } from '../../config/microservices.config';
-import { IUserProfile } from './interfaces/users-service.interface';
-import { UpsertOAuth42UserDto } from './dto/upsert-oauth42-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
+	// URL base del microservicio de usuarios.
 	private readonly usersBaseUrl = SERVICE_URLS.users;
 
 	constructor(private readonly httpService: HttpService) {}
 
+	/**
+	 * Reenvía el upsert OAuth42 al users-service.
+	 */
 	async upsertOAuth42User(dto: UpsertOAuth42UserDto): Promise<IUserProfile> {
 		try {
 			const response = await firstValueFrom(
@@ -26,6 +33,9 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * Busca un usuario por id interno.
+	 */
 	async findById(id: string): Promise<IUserProfile> {
 		try {
 			const response = await firstValueFrom(
@@ -39,6 +49,9 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * Busca un usuario por id de 42.
+	 */
 	async findBy42Id(fortyTwoId: number): Promise<IUserProfile> {
 		try {
 			const response = await firstValueFrom(
@@ -52,6 +65,9 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * Busca un usuario por login.
+	 */
 	async findByLogin(login: string): Promise<IUserProfile> {
 		try {
 			const response = await firstValueFrom(
@@ -65,6 +81,9 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * Actualiza el perfil editable del usuario.
+	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<IUserProfile> {
 		try {
 			const response = await firstValueFrom(
@@ -78,6 +97,9 @@ export class UsersService {
 		}
 	}
 
+	/**
+	 * Normaliza las respuestas de error HTTP del users-service.
+	 */
 	private handleHttpError(error: unknown, action: string): never {
 		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;
 		if (axiosError.response?.data) {

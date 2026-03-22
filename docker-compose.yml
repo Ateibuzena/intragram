@@ -119,8 +119,8 @@ services:
   chat-service:
     container_name: chat-service
     build:
-      context: ./backend/services/chat
-      dockerfile: Dockerfile.dev
+      context: ./backend
+      dockerfile: services/chat/Dockerfile.dev
     environment:
       NODE_ENV: ${NODE_ENV}
       DB_HOST: chat-db
@@ -130,7 +130,8 @@ services:
       DB_DATABASE: ${CHAT_DB_NAME}
       USERS_SERVICE_URL: ${USERS_SERVICE_URL}
     volumes:
-      - ./backend/services/chat/src:/app/src
+      - ./backend/services/chat/src:/app/services/chat/src
+      - ./backend/shared:/app/shared
       - /app/node_modules
     networks:
       - service-net
@@ -182,8 +183,8 @@ services:
   users-service:
     container_name: users-service
     build:
-      context: ./backend/services/users
-      dockerfile: Dockerfile.dev
+      context: ./backend
+      dockerfile: services/users/Dockerfile.dev
     environment:
       PORT: 3006
       NODE_ENV: ${NODE_ENV}
@@ -193,7 +194,8 @@ services:
       DB_PASSWORD: ${USERS_DB_PASSWORD}
       DB_DATABASE: ${USERS_DB_NAME}
     volumes:
-      - ./backend/services/users/src:/app/src
+      - ./backend/services/users/src:/app/services/users/src
+      - ./backend/shared:/app/shared
       - /app/node_modules
     networks:
       - service-net
@@ -239,7 +241,7 @@ services:
       - users-service
       - chat-service
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://gateway:3000/test"]
+      test: ["CMD", "curl", "-f", "http://gateway:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3

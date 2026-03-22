@@ -10,6 +10,7 @@
     "start:watch": "ts-node-dev --poll --respawn --transpile-only src/main.ts"
   },
   "dependencies": {
+    "@intragram/shared":        "1.0.0",
     "@nestjs/platform-socket.io": "^11.1.14",
     "@nestjs/websockets":         "^11.1.14",
     "cookie-parser":              "^1.4.6",

@@ -1,11 +1,7 @@
 /**
- * Interceptor de Métricas
- * Captura y registra métricas de rendimiento de las peticiones HTTP
- * Monitorea tiempos de respuesta, códigos de estado y otros indicadores
- * para observabilidad del sistema
+ * Interceptor de métricas HTTP.
+ * Registra duración, conteo de requests y usuarios activos sin exponer PII.
  */
-/*Interceptor (medición real)*/
-/*Lo que sí es un riesgo: si alguna vez etiquetas con req.body.userId o req.query.email → estarías exponiendo datos de usuarios a Prometheus. Etiquetas deben ser información segura y agregada, nunca datos individuales identificables.*/
 
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
@@ -15,7 +11,7 @@ import { log } from 'console';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
-	constructor(private readonly metrics: MetricsService) { }
+	constructor(private readonly metrics: MetricsService) {}
 
 	intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
 		const start = Date.now();
@@ -37,7 +33,7 @@ export class MetricsInterceptor implements NestInterceptor {
 				void this.metrics.getTotalRequests().then((totalRequests) => {
 					log(`Request ${method} ${route} completed with status ${statusCode} in ${duration}ms total requests: ${totalRequests}`);
 				});
-				this.metrics.setActiveUsers(1); // Ejemplo: incrementar usuarios activos (en un caso real, esto debería basarse en la lógica de conexión/desconexión de usuarios)
+				this.metrics.setActiveUsers(1);
 			})
 		);
 	}

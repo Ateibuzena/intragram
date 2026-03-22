@@ -1,11 +1,20 @@
 /**
- * Controlador de Autenticación
- * Define los endpoints del API Gateway relacionados con autenticación:
- * - POST /auth/register - Registro de nuevos usuarios
- * - POST /auth/login - Inicio de sesión
- * - POST /auth/refresh - Renovar token
- * - POST /auth/logout - Cierre de sesión
- * Delega las peticiones al microservicio de autenticación
+ * Controlador de autenticación del gateway.
+ * Redirige las peticiones al auth-service y mantiene el frontend desacoplado.
+ *
+ * Endpoints:
+ * - POST /auth/register → Registra un nuevo usuario
+ * - POST /auth/login    → Inicia sesión y obtiene tokens
+ * - POST /auth/refresh  → Renueva el access token usando el refresh token
+ * - POST /auth/logout   → Cierra sesión (revoca refresh token)
+ * - POST /auth/validate → Valida un access token (uso interno del gateway)
+ * - GET  /auth/42       → Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
+ * - GET  /auth/42/callback → Callback de OAuth 42
+ *
+ * Seguridad:
+ * - Validación de datos con DTOs y pipes de NestJS
+ * - Manejo de errores que no revela información interna
+ * - Códigos HTTP correctos para cada tipo de error
  */
 
 import {
@@ -26,11 +35,11 @@ import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse } from '@intragram
 
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) { }
+	constructor(private readonly authService: AuthService) {}
 
 	/**
 	 * POST /auth/register
-	 * Registrar un nuevo usuario
+	 * Envía el registro al auth-service.
 	 */
 	@Post('register')
 	@HttpCode(HttpStatus.CREATED)
@@ -39,8 +48,6 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received registration request with data:", registerDto);
-
 		try {
 			return await this.authService.register(registerDto, ip, userAgent);
 		} catch (error: any) {
@@ -53,7 +60,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/login
-	 * Iniciar sesión
+	 * Envía el login al auth-service.
 	 */
 	@Post('login')
 	@HttpCode(HttpStatus.OK)
@@ -62,7 +69,6 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received login request with data:", loginDto);
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
 		} catch (error: any) {
@@ -75,7 +81,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/refresh
-	 * Renovar access token
+	 * Renueva el access token en el auth-service.
 	 */
 	@Post('refresh')
 	@HttpCode(HttpStatus.OK)
@@ -84,7 +90,6 @@ export class AuthController {
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 	): Promise<AuthResponse> {
-		console.log("Received token refresh request with data:", refreshTokenDto);
 		try {
 			return await this.authService.refreshToken(refreshTokenDto.refresh_token, ip, userAgent);
 		} catch (error: any) {
@@ -97,12 +102,11 @@ export class AuthController {
 
 	/**
 	 * POST /auth/logout
-	 * Cerrar sesión
+	 * Cierra la sesión actual.
 	 */
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
 	async logout(@Body('refresh_token') refreshToken: string) {
-		console.log("Received logout request with data:", refreshToken);
 		try {
 			return await this.authService.logout(refreshToken);
 		} catch (error: any) {
@@ -115,11 +119,10 @@ export class AuthController {
 
 	/**
 	 * GET /auth/42/login
-	 * Redirigir directamente al login de 42
+	 * Redirige al login OAuth de 42.
 	 */
 	@Get('42/login')
 	async oauth42Redirect(@Res() res: any) {
-		console.log("Received OAuth 42 login redirect request");
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
 			return res.redirect(url);
@@ -132,24 +135,21 @@ export class AuthController {
 	}
 
 	/**
- * GET /auth/42
- * Redirigir directamente a 42
- */
+	 * GET /auth/42
+	 * Redirige al login OAuth de 42.
+	 */
 	@Get('42')
 	async oauth42Login(@Res() res: any) {
-		console.log("Received OAuth 42 login request");
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
-			return res.redirect(url); // ← REDIRIGIR en vez de devolver JSON
+			return res.redirect(url);
 		} catch (error: any) {
 			return res.redirect('http://localhost:5173?error=oauth_init_failed');
 		}
 	}
-
-
 	/**
 	 * GET /auth/42/callback
-	 * Callback de OAuth 42 - redirige al frontend con tokens
+	 * Procesa el callback OAuth y redirige al frontend con la sesión.
 	 */
 	@Get('42/callback')
 	@HttpCode(HttpStatus.FOUND)
@@ -159,22 +159,17 @@ export class AuthController {
 		@Headers('user-agent') userAgent: string,
 		@Res() res: any,
 	) {
-		console.log("Received OAuth 42 callback request with data:", code);
 		if (!code) {
-			// Redirigir al frontend con error
 			return res.redirect('http://localhost:5173?error=no_code');
 		}
 
 		try {
 			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
 
-			// Redirigir al frontend con tokens
 			const frontendUrl = `http://localhost:5173?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
 			return res.redirect(frontendUrl);
 		} catch (error: any) {
-			// Redirigir al frontend con error
 			return res.redirect('http://localhost:5173?error=auth_failed');
 		}
 	}
-
 }

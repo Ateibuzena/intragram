@@ -1,12 +1,7 @@
 /**
- * Servicio de Logger
- * Implementa la funcionalidad de logging con diferentes niveles
- * (info, warn, error, debug) y formateo de mensajes
- * Puede integrarse con sistemas externos de logging
+ * Servicio de logging del gateway.
+ * Mantiene un contrato mínimo y evita registrar datos sensibles.
  */
-
-/*Esto es la base: logs estructurados y consistentes*/
-/*Regla brutal: nunca loguees cuerpos de request, headers con Authorization, passwords o tokens. Solo IDs, códigos de error y mensajes generales.*/
 
 import { Injectable, LoggerService } from '@nestjs/common';
 import pino from 'pino';

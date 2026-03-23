@@ -4,6 +4,7 @@ import FriendsList from '../common/FriendsList';
 import PostCard from '../common/PostCard';
 import SettingsModal from '../common/SettingsModal';
 import FilterDrawer from '../common/FilterDrawer';
+import ChatView from '../chat/ChatView';
 
 const MOCK_POSTS = [
   {
@@ -60,6 +61,25 @@ export default function HomePage() {
   const [showFilters, setShowFilters]   = useState(false);
   const [search, setSearch]             = useState('');
   const [postText, setPostText]         = useState('');
+
+  // Función para filtrar posts según el filtro activo
+  const getFilteredPosts = () => {
+    switch (activeFilter) {
+      case 'perfil':
+        return MOCK_POSTS.filter(p => p.user.login === 'petazz');
+      
+      case 'amigos':
+        const friends = ['mruiz', 'agarcia', 'csmith', 'dperez'];
+        return MOCK_POSTS.filter(p => friends.includes(p.user.login));
+      
+      case 'seguidos':
+        return MOCK_POSTS.filter(p => p.user.level >= 10);
+      
+      case 'reciente':
+      default:
+        return MOCK_POSTS;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
@@ -161,101 +181,105 @@ export default function HomePage() {
       </header>
 
       {/* ===== CUERPO ===== */}
-      {/* min-h-0: fix crítico para que flex no desborde con sidebars */}
       <div className="flex flex-1 min-h-0 pb-20 md:pb-0">
 
-        {/* Sidebar izquierdo — oculto en móvil */}
-        <div className="hidden md:block flex-shrink-0">
-          <Sidebar activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
-        </div>
+        {/* Sidebar izquierdo — oculto en móvil y cuando está en chat */}
+        {activeNav !== 'chat' && (
+          <div className="hidden md:block flex-shrink-0">
+            <Sidebar activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+          </div>
+        )}
 
         {/* FEED CENTRAL */}
-        {/* min-w-0: evita que el contenido desborde el flex container */}
-        <main className="flex-1 overflow-y-auto py-4 md:py-6 px-3 md:px-4 min-w-0">
-          <div className="max-w-xl mx-auto">
-            <div key={activeNav} className="animate-page-switch">
-
-              {/* ——— HOME ——— */}
-              {activeNav === 'home' && (
-                <div>
-                  {/* Caja de crear post */}
-                  <div className="bg-ft-card border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black flex-shrink-0">
-                        T
-                      </div>
-                      <textarea
-                        className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none resize-none mt-1 leading-relaxed"
-                        placeholder="¿Qué estás aprendiendo hoy? Comparte con la comunidad 42..."
-                        rows={2}
-                        value={postText}
-                        onChange={(e) => setPostText(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-ft-border">
-                      <div className="flex space-x-1">
-                        {[
-                          { icon: '📷', label: 'Imagen' },
-                          { icon: '💻', label: 'Código' },
-                          { icon: '🏆', label: 'Logro' },
-                        ].map((btn) => (
-                          <button
-                            key={btn.label}
-                            className="flex items-center space-x-1.5 text-xs text-ft-muted hover:text-ft-cyan px-2 py-1.5 rounded-lg hover:bg-ft-cyan/5 border border-transparent hover:border-ft-cyan/20 transition-all duration-150 active:scale-95"
-                          >
-                            <span>{btn.icon}</span>
-                            <span className="hidden sm:inline">{btn.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        disabled={!postText.trim()}
-                        className="bg-ft-cyan hover:bg-ft-cyan-light text-black text-xs font-bold px-4 py-1.5 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-ft-glow-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 btn-ripple"
-                      >
-                        Publicar
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Lista de posts */}
-                  {MOCK_POSTS.map((post, i) => (
-                    <div key={post.id} className={`animate-fade-in-up-delay-${i + 1}`}>
-                      <PostCard post={post} />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* ——— CHAT ——— */}
-              {activeNav === 'chat' && (
-                <div className="flex flex-col items-center justify-center h-64">
-                  <div className="w-16 h-16 rounded-2xl bg-ft-card border border-ft-border flex items-center justify-center mb-4">
-                    <span className="text-2xl">💬</span>
-                  </div>
-                  <p className="text-white font-semibold">Chat</p>
-                  <p className="text-ft-muted text-sm mt-1">Próximamente disponible</p>
-                </div>
-              )}
-
-              {/* ——— NOTIFICACIONES ——— */}
-              {activeNav === 'notifications' && (
-                <div className="flex flex-col items-center justify-center h-64">
-                  <div className="w-16 h-16 rounded-2xl bg-ft-card border border-ft-border flex items-center justify-center mb-4">
-                    <span className="text-2xl">🔔</span>
-                  </div>
-                  <p className="text-white font-semibold">Notificaciones</p>
-                  <p className="text-ft-muted text-sm mt-1">Estás al día</p>
-                </div>
-              )}
-
+        <main className="flex-1 overflow-y-auto min-w-0">
+          
+          {/* CHAT ocupa todo el espacio */}
+          {activeNav === 'chat' && (
+            <div className="h-full">
+              <ChatView />
             </div>
-          </div>
+          )}
+
+          {/* HOME y NOTIFICACIONES con padding y max-width */}
+          {activeNav !== 'chat' && (
+            <div className="py-4 md:py-6 px-3 md:px-4">
+              <div className="max-w-xl mx-auto">
+                <div key={activeNav} className="animate-page-switch">
+
+                  {/* ——— HOME ——— */}
+                  {activeNav === 'home' && (
+                    <div>
+                      {/* Caja de crear post */}
+                      <div className="bg-ft-card border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black flex-shrink-0">
+                            T
+                          </div>
+                          <textarea
+                            className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none resize-none mt-1 leading-relaxed"
+                            placeholder="¿Qué estás aprendiendo hoy? Comparte con la comunidad 42..."
+                            rows={2}
+                            value={postText}
+                            onChange={(e) => setPostText(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-ft-border">
+                          <div className="flex space-x-1">
+                            {[
+                              { icon: '📷', label: 'Imagen' },
+                              { icon: '💻', label: 'Código' },
+                              { icon: '🏆', label: 'Logro' },
+                            ].map((btn) => (
+                              <button
+                                key={btn.label}
+                                className="flex items-center space-x-1.5 text-xs text-ft-muted hover:text-ft-cyan px-2 py-1.5 rounded-lg hover:bg-ft-cyan/5 border border-transparent hover:border-ft-cyan/20 transition-all duration-150 active:scale-95"
+                              >
+                                <span>{btn.icon}</span>
+                                <span className="hidden sm:inline">{btn.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            disabled={!postText.trim()}
+                            className="bg-ft-cyan hover:bg-ft-cyan-light text-black text-xs font-bold px-4 py-1.5 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-ft-glow-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 btn-ripple"
+                          >
+                            Publicar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lista de posts */}
+                      {getFilteredPosts().map((post, i) => (
+                        <div key={post.id} className={`animate-fade-in-up-delay-${Math.min(i + 1, 3)}`}>
+                          <PostCard post={post} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ——— NOTIFICACIONES ——— */}
+                  {activeNav === 'notifications' && (
+                    <div className="flex flex-col items-center justify-center h-64">
+                      <div className="w-16 h-16 rounded-2xl bg-ft-card border border-ft-border flex items-center justify-center mb-4">
+                        <span className="text-2xl">🔔</span>
+                      </div>
+                      <p className="text-white font-semibold">Notificaciones</p>
+                      <p className="text-ft-muted text-sm mt-1">Estás al día</p>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
-        {/* FriendsList — solo en lg+ */}
-        <div className="hidden lg:block flex-shrink-0">
-          <FriendsList />
-        </div>
+        {/* FriendsList — solo en lg+ y no en chat */}
+        {activeNav !== 'chat' && (
+          <div className="hidden lg:block flex-shrink-0">
+            <FriendsList />
+          </div>
+        )}
       </div>
 
       {/* ===== BOTTOM BAR MÓVIL ===== */}

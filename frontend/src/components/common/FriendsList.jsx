@@ -5,11 +5,6 @@ const MOCK_FRIENDS = [
   { login: 'dperez',  level: 3,  online: true },
 ];
 
-const MOCK_SUGGESTIONS = [
-  { login: 'jlopez',  level: 8 },
-  { login: 'itorres', level: 6 },
-];
-
 export default function FriendsList() {
   return (
     <aside className="
@@ -18,7 +13,7 @@ export default function FriendsList() {
       p-4 overflow-y-auto flex-shrink-0
     ">
       {/* EN LÍNEA */}
-      <div className="mb-5">
+      <div>
         <h3 className="text-xs font-bold text-ft-muted uppercase tracking-wider mb-3">
           En línea <span className="text-ft-cyan ml-1">{MOCK_FRIENDS.length}</span>
         </h3>
@@ -73,59 +68,8 @@ export default function FriendsList() {
         </ul>
       </div>
 
-      {/* SUGERENCIAS */}
-      <div>
-        <h3 className="text-xs font-bold text-ft-muted uppercase tracking-wider mb-3">
-          Sugerencias
-        </h3>
-        <ul className="space-y-2">
-          {MOCK_SUGGESTIONS.map((user) => (
-            <li
-              key={user.login}
-              className="
-                flex items-center space-x-2.5 p-2 rounded-xl
-                hover:bg-ft-hover border border-transparent hover:border-ft-border
-                transition-all duration-200
-                group
-              "
-            >
-              {/* Avatar */}
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs text-black uppercase flex-shrink-0"
-                style={{
-                  background: `linear-gradient(135deg, ${getGradient(user.login)})`
-                }}
-              >
-                {user.login[0]}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">
-                  {user.login}
-                </p>
-                <p className="text-xs text-ft-muted">
-                  nivel {user.level}
-                </p>
-              </div>
-
-              {/* Botón seguir */}
-              <button className="
-                text-ft-cyan hover:bg-ft-cyan/10 border border-ft-cyan/30
-                text-[10px] font-bold px-2 py-1 rounded-lg
-                transition-all duration-150
-                hover:shadow-ft-glow-sm active:scale-95
-                flex-shrink-0
-              ">
-                Seguir
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Footer (opcional) */}
-      <div className="mt-6 pt-4 border-t border-ft-border">
+      {/* Footer */}
+      <div className="mt-auto pt-6 border-t border-ft-border">
         <p className="text-[10px] text-ft-muted text-center">
           © 2026 Intragram · 42 Network
         </p>

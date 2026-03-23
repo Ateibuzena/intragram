@@ -1,9 +1,10 @@
 const FILTERS = [
-  { key: 'perfil',   label: 'Mi perfil', icon: '👤' },
-  { key: 'reciente', label: 'Reciente',  icon: '🕐' },
-  { key: 'amigos',   label: 'Amigos',    icon: '👥' },
-  { key: 'seguidos', label: 'Seguidos',  icon: '⭐' },
+  { key: 'reciente', label: 'Reciente',     icon: '🕐', desc: 'Publicaciones más nuevas primero' },
+  { key: 'amigos',   label: 'Amigos',       icon: '👥', desc: 'Solo de personas que sigues' },
+  { key: 'seguidos', label: 'Seguidos',     icon: '⭐', desc: 'Tus favoritos' },
+  { key: 'perfil',   label: 'Mi perfil',    icon: '👤', desc: 'Tus propias publicaciones' },
 ];
+
 
 export default function Sidebar({ activeFilter, setActiveFilter }) {
   return (

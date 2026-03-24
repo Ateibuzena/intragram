@@ -1,0 +1,23 @@
+.conversation-list {
+	@apply w-96 h-full bg-ft-card border-r border-ft-border flex flex-col flex-shrink-0;
+}
+
+.conv-tab {
+	@apply flex-1 text-sm font-semibold py-2 rounded-lg transition-all;
+}
+
+.conv-tab--active {
+	@apply bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30;
+}
+
+.conv-tab--default {
+	@apply text-ft-muted hover:bg-ft-hover;
+}
+
+.conv-item {
+	@apply w-full flex items-start gap-3 p-4 hover:bg-ft-hover border-b border-ft-border/50 transition-all;
+}
+
+.conv-item--selected {
+	@apply bg-ft-hover;
+}

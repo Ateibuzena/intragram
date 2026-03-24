@@ -1,0 +1,24 @@
+.filter-drawer-overlay {
+	@apply fixed inset-0 z-40 md:hidden;
+}
+
+.filter-drawer-bg {
+	@apply absolute inset-0 bg-black/60 backdrop-blur-sm;
+}
+
+.filter-drawer-panel {
+	@apply absolute bottom-0 left-0 right-0 bg-ft-card border-t border-ft-border rounded-t-2xl p-5;
+	padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.filter-item {
+	@apply flex items-center gap-4 px-4 py-3 rounded-xl text-left transition-all duration-200 active:scale-[0.98] border;
+}
+
+.filter-item--active {
+	@apply bg-ft-cyan/15 border-ft-cyan/30 text-ft-cyan;
+}
+
+.filter-item--default {
+	@apply bg-ft-hover border-transparent text-ft-text hover:border-ft-border;
+}

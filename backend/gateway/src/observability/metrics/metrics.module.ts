@@ -1,11 +1,7 @@
 /**
- * Módulo de Métricas
- * Configura el sistema de recolección de métricas de la aplicación
- * Proporciona el MetricsService para monitoreo de rendimiento,
- * uso de recursos y estadísticas operacionales
+ * Módulo de métricas del gateway.
+ * Expone el servicio compartido para observabilidad Prometheus.
  */
-
-/*Métricas Prometheus*/
 
 import { Module } from '@nestjs/common';
 import { MetricsService } from './metrics.service';

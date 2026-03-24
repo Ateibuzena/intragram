@@ -1,0 +1,19 @@
+.avatar {
+	@apply rounded-full flex items-center justify-center font-bold text-black uppercase flex-shrink-0;
+}
+
+.avatar-sm {
+	@apply w-7 h-7 text-xs;
+}
+
+.avatar-md {
+	@apply w-9 h-9 text-xs;
+}
+
+.avatar-lg {
+	@apply w-12 h-12 text-sm;
+}
+
+.avatar-online {
+	@apply absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-ft-card rounded-full;
+}

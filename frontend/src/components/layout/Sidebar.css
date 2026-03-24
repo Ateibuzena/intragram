@@ -1,0 +1,19 @@
+.sidebar {
+	@apply w-14 hover:w-48 h-screen sticky top-0 bg-ft-card border-r border-ft-border flex flex-col py-3 transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0;
+}
+
+.sidebar-item {
+	@apply relative flex items-center gap-3 w-full px-2 py-2.5 rounded-xl transition-all duration-200;
+}
+
+.sidebar-item--active {
+	@apply bg-ft-cyan/15 text-ft-cyan;
+}
+
+.sidebar-item--default {
+	@apply text-ft-muted hover:bg-ft-hover hover:text-ft-text;
+}
+
+.sidebar-item-label {
+	@apply text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 max-w-0 group-hover:max-w-xs overflow-hidden transition-all duration-300;
+}

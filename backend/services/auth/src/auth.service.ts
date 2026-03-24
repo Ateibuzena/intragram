@@ -40,14 +40,14 @@
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
+import axios from 'axios';
 
 // ─── Constantes de seguridad ───────────────────────
 const BCRYPT_SALT_ROUNDS = 12;
@@ -60,27 +60,6 @@ const LOCKOUT_DURATION_MINUTES = 15;
 const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
-
-export interface TokenPayload {
-	sub: string;    // user id
-	username: string;
-	email: string;
-	iat?: number;
-	exp?: number;
-}
-
-export interface AuthResponse {
-	access_token: string;
-	refresh_token: string;
-	token_type: string;
-	expires_in: number;
-	user: {
-		id: string;
-		username: string;
-		email: string;
-		display_name: string | null;
-	};
-}
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -100,9 +79,12 @@ export class AuthService implements OnModuleInit {
 		}
 	}
 
+	/**
+	 * Log de arranque útil para validar configuración sensible en runtime.
+	 */
 	async onModuleInit() {
-		console.log('🔐 AuthService inicializado correctamente');
-		console.log(`📊 Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
+		console.log('AuthService inicializado correctamente');
+		console.log(`Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
 	}
 
 	// ═══════════════════════════════════════════════
@@ -122,11 +104,11 @@ export class AuthService implements OnModuleInit {
 	): Promise<AuthResponse> {
 		const { username, email, password, display_name } = registerDto;
 
-		// Normalizar datos
+		// Normaliza datos de entrada para comparar y persistir con consistencia.
 		const normalizedUsername = username.toLowerCase().trim();
 		const normalizedEmail = email.toLowerCase().trim();
 
-		// Verificar si el usuario ya existe (username o email)
+		// Verifica unicidad por username o email antes de crear.
 		const existingUser = await this.userRepo.findOne({
 			where: [
 				{ username: normalizedUsername },
@@ -152,7 +134,7 @@ export class AuthService implements OnModuleInit {
 		});
 
 		const savedUser = await this.userRepo.save(user);
-		console.log(`✅ Usuario registrado: ${savedUser.username} (${savedUser.id})`);
+		console.log(`Usuario registrado: ${savedUser.username} (${savedUser.id})`);
 
 		// Generar tokens
 		return this.generateAuthResponse(savedUser, ip, userAgent);
@@ -219,7 +201,7 @@ export class AuthService implements OnModuleInit {
 		// Login exitoso: resetear intentos fallidos
 		await this.handleSuccessfulLogin(user);
 
-		console.log(`✅ Login exitoso: ${user.username} (${user.id})`);
+		console.log(`Login exitoso: ${user.username} (${user.id})`);
 
 		return this.generateAuthResponse(user, ip, userAgent);
 	}
@@ -301,7 +283,7 @@ export class AuthService implements OnModuleInit {
 			{ is_revoked: true },
 		);
 
-		console.log(`🔒 Todas las sesiones revocadas para usuario: ${userId}`);
+		console.log(`Todas las sesiones revocadas para usuario: ${userId}`);
 		return { message: 'Todas las sesiones cerradas correctamente' };
 	}
 
@@ -345,7 +327,7 @@ export class AuthService implements OnModuleInit {
 	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
 		try {
 			// Verificar conexión a la BBDD
-			await this.userRepo.query('SELECT 1');
+			await this.userRepo.query('SELECT 4');
 			return {
 				status: 'ok',
 				database: 'connected',
@@ -434,7 +416,7 @@ export class AuthService implements OnModuleInit {
 			lockUntil.setMinutes(lockUntil.getMinutes() + LOCKOUT_DURATION_MINUTES);
 			updateData.locked_until = lockUntil;
 
-			console.log(`🔒 Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
+			console.log(`Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
 		}
 
 		await this.userRepo.update(user.id, updateData);
@@ -460,8 +442,9 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Limpiar refresh tokens expirados (mantenimiento)
-	 * Se recomienda ejecutar periódicamente con un cron job
+	 * Elimina refresh tokens expirados o revocados.
+	 *
+	 * Esta rutina es de mantenimiento y se puede ejecutar desde un cron job.
 	 */
 	async cleanupExpiredTokens(): Promise<number> {
 		const result = await this.refreshTokenRepo
@@ -473,10 +456,155 @@ export class AuthService implements OnModuleInit {
 
 		const deleted = result.affected || 0;
 		if (deleted > 0) {
-			console.log(`🧹 ${deleted} tokens expirados/revocados eliminados`);
+			console.log(`${deleted} tokens expirados/revocados eliminados`);
 		}
 		return deleted;
 	}
+	// ═══════════════════════════════════════════════
+	//  OAUTH 42
+	// ═══════════════════════════════════════════════
+
+	/**
+	 * Construye la URL de autorización de 42 para iniciar el flujo OAuth.
+	 *
+	 * No hace I/O; solo arma la URL con las variables de entorno.
+	 */
+	getOAuth42AuthUrl(): string {
+		const clientId = process.env.OAUTH_42_CLIENT_ID;
+		const redirectUri = process.env.OAUTH_42_REDIRECT_URI || 'http://localhost:3000/auth/42/callback';
+
+		if (!clientId) {
+			throw new Error('OAUTH_42_CLIENT_ID no configurado');
+		}
+
+		return `https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=public`;
+	}
+
+	/**
+	 * Procesa el callback de OAuth 42 y transforma el login externo en sesión propia.
+	 *
+	 * Flujo:
+	 * 1. Intercambia el code por un access token de 42.
+	 * 2. Consulta el perfil remoto del usuario.
+	 * 3. Sincroniza el perfil local en users-service.
+	 * 4. Emite nuestros propios tokens JWT.
+	 */
+	async handleOAuth42Callback(
+		code: string,
+		ip?: string,
+		userAgent?: string,
+	): Promise<AuthResponse> {
+		try {
+			// Paso 1: intercambiar el code por access token de 42.
+			const tokenResponse = await axios.post('https://api.intra.42.fr/oauth/token', {
+				grant_type: 'authorization_code',
+				client_id: process.env.OAUTH_42_CLIENT_ID,
+				client_secret: process.env.OAUTH_42_CLIENT_SECRET,
+				code,
+				redirect_uri: process.env.OAUTH_42_REDIRECT_URI,
+			});
+
+			const { access_token } = tokenResponse.data;
+
+			// Paso 2: obtener el perfil del usuario autenticado en 42.
+			const userResponse = await axios.get('https://api.intra.42.fr/v2/me', {
+				headers: { Authorization: `Bearer ${access_token}` },
+			});
+
+			const user42 = userResponse.data as any;
+
+			// Paso 3: mapear solo los campos permitidos por UpsertOAuth42UserDto
+			// y sincronizar el perfil local en users-service.
+			const upsertPayload = {
+				id: user42.id,
+				login: user42.login,
+				email: user42.email,
+				first_name: user42.first_name,
+				last_name: user42.last_name,
+				displayname: user42.displayname,
+				usual_full_name: user42.usual_full_name,
+				pool_month: user42.pool_month,
+				pool_year: user42.pool_year,
+				wallet: user42.wallet,
+				correction_point: user42.correction_point,
+				location: user42.location,
+				phone: user42.phone,
+				staff: user42['staff?'] ?? user42.staff,
+				alumni: user42['alumni?'] ?? user42.alumni,
+				active: user42['active?'] ?? user42.active,
+				image: user42.image
+					? {
+						link: user42.image.link,
+						versions: user42.image.versions
+							? {
+								large: user42.image.versions.large,
+								medium: user42.image.versions.medium,
+								small: user42.image.versions.small,
+								micro: user42.image.versions.micro,
+							}
+							: undefined,
+					}
+					: undefined,
+				campus: Array.isArray(user42.campus)
+					? user42.campus.map((c: any) => ({ name: c.name }))
+					: undefined,
+			};
+
+			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
+			const upsertResponse = await axios.post(
+				`${usersServiceUrl}/users/oauth/42/upsert`,
+				upsertPayload,
+				{ timeout: 10000 },
+			);
+
+			const profile = upsertResponse.data;
+
+			// Normalizar identificadores para el usuario interno del auth-service.
+			const normalizedUsername = (profile.login || user42.login || '').toLowerCase().trim();
+			const normalizedEmail = (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase().trim();
+			const displayName = profile.display_name || user42.usual_full_name || user42.login;
+
+			// Paso 4: buscar o crear el usuario interno en la BBDD del auth-service.
+			let authUser = await this.userRepo.findOne({
+				where: [
+					{ username: normalizedUsername },
+					{ email: normalizedEmail },
+				],
+			});
+
+			if (!authUser) {
+				// Usuario nuevo autenticado solo vía OAuth42: creamos credenciales internas
+				// con una contraseña aleatoria (no usada directamente por el usuario).
+				const randomPassword = crypto.randomBytes(32).toString('hex');
+				const hashedPassword = await bcrypt.hash(randomPassword, BCRYPT_SALT_ROUNDS);
+
+				authUser = this.userRepo.create({
+					username: normalizedUsername,
+					email: normalizedEmail,
+					password: hashedPassword,
+					display_name: displayName,
+					is_active: true,
+					failed_login_attempts: 0,
+				});
+			} else {
+				// Usuario existente: sincronizar algunos campos básicos.
+				authUser.display_name = displayName;
+				authUser.is_active = true;
+			}
+
+			authUser.last_login = new Date();
+			const savedAuthUser = await this.userRepo.save(authUser);
+
+			console.log(`Login OAuth 42 exitoso: ${savedAuthUser.username} (${savedAuthUser.id})`);
+
+			// Paso 5: generar tokens propios del sistema.
+			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
+		} catch (error: any) {
+			console.error('Error en OAuth 42:', error.response?.data || error.message);
+			throw new UnauthorizedError('Error al autenticar con 42');
+		}
+	}
+
 }
 
 // ═══════════════════════════════════════════════

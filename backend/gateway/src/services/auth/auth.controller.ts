@@ -1,11 +1,20 @@
 /**
- * Controlador de Autenticación
- * Define los endpoints del API Gateway relacionados con autenticación:
- * - POST /auth/register - Registro de nuevos usuarios
- * - POST /auth/login - Inicio de sesión
- * - POST /auth/refresh - Renovar token
- * - POST /auth/logout - Cierre de sesión
- * Delega las peticiones al microservicio de autenticación
+ * Controlador de autenticación del gateway.
+ * Redirige las peticiones al auth-service y mantiene el frontend desacoplado.
+ *
+ * Endpoints:
+ * - POST /auth/register → Registra un nuevo usuario
+ * - POST /auth/login    → Inicia sesión y obtiene tokens
+ * - POST /auth/refresh  → Renueva el access token usando el refresh token
+ * - POST /auth/logout   → Cierra sesión (revoca refresh token)
+ * - POST /auth/validate → Valida un access token (uso interno del gateway)
+ * - GET  /auth/42       → Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
+ * - GET  /auth/42/callback → Callback de OAuth 42
+ *
+ * Seguridad:
+ * - Validación de datos con DTOs y pipes de NestJS
+ * - Manejo de errores que no revela información interna
+ * - Códigos HTTP correctos para cada tipo de error
  */
 
 import {
@@ -17,19 +26,22 @@ import {
 	HttpCode,
 	HttpStatus,
 	HttpException,
+	Get,
+	Query,
+	Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { IAuthResponse } from './interfaces/auth-service.interface';
+import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse } from '@intragram/shared';
 
 @Controller('auth')
 export class AuthController {
+	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://localhost:8443';
+
 	constructor(private readonly authService: AuthService) {}
 
 	/**
 	 * POST /auth/register
-	 * Registrar un nuevo usuario
+	 * Envía el registro al auth-service.
 	 */
 	@Post('register')
 	@HttpCode(HttpStatus.CREATED)
@@ -37,7 +49,7 @@ export class AuthController {
 		@Body() registerDto: RegisterDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.register(registerDto, ip, userAgent);
 		} catch (error: any) {
@@ -50,7 +62,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/login
-	 * Iniciar sesión
+	 * Envía el login al auth-service.
 	 */
 	@Post('login')
 	@HttpCode(HttpStatus.OK)
@@ -58,7 +70,7 @@ export class AuthController {
 		@Body() loginDto: LoginDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
 		} catch (error: any) {
@@ -71,17 +83,17 @@ export class AuthController {
 
 	/**
 	 * POST /auth/refresh
-	 * Renovar access token
+	 * Renueva el access token en el auth-service.
 	 */
 	@Post('refresh')
 	@HttpCode(HttpStatus.OK)
 	async refresh(
-		@Body('refresh_token') refreshToken: string,
+		@Body() refreshTokenDto: RefreshTokenDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	): Promise<IAuthResponse> {
+	): Promise<AuthResponse> {
 		try {
-			return await this.authService.refreshToken(refreshToken, ip, userAgent);
+			return await this.authService.refreshToken(refreshTokenDto.refresh_token, ip, userAgent);
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al renovar token',
@@ -92,7 +104,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/logout
-	 * Cerrar sesión
+	 * Cierra la sesión actual.
 	 */
 	@Post('logout')
 	@HttpCode(HttpStatus.OK)
@@ -104,6 +116,62 @@ export class AuthController {
 				error.message || 'Error al cerrar sesión',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
+		}
+	}
+
+	/**
+	 * GET /auth/42/login
+	 * Redirige al login OAuth de 42.
+	 */
+	@Get('42/login')
+	async oauth42Redirect(@Res() res: any) {
+		try {
+			const { url } = await this.authService.getOAuth42AuthUrl();
+			return res.redirect(url);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al redirigir a OAuth 42',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * GET /auth/42
+	 * Redirige al login OAuth de 42.
+	 */
+	@Get('42')
+	async oauth42Login(@Res() res: any) {
+		try {
+			const { url } = await this.authService.getOAuth42AuthUrl();
+			return res.redirect(url);
+		} catch (error: any) {
+			return res.redirect(`${this.frontendUrl}?error=oauth_init_failed`);
+		}
+	}
+	/**
+	 * GET /auth/42/callback
+	 * Procesa el callback OAuth y redirige al frontend con la sesión.
+	 */
+	@Get('42/callback')
+	@HttpCode(HttpStatus.FOUND)
+	async oauth42Callback(
+		@Query('code') code: string,
+		@Ip() ip: string,
+		@Headers('user-agent') userAgent: string,
+		@Res() res: any,
+	) {
+		if (!code) {
+			return res.redirect(`${this.frontendUrl}?error=no_code`);
+		}
+
+		try {
+			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
+
+			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			return res.redirect(redirectUrl);
+		} catch (error: any) {
+			return res.redirect(`${this.frontendUrl}?error=auth_failed`);
 		}
 	}
 }

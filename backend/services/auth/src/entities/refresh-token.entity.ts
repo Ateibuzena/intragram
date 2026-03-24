@@ -1,16 +1,6 @@
 /**
- * Entidad de Refresh Token
- * Tabla 'refresh_tokens' en PostgreSQL
- * 
- * Permite:
- * - Renovar access tokens sin re-autenticación
- * - Revocar sesiones individuales
- * - Auditoría de sesiones activas por usuario
- * 
- * Seguridad:
- * - Tokens hasheados en BBDD (no se almacena el token en texto plano)
- * - Expiración configurable
- * - Revocación individual y masiva
+ * Entidad de refresh token del auth-service.
+ * Guarda sesiones rotables y revocables con trazabilidad.
  */
 
 import {
@@ -30,8 +20,8 @@ export class RefreshTokenEntity {
 	id!: string;
 
 	/**
-	 * Hash SHA-256 del refresh token
-	 * El token original solo se envía al cliente una vez
+	 * Hash SHA-256 del refresh token.
+	 * El token original solo se envía una vez al cliente.
 	 */
 	@Column({ type: 'varchar', length: 255 })
 	@Index('IDX_REFRESH_TOKEN_HASH')
@@ -52,14 +42,13 @@ export class RefreshTokenEntity {
 	is_revoked!: boolean;
 
 	/**
-	 * User-Agent del cliente que creó la sesión
-	 * Útil para auditoría y detección de sesiones sospechosas
+	 * User-Agent del cliente que creó la sesión.
 	 */
 	@Column({ type: 'varchar', length: 500, nullable: true })
 	user_agent!: string | null;
 
 	/**
-	 * IP del cliente que creó la sesión
+	 * IP del cliente que creó la sesión.
 	 */
 	@Column({ type: 'varchar', length: 45, nullable: true })
 	ip_address!: string | null;

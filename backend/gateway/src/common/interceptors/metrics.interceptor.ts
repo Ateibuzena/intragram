@@ -31,7 +31,7 @@ export class MetricsInterceptor implements NestInterceptor {
 
 				this.metrics.incrementRequests(method, route, statusCode.toString());
 				void this.metrics.getTotalRequests().then((totalRequests) => {
-					log(`Request ${method} ${route} completed with status ${statusCode} in ${duration}ms total requests: ${totalRequests}`);
+					// log(`Request ${method} ${route} completed with status ${statusCode} in ${duration}ms total requests: ${totalRequests}`);
 				});
 				this.metrics.setActiveUsers(1);
 			})

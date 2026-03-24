@@ -511,37 +511,94 @@ export class AuthService implements OnModuleInit {
 				headers: { Authorization: `Bearer ${access_token}` },
 			});
 
-			const user42 = userResponse.data;
+			const user42 = userResponse.data as any;
 
-			// Paso 3: sincronizar el perfil local en users-service.
+			// Paso 3: mapear solo los campos permitidos por UpsertOAuth42UserDto
+			// y sincronizar el perfil local en users-service.
+			const upsertPayload = {
+				id: user42.id,
+				login: user42.login,
+				email: user42.email,
+				first_name: user42.first_name,
+				last_name: user42.last_name,
+				displayname: user42.displayname,
+				usual_full_name: user42.usual_full_name,
+				pool_month: user42.pool_month,
+				pool_year: user42.pool_year,
+				wallet: user42.wallet,
+				correction_point: user42.correction_point,
+				location: user42.location,
+				phone: user42.phone,
+				staff: user42['staff?'] ?? user42.staff,
+				alumni: user42['alumni?'] ?? user42.alumni,
+				active: user42['active?'] ?? user42.active,
+				image: user42.image
+					? {
+						link: user42.image.link,
+						versions: user42.image.versions
+							? {
+								large: user42.image.versions.large,
+								medium: user42.image.versions.medium,
+								small: user42.image.versions.small,
+								micro: user42.image.versions.micro,
+							}
+							: undefined,
+					}
+					: undefined,
+				campus: Array.isArray(user42.campus)
+					? user42.campus.map((c: any) => ({ name: c.name }))
+					: undefined,
+			};
+
 			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
 			const upsertResponse = await axios.post(
 				`${usersServiceUrl}/users/oauth/42/upsert`,
-				user42,
+				upsertPayload,
 				{ timeout: 10000 },
 			);
 
 			const profile = upsertResponse.data;
 
-			// El perfil local alimenta nuestra identidad interna, no la respuesta externa.
-			const user = {
-				id: profile.id,
-				username: (profile.login || user42.login || '').toLowerCase(),
-				email: (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase(),
-				display_name: profile.display_name || user42.usual_full_name || user42.login,
-				is_active: true,
-				failed_login_attempts: 0,
-				last_login: new Date(),
-				password: '',
-				created_at: new Date(),
-				updated_at: new Date(),
-				locked_until: null,
-			} as UserEntity;
+			// Normalizar identificadores para el usuario interno del auth-service.
+			const normalizedUsername = (profile.login || user42.login || '').toLowerCase().trim();
+			const normalizedEmail = (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase().trim();
+			const displayName = profile.display_name || user42.usual_full_name || user42.login;
 
-			console.log(`Login OAuth 42 exitoso: ${user.username} (${user.id})`);
+			// Paso 4: buscar o crear el usuario interno en la BBDD del auth-service.
+			let authUser = await this.userRepo.findOne({
+				where: [
+					{ username: normalizedUsername },
+					{ email: normalizedEmail },
+				],
+			});
 
-			// Paso 4: generar tokens propios del sistema.
-			return this.generateAuthResponse(user, ip, userAgent);
+			if (!authUser) {
+				// Usuario nuevo autenticado solo vía OAuth42: creamos credenciales internas
+				// con una contraseña aleatoria (no usada directamente por el usuario).
+				const randomPassword = crypto.randomBytes(32).toString('hex');
+				const hashedPassword = await bcrypt.hash(randomPassword, BCRYPT_SALT_ROUNDS);
+
+				authUser = this.userRepo.create({
+					username: normalizedUsername,
+					email: normalizedEmail,
+					password: hashedPassword,
+					display_name: displayName,
+					is_active: true,
+					failed_login_attempts: 0,
+				});
+			} else {
+				// Usuario existente: sincronizar algunos campos básicos.
+				authUser.display_name = displayName;
+				authUser.is_active = true;
+			}
+
+			authUser.last_login = new Date();
+			const savedAuthUser = await this.userRepo.save(authUser);
+
+			console.log(`Login OAuth 42 exitoso: ${savedAuthUser.username} (${savedAuthUser.id})`);
+
+			// Paso 5: generar tokens propios del sistema.
+			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
 		} catch (error: any) {
 			console.error('Error en OAuth 42:', error.response?.data || error.message);
 			throw new UnauthorizedError('Error al autenticar con 42');

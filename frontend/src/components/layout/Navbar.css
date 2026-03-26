@@ -1,0 +1,23 @@
+.navbar {
+	@apply bg-ft-card/60 backdrop-blur-xl border-b border-ft-border px-5 py-2.5 items-center justify-between sticky top-0 z-20;
+}
+
+.navbar-logo {
+	@apply text-ft-cyan font-black text-xl tracking-tight flex-shrink-0;
+}
+
+.navbar-search {
+	@apply flex-1 flex items-center bg-ft-hover border border-ft-border focus-within:border-ft-cyan/50 rounded-xl px-3 py-1.5 transition-all duration-200;
+}
+
+.nav-btn {
+	@apply relative flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200;
+}
+
+.nav-btn--active {
+	@apply bg-ft-cyan text-black shadow-ft-glow-sm scale-[1.02];
+}
+
+.nav-btn--default {
+	@apply text-ft-muted hover:text-white hover:bg-ft-faint;
+}

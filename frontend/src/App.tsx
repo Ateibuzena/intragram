@@ -1,19 +1,73 @@
-import { Routes, Route, BrowserRouter } from 'react-router-dom'
-import Login from './Pages/Login/Login'
-import Chat from './Pages/Chat'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
+import { ROUTES } from '@/constants/routes';
+import HomePage from '@/pages/HomePage';
+import LoginPage from '@/pages/LoginPage';
 
-import './App.css'
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+	const auth = useAuthState();
+	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+};
 
-function App() {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+	const { isAuthenticated } = useAuth();
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/chat" element={<Chat />} />
-      </Routes>
-    </BrowserRouter>
-  )
-}
+	if (!isAuthenticated) {
+		return <Navigate to={ROUTES.LOGIN} replace />;
+	}
 
-export default App
+	return children;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+	const { isAuthenticated } = useAuth();
+
+	if (isAuthenticated) {
+		return <Navigate to={ROUTES.HOME} replace />;
+	}
+
+	return children;
+};
+
+const NotFoundRedirect = () => {
+	const { isAuthenticated } = useAuth();
+
+	return (
+		<Navigate
+			to={isAuthenticated ? ROUTES.HOME : ROUTES.LOGIN}
+			replace
+		/>
+	);
+};
+
+const App = () => {
+	return (
+		<BrowserRouter>
+			<AuthProvider>
+				<Routes>
+					<Route
+						path={ROUTES.LOGIN}
+						element={
+							<PublicRoute>
+								<LoginPage />
+							</PublicRoute>
+						}
+					/>
+
+					<Route
+						path={ROUTES.HOME}
+						element={
+							<ProtectedRoute>
+								<HomePage />
+							</ProtectedRoute>
+						}
+					/>
+
+					<Route path="*" element={<NotFoundRedirect />} />
+				</Routes>
+			</AuthProvider>
+		</BrowserRouter>
+	);
+};
+
+export default App;

@@ -2,10 +2,10 @@
 // (likes, guardado y pequeñas animaciones asociadas) en el frontend.
 import { useState } from 'react';
 
-export const usePost = (initialLiked: boolean, initialLikes: number) => {
+export const usePost = (initialLiked: boolean, initialLikes: number, initialSaved = false) => {
 	const [liked, setLiked] = useState(initialLiked);
 	const [likes, setLikes] = useState(initialLikes);
-	const [saved, setSaved] = useState(false);
+	const [saved, setSaved] = useState(initialSaved);
 	const [animatingLike, setAnimatingLike] = useState(false);
 	const [animatingSave, setAnimatingSave] = useState(false);
 

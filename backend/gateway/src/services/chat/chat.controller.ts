@@ -3,7 +3,8 @@
  * Protege las rutas con AuthGuard y reenvía el contexto del usuario.
  * Redirige las peticiones al chat-service y mantiene el frontend desacoplado.
  * 
- * Endpoints:                           → Health check del chat-service
+ * Endpoints:
+ * - GET  /chat/health                           → Health check del chat-service
  * - GET  /chat/conversations                    → Lista conversaciones del usuario
  * - POST /chat/conversations                    → Crea una nueva conversación
  * - GET  /chat/conversations/:id/messages       → Lista mensajes de una conversación
@@ -24,6 +25,15 @@ import { ChatService } from './chat.service';
 @Controller('chat')
 export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
+
+	/**
+	 * Health check del chat-service a través del gateway.
+	 * No requiere autenticación; útil para monitorización del API público.
+	 */
+	@Get('health')
+	getHealth() {
+		return this.chatService.getHealth();
+	}
 
 	/**
 	 * Lista las conversaciones del usuario autenticado.

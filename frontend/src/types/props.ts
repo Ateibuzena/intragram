@@ -24,6 +24,7 @@ export interface ChatWindowProps {
 	error?: string | null;
 	sending?: boolean;
 	onSendMessage: (message: string) => Promise<void>;
+	onStartNewConversation?: () => void;
 }
 
 export interface SidebarProps {

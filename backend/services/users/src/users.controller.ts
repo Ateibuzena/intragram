@@ -29,7 +29,7 @@ import {
 	Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -108,5 +108,73 @@ export class UsersController {
 	@Get('health')
 	async health() {
 		return this.usersService.getHealth();
+	}
+
+	/**
+	 * Devuelve el feed "Reciente" personalizado del usuario.
+	 */
+	@Get('feed/recent/:id')
+	async getRecentFeed(@Param('id') id: string) {
+		return this.usersService.getRecentFeed(id);
+	}
+
+	/**
+	 * Devuelve las publicaciones del propio usuario.
+	 */
+	@Get('feed/user/:id')
+	async getUserFeed(@Param('id') id: string) {
+		return this.usersService.getUserFeed(id);
+	}
+
+	/**
+	 * Crea una nueva publicacion para el usuario indicado.
+	 */
+	@Post('feed/user/:id')
+	async createUserPost(@Param('id') id: string, @Body() dto: CreateFeedPostDto) {
+		return this.usersService.createPost(id, dto);
+	}
+
+	/**
+	 * Devuelve publicaciones de amigos de un usuario.
+	 */
+	@Get('feed/friends/:id')
+	async getFriendsFeed(@Param('id') id: string) {
+		return this.usersService.getFriendsFeed(id);
+	}
+
+	/**
+	 * Devuelve el feed de "Tendencias" para un usuario (sin incluir sus propios posts).
+	 */
+	@Get('feed/trending/:id')
+	async getTrendingFeed(@Param('id') id: string) {
+		return this.usersService.getTrendingFeed(id);
+	}
+
+	/**
+	 * Devuelve el feed de posts guardados (favoritos) de un usuario.
+	 */
+	@Get('feed/favorites/:id')
+	async getFavoritesFeed(@Param('id') id: string) {
+		return this.usersService.getFavoritesFeed(id);
+	}
+
+	/**
+	 * Alterna el estado de guardado de un post para un usuario.
+	 */
+	@Post('feed/favorites/:id')
+	async toggleFavorite(
+		@Param('id') id: string,
+		@Body('postId') postId: string,
+	) {
+		const saved = await this.usersService.toggleFavoritePost(id, postId);
+		return { saved };
+	}
+
+	/**
+	 * Devuelve la lista de amigos aceptados de un usuario.
+	 */
+	@Get('friends/:id')
+	async getFriends(@Param('id') id: string) {
+		return this.usersService.getFriends(id);
 	}
 }

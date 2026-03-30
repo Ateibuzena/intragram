@@ -17,7 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@intragram/shared": ["../backend/shared/index.ts"],
+      "@intragram/shared/*": ["../backend/shared/*"]
     }
   },
   "include": ["src"],

@@ -8,13 +8,14 @@ export interface User {
 }
 
 export interface Post {
-	id: number;
+	id: string | number;
 	user: Pick<User, 'login' | 'level'>;
 	content: string;
 	time: string;
 	likes: number;
 	comments: number;
 	liked: boolean;
+	saved?: boolean;
 }
 
 export type MessageSender = 'me' | 'other';
@@ -38,6 +39,6 @@ export interface Conversation {
 	unread: boolean;
 }
 
-export type FilterKey = 'reciente' | 'amigos' | 'seguidos' | 'trending' | 'perfil';
+export type FilterKey = 'reciente' | 'amigos' | 'favoritos' | 'trending' | 'perfil';
 export type NavKey = 'home' | 'chat' | 'notifications';
 export type ChatTab = 'mensajes' | 'solicitudes';

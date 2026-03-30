@@ -12,29 +12,23 @@
 
 import { Injectable } from '@nestjs/common';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
+import { ChatConversationEntity } from './entities/chat-conversation.entity';
+import { ChatMessageEntity } from './entities/chat-message.entity';
 
 @Injectable()
 export class ChatService {
-	// Estado en memoria para conversaciones y mensajes.
+	// Estado efímero de usuarios conectados (podría migrarse a otro mecanismo más adelante).
 	private readonly connectedUsers = new Set<string>();
-	private readonly conversations = new Map<string, {
-		id: string;
-		participants: string[];
-		created_at: string;
-		updated_at: string;
-		last_message: string | null;
-		last_message_at: string | null;
-	}>();
-	private readonly messages = new Map<string, Array<{
-		id: string;
-		conversationId: string;
-		senderId: string;
-		message: string;
-		attachments: string[];
-		created_at: string;
-	}>>();
+
+	constructor(
+		@InjectRepository(ChatConversationEntity)
+		private readonly conversationRepo: Repository<ChatConversationEntity>,
+		@InjectRepository(ChatMessageEntity)
+		private readonly messageRepo: Repository<ChatMessageEntity>,
+	) {}
 
 	/**
 	 * Devuelve la lista de usuarios conectados.
@@ -56,16 +50,23 @@ export class ChatService {
 
 	/**
 	 * Lista las conversaciones accesibles para el usuario autenticado.
+	 *
+	 * Usa un QueryBuilder porque `participants` es un array de texto en PostgreSQL
+	 * y necesitamos el operador `ANY` para comprobar pertenencia.
 	 */
-	getConversations(userId: string) {
+	async getConversations(userId: string): Promise<ChatConversationEntity[]> {
 		this.assertUser(userId);
-		return [...this.conversations.values()].filter((conversation) => conversation.participants.includes(userId));
+		return this.conversationRepo
+			.createQueryBuilder('conversation')
+			.where(':userId = ANY(conversation.participants)', { userId })
+			.orderBy('conversation.updated_at', 'DESC')
+			.getMany();
 	}
 
 	/**
 	 * Crea o reutiliza una conversación entre dos participantes.
 	 */
-	createConversation(userId: string, dto: CreateConversationDto) {
+	async createConversation(userId: string, dto: CreateConversationDto) {
 		this.assertUser(userId);
 		this.assertRecipient(dto.recipientId);
 
@@ -74,76 +75,76 @@ export class ChatService {
 			throw new BadRequestException('Conversation requires two participants');
 		}
 
-		const existingConversation = [...this.conversations.values()].find((conversation) => {
-			return conversation.participants.length === 2
-				&& conversation.participants.includes(participants[0])
-				&& conversation.participants.includes(participants[1]);
-		});
+		const existingConversation = await this.conversationRepo
+			.createQueryBuilder('conversation')
+			.where(':p1 = ANY(conversation.participants)', { p1: participants[0] })
+			.andWhere(':p2 = ANY(conversation.participants)', { p2: participants[1] })
+			.andWhere('cardinality(conversation.participants) = 2')
+			.getOne();
 
 		if (existingConversation) {
 			return { conversation: existingConversation };
 		}
 
-		const now = new Date().toISOString();
-		const conversation = {
-			id: randomUUID(),
+		const now = new Date();
+		const conversation = this.conversationRepo.create({
 			participants,
 			created_at: now,
 			updated_at: now,
 			last_message: null,
 			last_message_at: null,
-		};
+		});
 
-		this.conversations.set(conversation.id, conversation);
-		this.messages.set(conversation.id, []);
-
-		return { conversation };
+		const saved = await this.conversationRepo.save(conversation);
+		return { conversation: saved };
 	}
 
 	/**
 	 * Devuelve el historial de mensajes de una conversación accesible.
 	 */
-	getMessages(userId: string, conversationId: string) {
-		const conversation = this.getAccessibleConversation(userId, conversationId);
-		return this.messages.get(conversation.id) ?? [];
+	async getMessages(userId: string, conversationId: string): Promise<ChatMessageEntity[]> {
+		const conversation = await this.getAccessibleConversation(userId, conversationId);
+		return this.messageRepo.find({
+			where: { conversationId: conversation.id },
+			order: { created_at: 'ASC' },
+		});
 	}
 
 	/**
 	 * Agrega un mensaje a la conversación y actualiza el resumen.
 	 */
-	sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
-		const conversation = this.getAccessibleConversation(userId, conversationId);
-
+	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
 		if (!dto.message?.trim()) {
 			throw new BadRequestException('Message cannot be empty');
 		}
 
-		const message = {
-			id: randomUUID(),
+		const conversation = await this.getAccessibleConversation(userId, conversationId);
+		const createdAt = new Date();
+		const message = this.messageRepo.create({
+			conversation,
 			conversationId: conversation.id,
 			senderId: userId,
 			message: dto.message.trim(),
 			attachments: dto.attachments ?? [],
-			created_at: new Date().toISOString(),
-		};
+			created_at: createdAt,
+		});
 
-		const history = this.messages.get(conversation.id) ?? [];
-		history.push(message);
-		this.messages.set(conversation.id, history);
+		const savedMessage = await this.messageRepo.save(message);
 
-		conversation.last_message = message.message;
-		conversation.last_message_at = message.created_at;
-		conversation.updated_at = message.created_at;
+		conversation.last_message = savedMessage.message;
+		conversation.last_message_at = createdAt;
+		conversation.updated_at = createdAt;
+		await this.conversationRepo.save(conversation);
 
-		return { message };
+		return { message: savedMessage };
 	}
 
 	/**
 	 * Valida que la conversación exista y que el usuario forme parte de ella.
 	 */
-	private getAccessibleConversation(userId: string, conversationId: string) {
+	private async getAccessibleConversation(userId: string, conversationId: string) {
 		this.assertUser(userId);
-		const conversation = this.conversations.get(conversationId);
+		const conversation = await this.conversationRepo.findOne({ where: { id: conversationId } });
 
 		if (!conversation) {
 			throw new NotFoundException('Conversation not found');

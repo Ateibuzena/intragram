@@ -99,13 +99,14 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed global de publicaciones (público).
+	 * Devuelve el feed "Reciente" del usuario autenticado.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed')
-	async getGlobalFeed(@Req() _req: any) {
+	async getRecentFeed(@Req() req: any) {
 		try {
-			return await this.usersService.getGlobalFeed();
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getRecentFeed(profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -134,6 +135,49 @@ export class UsersController {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			return await this.usersService.getFriendsFeed(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Devuelve el feed de "Tendencias" del usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('feed/trending')
+	async getTrendingFeed(@Req() req: any) {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getTrendingFeed(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Devuelve el feed de posts guardados (favoritos) del usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('feed/favorites')
+	async getFavoritesFeed(@Req() req: any) {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getFavoritesFeed(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Alterna el estado de favorito de un post del usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Post('feed/favorites/:postId')
+	async toggleFavorite(@Param('postId') postId: string, @Req() req: any) {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			const saved = await this.usersService.toggleFavoritePost(profile.id, postId);
+			return { saved };
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

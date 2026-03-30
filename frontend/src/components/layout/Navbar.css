@@ -7,7 +7,7 @@
 }
 
 .navbar-search {
-	@apply flex-1 min-w-[180px] flex items-center bg-ft-hover border border-ft-border focus-within:border-ft-cyan/50 rounded-xl px-3 py-1.5 transition-all duration-200;
+	@apply flex-1 min-w-[140px] sm:min-w-[180px] flex items-center bg-ft-hover border border-ft-border focus-within:border-ft-cyan/50 rounded-xl px-3 py-1.5 transition-all duration-200;
 }
 
 .nav-btn {

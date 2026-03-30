@@ -15,6 +15,7 @@ import { In, Repository } from 'typeorm';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
+import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
 
 @Injectable()
@@ -27,7 +28,20 @@ export class UsersService {
 		private readonly userPostRepo: Repository<UserPostEntity>,
 		@InjectRepository(UserFriendshipEntity)
 		private readonly friendshipRepo: Repository<UserFriendshipEntity>,
+		@InjectRepository(UserSavedPostEntity)
+		private readonly savedPostRepo: Repository<UserSavedPostEntity>,
 	) {}
+
+	/**
+	 * Devuelve los ids de amigos aceptados (tanto "yo → amigo" como "amigo → yo").
+	 */
+	private async getFriendIds(userId: string): Promise<string[]> {
+		const friendships = await this.friendshipRepo.find({
+			where: [{ user_id: userId, status: 'accepted' }, { friend_id: userId, status: 'accepted' }],
+		});
+
+		return friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+	}
 
 	/**
 	 * Crea o actualiza el perfil local a partir del payload OAuth42.
@@ -174,10 +188,29 @@ export class UsersService {
 
 	/**
 	 * Devuelve el feed público global ordenado por fecha de creación.
+	 * Se mantiene para posibles usos futuros (no personalizado).
 	 */
 	async getGlobalFeed(limit = 50): Promise<IFeedPost[]> {
 		const posts = await this.userPostRepo.find({
 			where: { visibility: 'public' },
+			order: { created_at: 'DESC' },
+			take: limit,
+			relations: ['author'],
+		});
+		return posts.map((post) => this.mapPostToFeedDto(post));
+	}
+
+	/**
+	 * Devuelve el feed "Reciente" personal del usuario:
+	 * - Publicaciones propias
+	 * - Publicaciones de amigos aceptados (gente que sigues y te sigue)
+	 */
+	async getRecentFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const friendIds = await this.getFriendIds(userId);
+		const authorIds = [userId, ...friendIds];
+
+		const posts = await this.userPostRepo.find({
+			where: { author_id: In(authorIds), visibility: 'public' },
 			order: { created_at: 'DESC' },
 			take: limit,
 			relations: ['author'],
@@ -202,15 +235,11 @@ export class UsersService {
 	 * Devuelve publicaciones de amigos aceptados del usuario.
 	 */
 	async getFriendsFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const friendships = await this.friendshipRepo.find({
-			where: [{ user_id: userId, status: 'accepted' }, { friend_id: userId, status: 'accepted' }],
-		});
-
-		const friendIds = friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+		const friendIds = await this.getFriendIds(userId);
 		if (!friendIds.length) return [];
 
 		const posts = await this.userPostRepo.find({
-			where: { author_id: In(friendIds) },
+			where: { author_id: In(friendIds), visibility: 'public' },
 			order: { created_at: 'DESC' },
 			take: limit,
 			relations: ['author'],
@@ -218,7 +247,25 @@ export class UsersService {
 		return posts.map((post) => this.mapPostToFeedDto(post));
 	}
 
-	private mapPostToFeedDto(post: UserPostEntity): IFeedPost {
+	/**
+	 * Devuelve el feed de "Tendencias" para un usuario:
+	 * - Solo publicaciones públicas
+	 * - Excluye las del propio usuario
+	 * - Ordenado por likes (desc) y fecha (desc)
+	 */
+	async getTrendingFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const posts = await this.userPostRepo.find({
+			where: { visibility: 'public' },
+			order: { likes_count: 'DESC', created_at: 'DESC' },
+			take: limit * 2,
+			relations: ['author'],
+		});
+
+		const filtered = posts.filter((post) => post.author_id !== userId);
+		return filtered.slice(0, limit).map((post) => this.mapPostToFeedDto(post));
+	}
+
+	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false): IFeedPost {
 		return {
 			id: post.id,
 			content: post.content,
@@ -238,6 +285,7 @@ export class UsersService {
 							? post.author.last_login_at.toISOString()
 							: (post.author.last_login_at as unknown as string | null),
 			},
+			saved_by_current_user: savedByCurrentUser,
 		};
 	}
 
@@ -245,14 +293,45 @@ export class UsersService {
 	 * Devuelve la lista de amigos aceptados de un usuario.
 	 */
 	async getFriends(userId: string): Promise<UserProfileEntity[]> {
-		const friendships = await this.friendshipRepo.find({
-			where: [{ user_id: userId, status: 'accepted' }, { friend_id: userId, status: 'accepted' }],
-		});
-
-		const friendIds = friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+		const friendIds = await this.getFriendIds(userId);
 		if (!friendIds.length) return [];
 
 		return this.userProfileRepo.find({ where: { id: In(friendIds) } });
+	}
+
+	/**
+	 * Devuelve el feed de posts guardados (favoritos) por el usuario.
+	 */
+	async getFavoritesFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const saved = await this.savedPostRepo.find({
+			where: { user_id: userId },
+			order: { created_at: 'DESC' },
+			relations: ['post', 'post.author'],
+			take: limit,
+		});
+
+		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true));
+	}
+
+	/**
+	 * Alterna el estado de guardado de un post para un usuario.
+	 * Devuelve true si queda guardado, false si se deshace el guardado.
+	 */
+	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
+		const existing = await this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } });
+		if (existing) {
+			await this.savedPostRepo.remove(existing);
+			return false;
+		}
+
+		const post = await this.userPostRepo.findOne({ where: { id: postId } });
+		if (!post) {
+			throw Object.assign(new Error('Publicacion no encontrada'), { statusCode: 404 });
+		}
+
+		const entity = this.savedPostRepo.create({ user_id: userId, post_id: postId });
+		await this.savedPostRepo.save(entity);
+		return true;
 	}
 
 	/**

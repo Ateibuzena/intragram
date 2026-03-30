@@ -111,11 +111,11 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed global público.
+	 * Devuelve el feed "Reciente" personalizado del usuario.
 	 */
-	@Get('feed')
-	async getGlobalFeed() {
-		return this.usersService.getGlobalFeed();
+	@Get('feed/recent/:id')
+	async getRecentFeed(@Param('id') id: string) {
+		return this.usersService.getRecentFeed(id);
 	}
 
 	/**
@@ -140,6 +140,34 @@ export class UsersController {
 	@Get('feed/friends/:id')
 	async getFriendsFeed(@Param('id') id: string) {
 		return this.usersService.getFriendsFeed(id);
+	}
+
+	/**
+	 * Devuelve el feed de "Tendencias" para un usuario (sin incluir sus propios posts).
+	 */
+	@Get('feed/trending/:id')
+	async getTrendingFeed(@Param('id') id: string) {
+		return this.usersService.getTrendingFeed(id);
+	}
+
+	/**
+	 * Devuelve el feed de posts guardados (favoritos) de un usuario.
+	 */
+	@Get('feed/favorites/:id')
+	async getFavoritesFeed(@Param('id') id: string) {
+		return this.usersService.getFavoritesFeed(id);
+	}
+
+	/**
+	 * Alterna el estado de guardado de un post para un usuario.
+	 */
+	@Post('feed/favorites/:id')
+	async toggleFavorite(
+		@Param('id') id: string,
+		@Body('postId') postId: string,
+	) {
+		const saved = await this.usersService.toggleFavoritePost(id, postId);
+		return { saved };
 	}
 
 	/**

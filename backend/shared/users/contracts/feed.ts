@@ -20,4 +20,9 @@ export interface IFeedPost {
 	created_at: string;
 	updated_at: string;
 	author: IFeedPostAuthorSummary;
+	/**
+	 * Indica si el usuario autenticado ha guardado este post como favorito.
+	 * Opcional para mantener compatibilidad con feeds que no dependen del usuario.
+	 */
+	saved_by_current_user?: boolean;
 }

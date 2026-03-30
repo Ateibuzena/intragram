@@ -98,18 +98,18 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed global de publicaciones.
+	 * Devuelve el feed "Reciente" personalizado del usuario.
 	 */
-	async getGlobalFeed(): Promise<IFeedPost[]> {
+	async getRecentFeed(userId: string): Promise<IFeedPost[]> {
 		try {
 			const response = await firstValueFrom(
-				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed`, {
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/recent/${userId}`, {
 					timeout: 5000,
 				}),
 			);
 			return response.data;
 		} catch (error) {
-			this.handleHttpError(error, 'obtener feed global');
+			this.handleHttpError(error, 'obtener feed reciente');
 		}
 	}
 
@@ -142,6 +142,54 @@ export class UsersService {
 			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed de amigos');
+		}
+	}
+
+	/**
+	 * Devuelve el feed de "Tendencias" del usuario autenticado (sin incluir sus propios posts).
+	 */
+	async getTrendingFeed(userId: string): Promise<IFeedPost[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/trending/${userId}`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener feed de tendencias');
+		}
+	}
+
+	/**
+	 * Devuelve el feed de posts guardados (favoritos) del usuario autenticado.
+	 */
+	async getFavoritesFeed(userId: string): Promise<IFeedPost[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/favorites/${userId}`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener feed de favoritos');
+		}
+	}
+
+	/**
+	 * Alterna el estado de guardado de un post para el usuario autenticado.
+	 */
+	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<{ saved: boolean }>(`${this.usersBaseUrl}/feed/favorites/${userId}`, { postId }, {
+					timeout: 5000,
+				}),
+			);
+			return response.data.saved;
+		} catch (error) {
+			this.handleHttpError(error, 'actualizar favorito');
 		}
 	}
 

@@ -35,7 +35,7 @@
   - Estado `search` interno en HomePage, solo UI (sin backend)
 
 - **Avatar usuario**
-  - Desktop y móvil, sin `onClick`
+  - Solo desktop, sin `onClick` (sin flujo móvil)
 
 - **Adjuntos en CrearPost (Imagen / Código / Logro)**
   - Botones sin handler
@@ -48,8 +48,7 @@
   - Menú “…” → sin lógica
 
 - **FriendsList**
-  - Lista real (`/users/friends/me`)
-  - Items no clicables
+  - Items no clicables (abrir perfil o chat)
 
 - **Iconos header chat**
   - Sin `onClick`, solo estética
@@ -67,25 +66,11 @@
 # Checklist priorizada - HOME funcional
 
 ## 🔴 Nivel 1: Crítico (bloquea flujos esenciales)
-Estos deben implementarse antes que nada; sin ellos, el feed y chat no funcionan como se espera.
+Estos deben implementarse antes que nada; sin ellos, el flujo principal no está completo.
 
 - **Logout desde HOME**
   - Añadir botón visible en Navbar o avatar móvil
   - Debe llamar a `useAuth.logout` y redirigir al login
-
-- **Crear post - botón Publicar**
-  - Ya funciona parcialmente
-  - Verificar manejo de errores y feedback al usuario
-  - Asegurarse de refrescar feed al crear post
-
-- **Chat - envío de mensajes y creación de nuevas conversaciones**
-  - Botón “Enviar” en ventana abierta
-  - Botón “Enviar / Crear nueva conversación” cuando no hay chat seleccionado
-  - Confirmar llamadas a `/chat/conversations` y `/chat/conversations/:id/messages`
-
-- **Filtros esenciales del feed**
-  - `Reciente`, `Amigos`, `Mi perfil` → endpoints reales
-  - Que realmente refresquen el feed y actualicen la vista
 
 ---
 

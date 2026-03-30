@@ -27,6 +27,7 @@ const mapApiPostToPost = (api: IFeedPost): Post => ({
 	likes: api.likes_count ?? 0,
 	comments: api.comments_count ?? 0,
 	liked: false,
+	saved: api.saved_by_current_user ?? false,
 });
 
 export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
@@ -45,11 +46,15 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 			try {
 				setLoadingFeed(true);
 				setError(null);
-				let path = '/users/feed';
+				let path = '/users/feed'; // "Reciente": propias + amigos
 				if (activeFilter === 'perfil') {
-					path = '/users/feed/me';
+					path = '/users/feed/me'; // "Mis publicaciones"
 				} else if (activeFilter === 'amigos') {
-					path = '/users/feed/friends';
+					path = '/users/feed/friends'; // Solo amigos
+				} else if (activeFilter === 'favoritos') {
+					path = '/users/feed/favorites'; // Posts guardados por el usuario
+				} else if (activeFilter === 'trending') {
+					path = '/users/feed/trending'; // Tendencias: otros usuarios, ordenado por popularidad
 				}
 
 				const res = await fetch(buildApiUrl(path), {

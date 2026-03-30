@@ -3,6 +3,7 @@ import type { NavKey } from '@/types/models';
 import { Badge } from '@/components/ui/Badge';
 import { NavIcon } from './NavIcon';
 import { useAuth } from '@/hooks/useAuth';
+import logoIntragram from '/logo.png';
 
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
 	{ key: 'home', label: 'Home' },
@@ -27,8 +28,11 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	return (
 		<header className="navbar flex">
 			{/* Logo + buscador */}
-			<div className="flex items-center space-x-4 w-64 lg:w-72">
-				<span className="navbar-logo">Intra<span className="text-white">gram</span></span>
+			<div className="flex items-center space-x-3 flex-1 min-w-[260px] max-w-[420px]">
+				<div className="flex items-center space-x-2 shrink-0">
+					<img src={logoIntragram} alt="Intragram logo" className="w-6 h-6 rounded shrink-0" />
+					<span className="navbar-logo">Intra<span className="text-white">gram</span></span>
+				</div>
 				<div className="navbar-search">
 					<svg className="w-3.5 h-3.5 text-ft-muted mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

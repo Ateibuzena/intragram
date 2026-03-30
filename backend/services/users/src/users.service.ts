@@ -187,20 +187,6 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed público global ordenado por fecha de creación.
-	 * Se mantiene para posibles usos futuros (no personalizado).
-	 */
-	async getGlobalFeed(limit = 50): Promise<IFeedPost[]> {
-		const posts = await this.userPostRepo.find({
-			where: { visibility: 'public' },
-			order: { created_at: 'DESC' },
-			take: limit,
-			relations: ['author'],
-		});
-		return posts.map((post) => this.mapPostToFeedDto(post));
-	}
-
-	/**
 	 * Devuelve el feed "Reciente" personal del usuario:
 	 * - Publicaciones propias
 	 * - Publicaciones de amigos aceptados (gente que sigues y te sigue)

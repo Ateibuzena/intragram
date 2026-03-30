@@ -3,6 +3,8 @@ import type { NavKey } from '@/types/models';
 import { Badge } from '@/components/ui/Badge';
 import { NavIcon } from './NavIcon';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import logoIntragram from '/logo.png';
 
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
@@ -19,11 +21,17 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarProps) => {
-	const { user, profile } = useAuth();
+	const { user, profile, logout } = useAuth();
+	const navigate = useNavigate();
 	const displayLogin = profile?.login || user?.username || '';
 	const displayName = profile?.display_name || user?.display_name || displayLogin;
 	const avatarLetter = (displayName || displayLogin || '?').charAt(0).toUpperCase();
 	const levelLabel = profile ? `CP ${profile.correction_point}` : undefined;
+
+	const handleLogout = () => {
+		logout();
+		navigate(ROUTES.LOGIN + '?reason=manual');
+	};
 
 	return (
 		<header className="navbar flex">
@@ -72,6 +80,12 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 					</div>
 					<span className="text-xs font-medium text-ft-text hidden lg:inline">{displayLogin}</span>
 					{levelLabel && <Badge variant="level">{levelLabel}</Badge>}
+					<button
+						onClick={handleLogout}
+						className="ml-2 text-[10px] font-medium text-ft-muted hover:text-red-400 transition-colors"
+					>
+						Cerrar sesión
+					</button>
 				</div>
 			</div>
 		</header>

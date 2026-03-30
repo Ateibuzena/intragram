@@ -12,6 +12,7 @@ export const ChatWindow = ({
 	error = null,
 	sending = false,
 	onSendMessage,
+ 	onStartNewConversation,
 }: ChatWindowProps) => {
 	const [messageText, setMessageText] = useState('');
 
@@ -33,7 +34,14 @@ export const ChatWindow = ({
 				</div>
 				<h3 className="text-xl font-bold text-white mb-2">Tus mensajes</h3>
 				<p className="text-ft-muted text-sm text-center max-w-sm">Envía fotos y mensajes privados a un amigo o grupo</p>
-				<Button variant="primary" size="md" className="mt-6">Enviar mensaje</Button>
+				<Button
+					variant="primary"
+					size="md"
+					className="mt-6"
+					onClick={onStartNewConversation}
+				>
+					Enviar mensaje
+				</Button>
 			</div>
 		);
 	}

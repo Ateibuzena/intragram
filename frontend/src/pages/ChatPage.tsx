@@ -98,6 +98,7 @@ const ChatPage = () => {
 	const [loadingConversations, setLoadingConversations] = useState(false);
 	const [loadingMessages, setLoadingMessages] = useState(false);
 	const [sendingMessage, setSendingMessage] = useState(false);
+	const [creatingConversation, setCreatingConversation] = useState(false);
 
 	const [conversationsError, setConversationsError] = useState<string | null>(null);
 	const [messagesError, setMessagesError] = useState<string | null>(null);
@@ -301,6 +302,70 @@ const ChatPage = () => {
 		}
 	};
 
+	const handleStartNewConversation = async () => {
+		if (!token) return;
+
+		const login = window.prompt('Introduce el login del usuario con el que quieres chatear:');
+		if (!login) return;
+
+		setCreatingConversation(true);
+		setConversationsError(null);
+
+		try {
+			// 1) Buscar usuario por login vía gateway: GET /users/login/:login
+			const userResponse = await fetch(buildApiUrl(`/users/login/${encodeURIComponent(login)}`), {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+
+			if (!userResponse.ok) {
+				throw new Error('No se pudo encontrar el usuario');
+			}
+
+			const profile = await userResponse.json() as UserProfile;
+
+			// 2) Crear o reutilizar conversación en el backend: POST /chat/conversations
+			const convResponse = await fetch(buildApiUrl('/chat/conversations'), {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ recipientId: profile.id }),
+			});
+
+			if (!convResponse.ok) {
+				throw new Error('No se pudo crear la conversación');
+			}
+
+			const { conversation } = await convResponse.json() as { conversation: BackendConversation };
+
+			// 3) Actualizar lista de conversaciones y mapa de usuarios
+			setRawConversations((previous) => {
+				const exists = previous.find((c) => c.id === conversation.id);
+				if (exists) {
+					return previous.map((c) => (c.id === conversation.id ? conversation : c));
+				}
+				return [...previous, conversation];
+			});
+
+			setUsersById((previous) => ({
+				...previous,
+				[profile.id]: {
+					id: profile.id,
+					login: profile.display_name || profile.login,
+					avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
+					level: 0,
+				},
+			}));
+
+			setSelectedChatId(conversation.id);
+		} catch (error) {
+			setConversationsError(error instanceof Error ? error.message : 'No se pudo crear la conversación');
+		} finally {
+			setCreatingConversation(false);
+		}
+	};
+
 	return (
 		<div className="flex h-full">
 			<ConversationList
@@ -313,10 +378,11 @@ const ChatPage = () => {
 			<ChatWindow
 				selectedChat={selectedChat}
 				messages={messages}
-				loading={loadingMessages}
+				loading={loadingMessages || creatingConversation}
 				error={messagesError}
 				sending={sendingMessage}
 				onSendMessage={handleSendMessage}
+				onStartNewConversation={handleStartNewConversation}
 			/>
 		</div>
 	);

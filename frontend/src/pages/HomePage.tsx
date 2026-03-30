@@ -5,17 +5,18 @@ import { BottomBar } from '@/components/layout/BottomBar';
 import { FriendsList } from '@/components/layout/FriendsList';
 import { Feed } from '@/components/feed/Feed';
 import { FilterDrawer } from '@/components/filters/FilterDrawer';
-import { SettingsModal } from '@/components/filters/SettingsModal';
 import type { FilterKey, NavKey } from '@/types/models';
 import ChatPage from './ChatPage';
 import NotificationsPage from './NotificationsPage';
+import { useAuth } from '@/hooks/useAuth';
 
 const HomePage = () => {
 	const [activeNav, setActiveNav] = useState<NavKey>('home');
 	const [activeFilter, setActiveFilter] = useState<FilterKey>('reciente');
-	const [showSettings, setShowSettings] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [search, setSearch] = useState('');
+	const { user, profile } = useAuth();
+	const currentLogin = profile?.login || user?.username || '';
 
 	return (
 		<div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
@@ -25,7 +26,6 @@ const HomePage = () => {
 				setActiveNav={setActiveNav}
 				search={search}
 				setSearch={setSearch}
-				onSettingsOpen={() => setShowSettings(true)}
 			/>
 
 			{/* Navbar móvil superior */}
@@ -38,8 +38,8 @@ const HomePage = () => {
 					<input type="text" placeholder="Buscar..." className="bg-transparent text-xs text-white placeholder-ft-muted focus:outline-none w-full"
 						value={search} onChange={(e) => setSearch(e.target.value)} />
 				</div>
-				<button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black flex-shrink-0">
-					P
+				<button className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black flex-shrink-0">
+					{(currentLogin || '?').charAt(0).toUpperCase()}
 				</button>
 			</header>
 
@@ -57,7 +57,7 @@ const HomePage = () => {
 						<div className="py-4 md:py-6 px-3 md:px-4">
 							<div className="max-w-xl mx-auto">
 								<div key={activeNav} className="animate-page-switch">
-									{activeNav === 'home' && <Feed activeFilter={activeFilter} />}
+									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
 									{activeNav === 'notifications' && <NotificationsPage />}
 								</div>
 							</div>
@@ -77,11 +77,9 @@ const HomePage = () => {
 				activeNav={activeNav}
 				setActiveNav={setActiveNav}
 				onFiltersOpen={() => setShowFilters(true)}
-				onSettingsOpen={() => setShowSettings(true)}
 			/>
 
 			{showFilters && <FilterDrawer activeFilter={activeFilter} setActiveFilter={setActiveFilter} onClose={() => setShowFilters(false)} />}
-			{showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 		</div>
 	);
 };

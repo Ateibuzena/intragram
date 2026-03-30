@@ -6,22 +6,26 @@ import { PostSkeleton } from './PostSkeleton';
 
 interface FeedProps {
 	activeFilter: FilterKey;
+	currentLogin?: string;
 	loading?: boolean;
 }
 
 const FRIENDS_LOGINS = ['mruiz', 'agarcia', 'csmith', 'dperez'];
 
-const filterPosts = (filter: FilterKey) => {
+const filterPosts = (filter: FilterKey, currentLogin?: string) => {
 	switch (filter) {
-		case 'perfil': return MOCK_POSTS.filter(p => p.user.login === 'petazz');
+		case 'perfil':
+			return currentLogin
+				? MOCK_POSTS.filter(p => p.user.login === currentLogin)
+				: [];
 		case 'amigos': return MOCK_POSTS.filter(p => FRIENDS_LOGINS.includes(p.user.login));
 		case 'seguidos': return MOCK_POSTS.filter(p => p.user.level >= 10);
 		default: return MOCK_POSTS;
 	}
 };
 
-export const Feed = ({ activeFilter, loading = false }: FeedProps) => {
-	const posts = filterPosts(activeFilter);
+export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
+	const posts = filterPosts(activeFilter, currentLogin || undefined);
 
 	return (
 		<div>

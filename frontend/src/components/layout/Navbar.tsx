@@ -25,7 +25,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	const levelLabel = profile ? `CP ${profile.correction_point}` : undefined;
 
 	return (
-		<header className="navbar hidden md:flex">
+		<header className="navbar flex">
 			{/* Logo + buscador */}
 			<div className="flex items-center space-x-4 w-64 lg:w-72">
 				<span className="navbar-logo">Intra<span className="text-white">gram</span></span>
@@ -61,7 +61,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 			</nav>
 
 			{/* Avatar del usuario */}
-			<div className="flex items-center space-x-2 w-64 lg:w-72 justify-end">
+			<div className="flex items-center space-x-2 justify-end flex-shrink-0">
 				<div className="flex items-center space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-3 py-1.5">
 					<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black">
 						{avatarLetter}

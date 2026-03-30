@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { IFeedPost } from '@intragram/shared/users';
 import type { FilterKey, Post } from '@/types/models';
 import { buildApiUrl } from '@/utils/apiBase';
 import { formatTime } from '@/utils/formatters';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/constants/routes';
 import { CreatePost } from './CreatePost';
 import { PostCard } from './PostCard';
 import { PostSkeleton } from './PostSkeleton';
@@ -28,11 +30,12 @@ const mapApiPostToPost = (api: IFeedPost): Post => ({
 });
 
 export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
-	const { token } = useAuth();
+	const { token, logout } = useAuth();
 	const [items, setItems] = useState<Post[]>([]);
 	const [loadingFeed, setLoadingFeed] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [error, setError] = useState<string | null>(null);
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (!token) return;
@@ -59,6 +62,12 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 					const message = await res.text().catch(() => '');
 					console.error('Error al cargar el feed', res.status, message);
 					setItems([]);
+					if (res.status === 401) {
+						// Token expirado o no válido: forzamos cierre de sesión y redirección a login.
+						logout();
+						navigate(ROUTES.LOGIN + '?reason=expired');
+						return;
+					}
 					setError('No se pudo cargar el feed. Inténtalo de nuevo más tarde.');
 					return;
 				}

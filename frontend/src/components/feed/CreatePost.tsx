@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/constants/routes';
 
 interface CreatePostProps {
 	onPostCreated?: () => void;
@@ -17,7 +19,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [postText, setPostText] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const { token, user, profile } = useAuth();
+	const { token, user, profile, logout } = useAuth();
+	const navigate = useNavigate();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 
 	const handlePublish = async () => {
@@ -38,6 +41,12 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 			if (!res.ok) {
 				const message = await res.text().catch(() => '');
 				console.error('Error al publicar en el feed', res.status, message);
+				if (res.status === 401) {
+					// Token expirado o no válido al publicar: cerramos sesión y redirigimos a login.
+					logout();
+					navigate(ROUTES.LOGIN + '?reason=expired');
+					return;
+				}
 				setError('No se pudo publicar tu actualización. Inténtalo de nuevo más tarde.');
 				return;
 			}

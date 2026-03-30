@@ -3,8 +3,7 @@
 ## ✅ Botones y elementos funcionales
 
 - **Navegación entre pestañas (Home / Chat / Notificaciones)**
-  - Barra superior (desktop)
-  - BottomBar (móvil)
+  - Barra superior (Navbar web, sin header móvil)
   - Cambian `activeNav` y la vista central
 
 - **Filtros del feed**
@@ -32,8 +31,8 @@
 
 ## ⚠️ Botones/elementos solo UI / pendientes
 
-- **Buscador Navbar y Header móvil**
-  - Estado `search` interno, no dispara backend
+- **Buscador Navbar (header principal)**
+  - Estado `search` interno en HomePage, solo UI (sin backend)
 
 - **Avatar usuario**
   - Desktop y móvil, sin `onClick`
@@ -113,7 +112,7 @@ Implementar para que los usuarios sientan que la app “responde”.
 ## 🟢 Nivel 3: Estético / nice-to-have
 No bloquea nada, pero mejora percepción de calidad.
 
-- Buscador Navbar / Header móvil → conectar a búsqueda real
+- Buscador Navbar → conectar a búsqueda real
 - Avatar del usuario → menú de perfil / logout
 - Adjuntos en CrearPost (Imagen / Código / Logro)
 - Iconos header chat → funciones reales o eliminar si no se usan

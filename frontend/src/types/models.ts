@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface Post {
-	id: number;
+	id: string | number;
 	user: Pick<User, 'login' | 'level'>;
 	content: string;
 	time: string;

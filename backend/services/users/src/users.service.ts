@@ -11,9 +11,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UserProfileEntity } from './entities/user-profile.entity';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import { UserPostEntity } from './entities/user-post.entity';
+import { UserFriendshipEntity } from './entities/user-friendship.entity';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +23,10 @@ export class UsersService {
 	constructor(
 		@InjectRepository(UserProfileEntity)
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
+		@InjectRepository(UserPostEntity)
+		private readonly userPostRepo: Repository<UserPostEntity>,
+		@InjectRepository(UserFriendshipEntity)
+		private readonly friendshipRepo: Repository<UserFriendshipEntity>,
 	) {}
 
 	/**
@@ -164,5 +170,123 @@ export class UsersService {
 				timestamp: new Date().toISOString(),
 			};
 		}
+	}
+
+	/**
+	 * Devuelve el feed público global ordenado por fecha de creación.
+	 */
+	async getGlobalFeed(limit = 50): Promise<IFeedPost[]> {
+		const posts = await this.userPostRepo.find({
+			where: { visibility: 'public' },
+			order: { created_at: 'DESC' },
+			take: limit,
+			relations: ['author'],
+		});
+		return posts.map((post) => this.mapPostToFeedDto(post));
+	}
+
+	/**
+	 * Devuelve las publicaciones del propio usuario autenticado.
+	 */
+	async getUserFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const posts = await this.userPostRepo.find({
+			where: { author_id: userId },
+			order: { created_at: 'DESC' },
+			take: limit,
+			relations: ['author'],
+		});
+		return posts.map((post) => this.mapPostToFeedDto(post));
+	}
+
+	/**
+	 * Devuelve publicaciones de amigos aceptados del usuario.
+	 */
+	async getFriendsFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const friendships = await this.friendshipRepo.find({
+			where: [{ user_id: userId, status: 'accepted' }, { friend_id: userId, status: 'accepted' }],
+		});
+
+		const friendIds = friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+		if (!friendIds.length) return [];
+
+		const posts = await this.userPostRepo.find({
+			where: { author_id: In(friendIds) },
+			order: { created_at: 'DESC' },
+			take: limit,
+			relations: ['author'],
+		});
+		return posts.map((post) => this.mapPostToFeedDto(post));
+	}
+
+	private mapPostToFeedDto(post: UserPostEntity): IFeedPost {
+		return {
+			id: post.id,
+			content: post.content,
+			visibility: post.visibility as IFeedPost['visibility'],
+			likes_count: post.likes_count,
+			comments_count: post.comments_count,
+			created_at: post.created_at instanceof Date ? post.created_at.toISOString() : (post.created_at as unknown as string),
+			updated_at: post.updated_at instanceof Date ? post.updated_at.toISOString() : (post.updated_at as unknown as string),
+			author: {
+				id: post.author.id,
+				login: post.author.login,
+				display_name: post.author.display_name,
+				avatar_url: post.author.avatar_url,
+				correction_point: post.author.correction_point,
+				last_login_at:
+					post.author.last_login_at instanceof Date
+							? post.author.last_login_at.toISOString()
+							: (post.author.last_login_at as unknown as string | null),
+			},
+		};
+	}
+
+	/**
+	 * Devuelve la lista de amigos aceptados de un usuario.
+	 */
+	async getFriends(userId: string): Promise<UserProfileEntity[]> {
+		const friendships = await this.friendshipRepo.find({
+			where: [{ user_id: userId, status: 'accepted' }, { friend_id: userId, status: 'accepted' }],
+		});
+
+		const friendIds = friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+		if (!friendIds.length) return [];
+
+		return this.userProfileRepo.find({ where: { id: In(friendIds) } });
+	}
+
+	/**
+	 * Crea una nueva publicación en el feed para el usuario indicado.
+	 */
+	async createPost(authorId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
+		const author = await this.userProfileRepo.findOne({ where: { id: authorId } });
+		if (!author) {
+			throw Object.assign(new Error(`Usuario con id ${authorId} no encontrado`), { statusCode: 404 });
+		}
+
+		const visibility = dto.visibility ?? 'public';
+		const trimmedContent = dto.content.trim();
+		if (!trimmedContent) {
+			throw Object.assign(new Error('El contenido de la publicacion no puede estar vacio'), { statusCode: 400 });
+		}
+
+		const entity = this.userPostRepo.create({
+			author_id: authorId,
+			content: trimmedContent,
+			visibility,
+			likes_count: 0,
+			comments_count: 0,
+		});
+
+		const saved = await this.userPostRepo.save(entity);
+		const full = await this.userPostRepo.findOne({
+			where: { id: saved.id },
+			relations: ['author'],
+		});
+		if (!full) {
+			throw Object.assign(new Error('No se pudo recuperar la publicacion creada'), { statusCode: 500 });
+		}
+
+		return this.mapPostToFeedDto(full);
 	}
 }

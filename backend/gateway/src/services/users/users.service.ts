@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
 import { SERVICE_URLS } from '../../config/microservices.config';
 
 @Injectable()
@@ -94,6 +94,86 @@ export class UsersService {
 			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'actualizar perfil de usuario');
+		}
+	}
+
+	/**
+	 * Devuelve el feed global de publicaciones.
+	 */
+	async getGlobalFeed(): Promise<IFeedPost[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener feed global');
+		}
+	}
+
+	/**
+	 * Devuelve el feed personal del usuario autenticado.
+	 */
+	async getMyFeed(userId: string): Promise<IFeedPost[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/user/${userId}`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener feed del usuario');
+		}
+	}
+
+	/**
+	 * Devuelve el feed de amigos del usuario autenticado.
+	 */
+	async getFriendsFeed(userId: string): Promise<IFeedPost[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/friends/${userId}`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener feed de amigos');
+		}
+	}
+
+	/**
+	 * Crea una nueva publicacion para el usuario autenticado.
+	 */
+	async createPost(userId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IFeedPost>(`${this.usersBaseUrl}/feed/user/${userId}`, dto, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'crear publicacion');
+		}
+	}
+
+	/**
+	 * Devuelve la lista de amigos del usuario autenticado.
+	 */
+	async getFriends(userId: string): Promise<IUserProfile[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IUserProfile[]>(`${this.usersBaseUrl}/friends/${userId}`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener amigos del usuario');
 		}
 	}
 

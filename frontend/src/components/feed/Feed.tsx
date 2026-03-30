@@ -1,5 +1,9 @@
-import { MOCK_POSTS } from '@/constants/mockData';
-import type { FilterKey } from '@/types/models';
+import { useEffect, useMemo, useState } from 'react';
+import type { IFeedPost } from '@intragram/shared/users';
+import type { FilterKey, Post } from '@/types/models';
+import { buildApiUrl } from '@/utils/apiBase';
+import { formatTime } from '@/utils/formatters';
+import { useAuth } from '@/hooks/useAuth';
 import { CreatePost } from './CreatePost';
 import { PostCard } from './PostCard';
 import { PostSkeleton } from './PostSkeleton';
@@ -10,27 +14,91 @@ interface FeedProps {
 	loading?: boolean;
 }
 
-const FRIENDS_LOGINS = ['mruiz', 'agarcia', 'csmith', 'dperez'];
-
-const filterPosts = (filter: FilterKey, currentLogin?: string) => {
-	switch (filter) {
-		case 'perfil':
-			return currentLogin
-				? MOCK_POSTS.filter(p => p.user.login === currentLogin)
-				: [];
-		case 'amigos': return MOCK_POSTS.filter(p => FRIENDS_LOGINS.includes(p.user.login));
-		case 'seguidos': return MOCK_POSTS.filter(p => p.user.level >= 10);
-		default: return MOCK_POSTS;
-	}
-};
+const mapApiPostToPost = (api: IFeedPost): Post => ({
+	id: api.id,
+	user: {
+		login: api.author?.login ?? 'desconocido',
+		level: api.author?.correction_point ?? 0,
+	},
+	content: api.content ?? '',
+	time: formatTime(api.created_at),
+	likes: api.likes_count ?? 0,
+	comments: api.comments_count ?? 0,
+	liked: false,
+});
 
 export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
-	const posts = filterPosts(activeFilter, currentLogin || undefined);
+	const { token } = useAuth();
+	const [items, setItems] = useState<Post[]>([]);
+	const [loadingFeed, setLoadingFeed] = useState(false);
+	const [refreshKey, setRefreshKey] = useState(0);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!token) return;
+
+		const controller = new AbortController();
+		const fetchFeed = async () => {
+			try {
+				setLoadingFeed(true);
+				setError(null);
+				let path = '/users/feed';
+				if (activeFilter === 'perfil') {
+					path = '/users/feed/me';
+				} else if (activeFilter === 'amigos') {
+					path = '/users/feed/friends';
+				}
+
+				const res = await fetch(buildApiUrl(path), {
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+					signal: controller.signal,
+				});
+				if (!res.ok) {
+					const message = await res.text().catch(() => '');
+					console.error('Error al cargar el feed', res.status, message);
+					setItems([]);
+					setError('No se pudo cargar el feed. Inténtalo de nuevo más tarde.');
+					return;
+				}
+				const data: IFeedPost[] = await res.json();
+				setItems(data.map(mapApiPostToPost));
+			} catch (err: unknown) {
+				// Ignoramos abortos provocados por el ciclo de montaje/desmontaje de React
+				// (por ejemplo en modo Strict) para no mostrarlos como errores de red.
+				if ((err as any)?.name === 'AbortError') {
+					console.debug('Carga de feed abortada antes de completarse (no es un error real)');
+					return;
+				}
+				console.error('Error de red al cargar el feed', err);
+				setItems([]);
+				setError('No se pudo cargar el feed por un problema de red.');
+			} finally {
+				setLoadingFeed(false);
+			}
+		};
+
+		fetchFeed();
+		return () => controller.abort();
+	}, [token, activeFilter, refreshKey]);
+
+	const posts = useMemo(() => {
+		if (activeFilter === 'perfil' && currentLogin) {
+			return items.filter(p => p.user.login === currentLogin);
+		}
+		return items;
+	}, [items, activeFilter, currentLogin]);
 
 	return (
 		<div>
-			<CreatePost />
-			{loading
+			<CreatePost onPostCreated={() => setRefreshKey((v) => v + 1)} />
+			{error && !loading && !loadingFeed && (
+				<p className="mb-3 text-xs text-red-400">
+					{error}
+				</p>
+			)}
+			{loading || loadingFeed
 				? Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)
 				: posts.map((post, i) => (
 					<div key={post.id} className={`animate-fade-in-up-delay-${Math.min(i + 1, 3)}`}>

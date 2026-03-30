@@ -35,9 +35,10 @@ Esta página es la vista principal de Intragram una vez que el usuario ha inicia
 - Datos **reales**:
 	- El login del usuario autenticado y su perfil se obtienen a partir del token JWT y del microservicio de usuarios.
 	- La inicial que aparece en los avatares de la cabecera se genera a partir de ese login/nombre real.
+	- El **feed** (lista de publicaciones) se carga desde el backend a través del gateway usando los endpoints `/users/feed`, `/users/feed/me` y `/users/feed/friends`.
+	- La **lista de amigos** (FriendsList) se obtiene desde el backend usando el endpoint `/users/friends/me`, que devuelve perfiles reales de usuarios relacionados.
 - Datos **de ejemplo (mock)**:
-	- El contenido del **feed** (publicaciones, likes, comentarios) todavía se basa en datos simulados, pensados para maquetar la interfaz.
-	- La **lista de amigos** (FriendsList) también usa usuarios de prueba, no conecta aún con un backend de “amigos reales”.
+	- Pueden seguir existiendo textos de ejemplo en la base de datos durante desarrollo, pero ya no se generan ni se filtran en el frontend a partir de constantes mock.
 
 ### Comportamiento técnico (alto nivel, sin código)
 
@@ -47,12 +48,11 @@ Esta página es la vista principal de Intragram una vez que el usuario ha inicia
 4. Con esta información se personalizan:
 	 - El avatar y login mostrados en la Navbar.
 	 - La inicial del botón de usuario en el header móvil.
-	 - El filtro "Mi perfil" del feed, que ahora usa el login real del usuario para mostrar solo sus publicaciones (aunque hoy en día esas publicaciones siguen siendo de ejemplo).
+	 - Las llamadas al feed (`/users/feed`, `/users/feed/me`, `/users/feed/friends`) que devuelven las publicaciones ligadas a usuarios reales.
 
 ### Pendiente / TODO de la página HOME
 
-- Conectar el **feed** con un backend real de publicaciones, de forma que:
-	- Las tarjetas de post muestren mensajes y métricas reales guardadas en base de datos.
-	- El filtro **"Mi perfil"** liste solo posts creados por el usuario autenticado, pero usando datos reales y no la colección mock.
-- Conectar la **lista de amigos (FriendsList)** con datos reales de usuarios/amigos/seguidores en lugar de una lista fija de ejemplo.
-- Integrar el **estado de sesión** (por ejemplo, botón de cerrar sesión) en la interfaz de HOME para que un usuario no técnico pueda salir de la aplicación fácilmente.
+- Mejorar el **soporte de interacciones del feed**:
+	- Los posts ya se **crean de verdad** desde el componente `CreatePost`, que llama al endpoint protegido `POST /users/feed` (gateway) → `POST /feed/user/:id` (users-service), persiste en base de datos y fuerza a recargar el feed.
+	- Siguen pendientes las interacciones de **likes reales** y **comentarios reales** (endpoints y UI asociada).
+- Implementar un **botón visible de cerrar sesión** dentro de HOME (por ejemplo, desde la Navbar o el avatar móvil) que llame al `logout` del contexto de autenticación y, opcionalmente, al endpoint `/auth/logout`.

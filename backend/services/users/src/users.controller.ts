@@ -29,7 +29,7 @@ import {
 	Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -108,5 +108,45 @@ export class UsersController {
 	@Get('health')
 	async health() {
 		return this.usersService.getHealth();
+	}
+
+	/**
+	 * Devuelve el feed global público.
+	 */
+	@Get('feed')
+	async getGlobalFeed() {
+		return this.usersService.getGlobalFeed();
+	}
+
+	/**
+	 * Devuelve las publicaciones del propio usuario.
+	 */
+	@Get('feed/user/:id')
+	async getUserFeed(@Param('id') id: string) {
+		return this.usersService.getUserFeed(id);
+	}
+
+	/**
+	 * Crea una nueva publicacion para el usuario indicado.
+	 */
+	@Post('feed/user/:id')
+	async createUserPost(@Param('id') id: string, @Body() dto: CreateFeedPostDto) {
+		return this.usersService.createPost(id, dto);
+	}
+
+	/**
+	 * Devuelve publicaciones de amigos de un usuario.
+	 */
+	@Get('feed/friends/:id')
+	async getFriendsFeed(@Param('id') id: string) {
+		return this.usersService.getFriendsFeed(id);
+	}
+
+	/**
+	 * Devuelve la lista de amigos aceptados de un usuario.
+	 */
+	@Get('friends/:id')
+	async getFriends(@Param('id') id: string) {
+		return this.usersService.getFriends(id);
 	}
 }

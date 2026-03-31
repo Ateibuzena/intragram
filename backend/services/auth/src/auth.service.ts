@@ -548,6 +548,32 @@ export class AuthService implements OnModuleInit {
 				campus: Array.isArray(user42.campus)
 					? user42.campus.map((c: any) => ({ name: c.name }))
 					: undefined,
+				projects_users: Array.isArray(user42.projects_users)
+					? user42.projects_users
+						.filter((projectUser: any) => typeof projectUser?.project?.id === 'number')
+						.map((projectUser: any) => ({
+							id: typeof projectUser.id === 'number' ? projectUser.id : undefined,
+							occurrence: typeof projectUser.occurrence === 'number' ? projectUser.occurrence : undefined,
+							final_mark: typeof projectUser.final_mark === 'number' ? projectUser.final_mark : undefined,
+							status: projectUser.status,
+							validated: projectUser['validated?'] ?? projectUser.validated,
+							marked: projectUser['marked?'] ?? projectUser.marked,
+							current_team_id:
+								typeof projectUser.current_team_id === 'number'
+									? projectUser.current_team_id
+									: undefined,
+							cursus_ids: Array.isArray(projectUser.cursus_ids)
+								? projectUser.cursus_ids.filter((id: any) => typeof id === 'number')
+								: undefined,
+							cursus_name: projectUser.cursus_name,
+							created_at: projectUser.created_at,
+							updated_at: projectUser.updated_at,
+							project: {
+								id: projectUser.project.id,
+								name: projectUser.project.name,
+							},
+						}))
+					: undefined,
 			};
 
 			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';

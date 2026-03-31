@@ -8,6 +8,9 @@
  * - GET    /users/:id             → Busca perfil por ID interno
  * - GET    /users/42/:fortyTwoId  → Busca perfil por ID de 42
  * - GET    /users/login/:login    → Busca perfil por login normalizado
+ * - GET    /users/:id/projects    → Lista proyectos guardados del usuario
+ * - GET    /users/42/:fortyTwoId/projects → Lista proyectos por id de 42
+ * - POST   /users/:id/projects/sync → Sincroniza proyectos actuales
  * - PATCH  /users/:id/profile     → Actualiza campos editables del perfil (solo propio)
  * 
  * Seguridad:
@@ -25,12 +28,20 @@ import {
 	HttpStatus,
 	Param,
 	Patch,
+	ParseUUIDPipe,
 	Post,
 	Req,
 	UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import {
+	IUserProfile,
+	IUserProject,
+	IUserProjectsSyncResult,
+	SyncOAuth42ProjectsDto,
+	UpsertOAuth42UserDto,
+	UpdateUserProfileDto,
+} from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 
 @Controller('users')
@@ -57,7 +68,7 @@ export class UsersController {
 	 */
 	@UseGuards(AuthGuard)
 	@Get(':id')
-	async findById(@Param('id') id: string): Promise<IUserProfile> {
+	async findById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string): Promise<IUserProfile> {
 		try {
 			return await this.usersService.findById(id);
 		} catch (error: any) {
@@ -92,11 +103,62 @@ export class UsersController {
 	}
 
 	/**
+	 * Lista proyectos almacenados por id interno del usuario.
+	 */
+	@UseGuards(AuthGuard)
+	@Get(':id/projects')
+	async findProjectsByUserId(
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+	): Promise<IUserProject[]> {
+		try {
+			return await this.usersService.findProjectsByUserId(id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.NOT_FOUND);
+		}
+	}
+
+	/**
+	 * Lista proyectos almacenados por id de 42.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('42/:fortyTwoId/projects')
+	async findProjectsBy42Id(@Param('fortyTwoId') fortyTwoId: string): Promise<IUserProject[]> {
+		try {
+			return await this.usersService.findProjectsBy42Id(parseInt(fortyTwoId, 10));
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.NOT_FOUND);
+		}
+	}
+
+	/**
+	 * Sincroniza manualmente proyectos actuales del usuario.
+	 */
+	@UseGuards(AuthGuard)
+	@Post(':id/projects/sync')
+	async syncProjects(
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Body() dto: SyncOAuth42ProjectsDto,
+	): Promise<IUserProjectsSyncResult> {
+		try {
+			return await this.usersService.syncProjects(id, dto);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al sincronizar proyectos',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
 	 * Actualiza solo los campos editables del propio perfil del usuario autenticado.
 	 */
 	@UseGuards(AuthGuard)
 	@Patch(':id/profile')
-	async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto, @Req() req: any): Promise<IUserProfile> {
+	async updateProfile(
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Body() dto: UpdateUserProfileDto,
+		@Req() req: any,
+	): Promise<IUserProfile> {
 		if (req.user?.sub !== id) {
 			throw new ForbiddenException('You can only update your own profile');
 		}

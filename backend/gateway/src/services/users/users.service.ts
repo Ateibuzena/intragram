@@ -7,7 +7,14 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
+import {
+	IUserProfile,
+	IUserProject,
+	IUserProjectsSyncResult,
+	SyncOAuth42ProjectsDto,
+	UpsertOAuth42UserDto,
+	UpdateUserProfileDto,
+} from '@intragram/shared/users';
 import { SERVICE_URLS } from '../../config/microservices.config';
 
 @Injectable()
@@ -78,6 +85,54 @@ export class UsersService {
 			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'obtener usuario por login');
+		}
+	}
+
+	/**
+	 * Lista los proyectos almacenados del usuario por id interno.
+	 */
+	async findProjectsByUserId(id: string): Promise<IUserProject[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IUserProject[]>(`${this.usersBaseUrl}/users/${id}/projects`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener proyectos de usuario por id');
+		}
+	}
+
+	/**
+	 * Lista los proyectos almacenados del usuario por id de 42.
+	 */
+	async findProjectsBy42Id(fortyTwoId: number): Promise<IUserProject[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IUserProject[]>(`${this.usersBaseUrl}/users/42/${fortyTwoId}/projects`, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'obtener proyectos de usuario por 42 id');
+		}
+	}
+
+	/**
+	 * Sincroniza los proyectos del usuario con los datos actuales de OAuth42.
+	 */
+	async syncProjects(id: string, dto: SyncOAuth42ProjectsDto): Promise<IUserProjectsSyncResult> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IUserProjectsSyncResult>(`${this.usersBaseUrl}/users/${id}/projects/sync`, dto, {
+					timeout: 10000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'sincronizar proyectos de usuario');
 		}
 	}
 

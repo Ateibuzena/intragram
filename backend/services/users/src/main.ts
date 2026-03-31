@@ -21,10 +21,7 @@ async function bootstrap() {
 
 	console.log(`Users Microservice HTTP listening on port ${port}`);
 	console.log(`Prometheus metrics available at http://localhost:${port}/metrics`);
-<<<<<<< HEAD
-=======
 	console.log(`Health check available at http://localhost:${port}/health`);
->>>>>>> origin/development
 }
 
 bootstrap();

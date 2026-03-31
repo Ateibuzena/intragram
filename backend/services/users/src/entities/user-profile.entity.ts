@@ -10,7 +10,9 @@ import {
 	CreateDateColumn,
 	UpdateDateColumn,
 	Index,
+	OneToMany,
 } from 'typeorm';
+import { UserProjectEntity } from './user-project.entity';
 
 @Entity('user_profiles')
 export class UserProfileEntity {
@@ -76,6 +78,9 @@ export class UserProfileEntity {
 
 	@Column({ type: 'jsonb', nullable: true })
 	raw_profile!: Record<string, unknown> | null;
+
+	@OneToMany(() => UserProjectEntity, (project) => project.user_profile)
+	projects!: UserProjectEntity[];
 
 	@CreateDateColumn({ type: 'timestamp' })
 	created_at!: Date;

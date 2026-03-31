@@ -12,7 +12,6 @@ interface CreatePostProps {
 const ATTACHMENT_BUTTONS = [
 	{ icon: '📷', label: 'Imagen' },
 	{ icon: '💻', label: 'Código' },
-	{ icon: '🏆', label: 'Logro' },
 ];
 
 export const CreatePost = ({ onPostCreated }: CreatePostProps) => {

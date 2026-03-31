@@ -5,7 +5,7 @@ import { FriendsList } from '@/components/layout/FriendsList';
 import { Feed } from '@/components/feed/Feed';
 import type { FilterKey, NavKey } from '@/types/models';
 import ChatPage from './ChatPage';
-import NotificationsPage from './NotificationsPage';
+import ProfilePage from './ProfilePage';
 import { useAuth } from '@/hooks/useAuth';
 
 const HomePage = () => {
@@ -40,7 +40,7 @@ const HomePage = () => {
 							<div className="max-w-xl mx-auto">
 								<div key={activeNav} className="animate-page-switch">
 									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
-									{activeNav === 'notifications' && <NotificationsPage />}
+									{activeNav === 'profile' && <ProfilePage />}
 								</div>
 							</div>
 						</div>

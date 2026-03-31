@@ -1,21 +1,36 @@
+/**
+ * Servicio de usuarios del backend de Intragram.
+ * Maneja la lógica de negocio relacionada con los perfiles de usuario.
+ * 
+ * Funcionalidades:
+ * - Sincronización de perfil desde OAuth42
+ * - Búsqueda de usuarios por id, login o id de 42
+ * - Actualización de campos editables del perfil
+ * - Health check para monitoreo y Docker
+ */
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserProfileEntity } from './entities/user-profile.entity';
-import { UpsertOAuth42UserDto } from './dto/upsert-oauth42-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto } from '@intragram/shared/users';
 
 @Injectable()
 export class UsersService {
+	// Repositorio TypeORM del perfil local de usuario.
 	constructor(
 		@InjectRepository(UserProfileEntity)
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
 	) {}
 
+	/**
+	 * Crea o actualiza el perfil local a partir del payload OAuth42.
+	 */
 	async upsertFromOAuth42(profile: UpsertOAuth42UserDto): Promise<UserProfileEntity> {
 		const login = profile.login.toLowerCase().trim();
 		const email = profile.email?.toLowerCase().trim() || null;
 
+		// Busca coincidencias por id de 42, login o email para reutilizar el perfil existente.
 		const existing = await this.userProfileRepo.findOne({
 			where: [{ forty_two_id: profile.id }, { login }, ...(email ? [{ email }] : [])],
 		});
@@ -31,6 +46,7 @@ export class UsersService {
 		const displayName = profile.displayname || profile.usual_full_name || login;
 
 		if (existing) {
+			// Actualiza solo los campos sincronizados desde 42.
 			existing.forty_two_id = profile.id;
 			existing.login = login;
 			existing.email = email;
@@ -54,6 +70,7 @@ export class UsersService {
 			return this.userProfileRepo.save(existing);
 		}
 
+		// Crea un perfil nuevo si no existe ningún registro equivalente.
 		const created = this.userProfileRepo.create({
 			forty_two_id: profile.id,
 			login,
@@ -79,6 +96,9 @@ export class UsersService {
 		return this.userProfileRepo.save(created);
 	}
 
+	/**
+	 * Busca un usuario por id interno.
+	 */
 	async findById(id: string): Promise<UserProfileEntity> {
 		const user = await this.userProfileRepo.findOne({ where: { id } });
 		if (!user) {
@@ -87,6 +107,9 @@ export class UsersService {
 		return user;
 	}
 
+	/**
+	 * Busca un usuario por id de 42.
+	 */
 	async findBy42Id(fortyTwoId: number): Promise<UserProfileEntity> {
 		const user = await this.userProfileRepo.findOne({ where: { forty_two_id: fortyTwoId } });
 		if (!user) {
@@ -95,6 +118,9 @@ export class UsersService {
 		return user;
 	}
 
+	/**
+	 * Busca un usuario por login normalizado.
+	 */
 	async findByLogin(login: string): Promise<UserProfileEntity> {
 		const normalized = login.toLowerCase().trim();
 		const user = await this.userProfileRepo.findOne({ where: { login: normalized } });
@@ -104,6 +130,9 @@ export class UsersService {
 		return user;
 	}
 
+	/**
+	 * Actualiza los campos editables del perfil local.
+	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<UserProfileEntity> {
 		const user = await this.findById(id);
 
@@ -117,9 +146,12 @@ export class UsersService {
 		return this.userProfileRepo.save(user);
 	}
 
+	/**
+	 * Verifica conectividad básica con la base de datos.
+	 */
 	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
 		try {
-			await this.userProfileRepo.query('SELECT 1');
+			await this.userProfileRepo.query('SELECT 3');
 			return {
 				status: 'ok',
 				database: 'connected',

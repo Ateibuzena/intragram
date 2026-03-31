@@ -1,13 +1,6 @@
 /**
- * Entidad de Usuario
- * Tabla 'users' en PostgreSQL
- * 
- * Medidas de seguridad:
- * - El password se almacena hasheado con bcrypt (salt rounds: 12)
- * - El email tiene índice único para evitar duplicados
- * - El username tiene índice único
- * - Se registra la fecha de último login
- * - Campo is_active para soft-delete / bloqueo de cuentas
+ * Entidad de usuario del auth-service.
+ * Modela credenciales, estado y auditoría de sesión.
  */
 
 import {
@@ -33,8 +26,8 @@ export class UserEntity {
 	email!: string;
 
 	/**
-	 * Password hasheado con bcrypt
-	 * NUNCA se devuelve en las respuestas de la API
+	 * Password hasheado con bcrypt.
+	 * Nunca se devuelve en respuestas.
 	 */
 	@Column({ type: 'varchar', length: 255, select: false })
 	password!: string;
@@ -49,16 +42,14 @@ export class UserEntity {
 	last_login!: Date | null;
 
 	/**
-	 * Contador de intentos fallidos de login
-	 * Se resetea tras un login exitoso
-	 * Se usa para bloqueo temporal de cuenta (lockout)
+	 * Contador de intentos fallidos de login.
+	 * Se usa para bloqueo temporal de cuenta.
 	 */
 	@Column({ type: 'int', default: 0 })
 	failed_login_attempts!: number;
 
 	/**
-	 * Fecha hasta la cual la cuenta está bloqueada
-	 * Si es null o pasada -> la cuenta no está bloqueada
+	 * Fecha hasta la cual la cuenta está bloqueada.
 	 */
 	@Column({ type: 'timestamp', nullable: true })
 	locked_until!: Date | null;

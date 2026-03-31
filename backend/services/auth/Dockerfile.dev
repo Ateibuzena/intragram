@@ -5,12 +5,17 @@ WORKDIR /app
 # curl para el healthcheck
 RUN apk add --no-cache curl
 
-COPY package*.json ./
+COPY package.json ./
+COPY gateway/package.json ./gateway/package.json
+COPY services/auth/package.json ./services/auth/package.json
+COPY services/chat/package.json ./services/chat/package.json
+COPY services/users/package.json ./services/users/package.json
+COPY shared/package.json ./shared/package.json
 RUN npm install
 
-COPY tsconfig.json ./
-COPY src ./src
+COPY services/auth/ ./services/auth/
+COPY shared/ ./shared/
 
 EXPOSE 3003
 
-CMD ["npm", "run", "start:watch"]
+CMD ["npm", "run", "start:watch", "-w", "services/auth"]

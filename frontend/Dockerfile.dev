@@ -1,0 +1,23 @@
+# ./frontend/Dockerfile.dev
+FROM node:20-alpine AS builder
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar package.json y package-lock.json para instalar deps
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar resto del frontend
+COPY . .
+
+# Build de Vite/React solo si quieres producción
+# RUN npm run build
+
+# Exponer puerto interno 80 (para NGINX)
+EXPOSE 80
+
+# Comando por defecto para desarrollo
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "80"]

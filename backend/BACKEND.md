@@ -42,6 +42,31 @@ El backend utiliza una arquitectura de microservicios con las siguientes capas:
 
 ```
 backend/
+├── shared/                     # Contratos y tipos compartidos para todo el backend
+│   ├── package.json            # Paquete local @intragram/shared
+│   ├── tsconfig.json
+│   ├── index.ts
+│   ├── contracts/
+│   │   └── index.ts
+│   ├── dto/
+│   │   └── index.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── auth/
+│   │   ├── dto/
+│   │   │   ├── login.dto.ts
+│   │   │   ├── register.dto.ts
+│   │   │   └── refresh-token.dto.ts
+│   │   ├── contracts/
+│   │   │   ├── auth-response.ts
+│   │   │   ├── token-payload.ts
+│   │   │   └── token-validation.ts
+│   │   └── index.ts
+│   ├── users/
+│   │   └── index.ts
+│   └── chat/
+│       └── index.ts
+│
 ├── gateway/                    # API Gateway
 │   ├── src/
 │   │   ├── main.ts            # Punto de entrada del gateway
@@ -62,13 +87,7 @@ backend/
 │   │       ├── auth/
 │   │       │   ├── auth.controller.ts
 │   │       │   ├── auth.module.ts
-│   │       │   ├── auth.service.ts
-│   │       │   ├── dto/
-│   │       │   │   ├── login.dto.ts
-│   │       │   │   ├── register.dto.ts
-│   │       │   │   └── auth-response.dto.ts
-│   │       │   └── interfaces/
-│   │       │       └── auth-service.interface.ts
+│   │       │   └── auth.service.ts
 │   │       ├── chat/
 │   │       │   ├── chat.controller.ts
 │   │       │   ├── chat.module.ts
@@ -87,6 +106,12 @@ backend/
 │   ├── auth/                  # Servicio de autenticación
 │   │   ├── src/
 │   │   │   ├── main.ts        # Punto de entrada
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── dto/
+│   │   │   ├── entities/
+│   │   │   └── oauth.config.ts
 │   │   │   └── db/
 │   │   │       └── auth-db.sh # Script de inicialización BD
 │   │   ├── Dockerfile

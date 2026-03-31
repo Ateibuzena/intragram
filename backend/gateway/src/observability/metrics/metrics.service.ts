@@ -1,13 +1,7 @@
 /**
- * Servicio de Métricas
- * Recopila y expone métricas de la aplicación como:
- * - Contadores de peticiones
- * - Tiempos de respuesta
- * - Uso de memoria y CPU
- * Compatible con Prometheus y otros sistemas de monitoreo
+ * Servicio de métricas del gateway.
+ * Registra contadores y latencias para Prometheus.
  */
-
-/*Métricas Prometheus*/
 
 import { Injectable } from '@nestjs/common';
 import { Registry, collectDefaultMetrics, Histogram } from 'prom-client';
@@ -17,7 +11,6 @@ import { Counter, Gauge } from 'prom-client'
 export class MetricsService {
 	private readonly registry: Registry;
 	public httpRequestDuration: Histogram<string>;
-	/*vamos a exponer métricas custom + etiquetas útiles para Grafana*/
 	public activeUsers: Gauge<string>;
 	public requestCount: Counter<string>;
 
@@ -34,13 +27,13 @@ export class MetricsService {
 
 		this.activeUsers = new Gauge({
 			name: 'active_users',
-			help: 'Active users conected',
+			help: 'Active users connected',
 			registers: [this.registry],
 		});
 
 		this.requestCount = new Counter({
 			name: 'request_count_total',
-			help: 'Total requests HTTP numbers',
+			help: 'Total HTTP requests',
 			labelNames: ['method', 'route', 'status_code'],
 			registers: [this.registry],
 		});

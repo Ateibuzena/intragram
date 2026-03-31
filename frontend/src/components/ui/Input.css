@@ -1,0 +1,15 @@
+.input-base {
+	@apply w-full bg-ft-hover border border-ft-border text-white text-sm rounded-xl px-3.5 py-2.5 placeholder-ft-muted focus:outline-none focus:border-ft-cyan/50 transition-all duration-200;
+}
+
+.input-with-icon {
+	@apply pl-10;
+}
+
+.input-wrapper {
+	@apply relative;
+}
+
+.input-icon {
+	@apply absolute left-3 top-1/2 -translate-y-1/2 text-ft-muted pointer-events-none;
+}

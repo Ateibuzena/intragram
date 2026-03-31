@@ -29,13 +29,11 @@ import {
 	Query,
 } from '@nestjs/common';
 import { AuthService, ConflictError, UnauthorizedError, ForbiddenError } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthResponse, LoginDto, RegisterDto, RefreshTokenDto, TokenValidationResult } from '@intragram/shared';
 
 @Controller()
 export class AuthController {
-	constructor(private readonly authService: AuthService) { }
+	constructor(private readonly authService: AuthService) {}
 
 	/**
 	 * POST /auth/register
@@ -47,10 +45,10 @@ export class AuthController {
 		@Body() registerDto: RegisterDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.register(registerDto, ip, userAgent);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -65,10 +63,10 @@ export class AuthController {
 		@Body() loginDto: LoginDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.login(loginDto, ip, userAgent);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -83,14 +81,14 @@ export class AuthController {
 		@Body() refreshTokenDto: RefreshTokenDto,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		try {
 			return await this.authService.refreshToken(
 				refreshTokenDto.refresh_token,
 				ip,
 				userAgent,
 			);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -101,10 +99,10 @@ export class AuthController {
 	 */
 	@Post('auth/logout')
 	@HttpCode(HttpStatus.OK)
-	async logout(@Body() refreshTokenDto: RefreshTokenDto) {
+	async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ message: string }> {
 		try {
 			return await this.authService.logout(refreshTokenDto.refresh_token);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -116,24 +114,27 @@ export class AuthController {
 	 */
 	@Post('auth/validate')
 	@HttpCode(HttpStatus.OK)
-	async validateToken(@Body('access_token') accessToken: string) {
+	async validateToken(@Body('access_token') accessToken: string): Promise<TokenValidationResult> {
 		try {
 			const payload = await this.authService.validateToken(accessToken);
-			return { valid: true, payload };
-		} catch (error) {
+			return {
+				valid: true,
+				payload,
+			};
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
+
 	/**
- * GET /auth/42
- * Iniciar flujo OAuth con 42
- */
+	 * GET /auth/42
+	 * Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
+	 */
 	@Get('auth/42')
-	oauth42Login() {
+	oauth42Login(): { url: string } {
 		try {
-			const authUrl = this.authService.getOAuth42AuthUrl();
-			return { url: authUrl };
-		} catch (error) {
+			return { url: this.authService.getOAuth42AuthUrl() };
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -148,7 +149,7 @@ export class AuthController {
 		@Query('code') code: string,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
-	) {
+	): Promise<AuthResponse> {
 		if (!code) {
 			throw new HttpException(
 				{ statusCode: HttpStatus.BAD_REQUEST, message: 'Código OAuth no proporcionado' },
@@ -158,7 +159,7 @@ export class AuthController {
 
 		try {
 			return await this.authService.handleOAuth42Callback(code, ip, userAgent);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.handleError(error);
 		}
 	}
@@ -169,7 +170,7 @@ export class AuthController {
 	 * Health check para Docker y monitoreo
 	 */
 	@Get('health')
-	async health() {
+	async health(): Promise<{ status: string }> {
 		return this.authService.getHealth();
 	}
 
@@ -197,8 +198,8 @@ export class AuthController {
 			);
 		}
 
-		// Error inesperado - log interno, respuesta genérica
-		console.error('❌ Error interno no manejado:', error);
+		// Error inesperado: log interno y respuesta genérica al cliente.
+		console.error('Error interno no manejado:', error);
 		throw new HttpException(
 			{ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error interno del servidor' },
 			HttpStatus.INTERNAL_SERVER_ERROR,

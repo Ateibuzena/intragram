@@ -1,3 +1,8 @@
+/**
+ * Punto de arranque del users-service.
+ * Configura validación global y levanta el servidor HTTP.
+ */
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { UsersModule } from './users.module';
@@ -16,6 +21,10 @@ async function bootstrap() {
 
 	console.log(`Users Microservice HTTP listening on port ${port}`);
 	console.log(`Prometheus metrics available at http://localhost:${port}/metrics`);
+<<<<<<< HEAD
+=======
+	console.log(`Health check available at http://localhost:${port}/health`);
+>>>>>>> origin/development
 }
 
 bootstrap();

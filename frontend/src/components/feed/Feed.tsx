@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { IFeedPost } from '@intragram/shared/users';
 import type { FilterKey, Post } from '@/types/models';
 import { buildApiUrl } from '@/utils/apiBase';
 import { formatTime } from '@/utils/formatters';
@@ -14,6 +13,19 @@ interface FeedProps {
 	activeFilter: FilterKey;
 	currentLogin?: string;
 	loading?: boolean;
+}
+
+interface IFeedPost {
+	id: string;
+	content: string;
+	created_at: string;
+	likes_count: number;
+	comments_count: number;
+	saved_by_current_user?: boolean;
+	author?: {
+		login?: string;
+		correction_point?: number;
+	};
 }
 
 const mapApiPostToPost = (api: IFeedPost): Post => ({

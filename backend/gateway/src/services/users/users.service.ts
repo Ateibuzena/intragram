@@ -82,6 +82,23 @@ export class UsersService {
 	}
 
 	/**
+	 * Busca usuarios por texto libre (login/display_name) con limite.
+	 */
+	async searchUsers(query: string, limit = 20): Promise<IUserProfile[]> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.get<IUserProfile[]>(`${this.usersBaseUrl}/users/search`, {
+					timeout: 5000,
+					params: { q: query, limit },
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'buscar usuarios');
+		}
+	}
+
+	/**
 	 * Actualiza el perfil editable del usuario.
 	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<IUserProfile> {

@@ -2,6 +2,8 @@ export interface User {
 	id?: string | number;
 	login: string;
 	avatar: string;
+	avatarUrl?: string | null;
+	displayName?: string;
 	level: number;
 	lastSeen?: string;
 	online?: boolean;

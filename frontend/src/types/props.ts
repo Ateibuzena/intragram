@@ -15,6 +15,7 @@ export interface ConversationListProps {
 	error?: string | null;
 	selectedChat: Conversation | null;
 	onSelectChat: (chat: Conversation) => void;
+	onStartNewConversation?: () => void;
 }
 
 export interface ChatWindowProps {
@@ -50,6 +51,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export interface AvatarProps {
 	login: string;
+	imageUrl?: string | null;
 	size?: 'sm' | 'md' | 'lg';
 	online?: boolean;
 }

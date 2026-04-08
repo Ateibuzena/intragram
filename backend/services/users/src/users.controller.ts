@@ -20,6 +20,7 @@
 import {
 	Body,
 	Controller,
+	DefaultValuePipe,
 	Get,
 	HttpCode,
 	HttpException,
@@ -27,6 +28,8 @@ import {
 	Param,
 	Patch,
 	Post,
+	ParseIntPipe,
+	Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
@@ -46,6 +49,24 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al guardar usuario de OAuth 42',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Busca usuarios por login o display_name con limite para no sobrecargar la BBDD.
+	 */
+	@Get('users/search')
+	async searchUsers(
+		@Query('q') query = '',
+		@Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit = 20,
+	) {
+		try {
+			return await this.usersService.searchUsers(query, limit);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al buscar usuarios',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}

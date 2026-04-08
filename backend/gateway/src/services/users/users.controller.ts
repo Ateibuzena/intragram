@@ -19,6 +19,7 @@
 import {
 	Body,
 	Controller,
+	DefaultValuePipe,
 	ForbiddenException,
 	Get,
 	HttpException,
@@ -26,6 +27,8 @@ import {
 	Param,
 	Patch,
 	Post,
+	ParseIntPipe,
+	Query,
 	Req,
 	UseGuards,
 } from '@nestjs/common';
@@ -75,6 +78,22 @@ export class UsersController {
 			return await this.usersService.findByLogin(login);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.NOT_FOUND);
+		}
+	}
+
+	/**
+	 * Busca usuarios por login/display_name con límite de resultados.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('search')
+	async searchUsers(
+		@Query('q') query = '',
+		@Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit = 20,
+	): Promise<IUserProfile[]> {
+		try {
+			return await this.usersService.searchUsers(query, limit);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 

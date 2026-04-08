@@ -151,6 +151,26 @@ export class UsersService {
 	}
 
 	/**
+	 * Busca usuarios por login/display_name y limita resultados para evitar sobrecarga.
+	 */
+	async searchUsers(query: string, limit = 20): Promise<UserProfileEntity[]> {
+		const normalizedLimit = Math.min(Math.max(limit || 20, 1), 20);
+		const normalizedQuery = query.trim();
+
+		const qb = this.userProfileRepo
+			.createQueryBuilder('user')
+			.orderBy('user.updated_at', 'DESC')
+			.take(normalizedLimit);
+
+		if (normalizedQuery.length > 0) {
+			qb.where('user.login ILIKE :q', { q: `%${normalizedQuery}%` })
+				.orWhere('user.display_name ILIKE :q', { q: `%${normalizedQuery}%` });
+		}
+
+		return qb.getMany();
+	}
+
+	/**
 	 * Actualiza los campos editables del perfil local.
 	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<UserProfileEntity> {

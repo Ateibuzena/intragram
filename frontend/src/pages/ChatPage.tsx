@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ConversationList } from '@/components/chat/ConversationList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
+import { Avatar } from '@/components/ui/Avatar';
+import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import type { Conversation, Message, User } from '@/types/models';
 import { formatTime } from '@/utils/formatters';
@@ -32,7 +34,14 @@ interface UserProfile {
 	id: string;
 	login: string;
 	display_name: string | null;
+	avatar_url: string | null;
 }
+
+const SearchIcon = () => (
+	<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+	</svg>
+);
 
 const getCurrentUserIdFromToken = (token: string | null): string | null => {
 	if (!token) return null;
@@ -64,7 +73,9 @@ const mapConversationToUI = (
 	const user = usersById[otherParticipantId] ?? {
 		id: otherParticipantId,
 		login: fallbackLogin(otherParticipantId),
+		displayName: fallbackLogin(otherParticipantId),
 		avatar: fallbackLogin(otherParticipantId).charAt(0).toUpperCase(),
+		avatarUrl: null,
 		level: 0,
 	};
 
@@ -99,6 +110,11 @@ const ChatPage = () => {
 	const [loadingMessages, setLoadingMessages] = useState(false);
 	const [sendingMessage, setSendingMessage] = useState(false);
 	const [creatingConversation, setCreatingConversation] = useState(false);
+	const [showUserPicker, setShowUserPicker] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+	const [searchLoading, setSearchLoading] = useState(false);
+	const [searchError, setSearchError] = useState<string | null>(null);
 
 	const [conversationsError, setConversationsError] = useState<string | null>(null);
 	const [messagesError, setMessagesError] = useState<string | null>(null);
@@ -144,7 +160,7 @@ const ChatPage = () => {
 				setRawConversations(conversationList);
 
 				if (conversationList.length > 0) {
-					setSelectedChatId((currentSelectedChatId) => {
+					setSelectedChatId((currentSelectedChatId: string | null) => {
 						if (currentSelectedChatId && conversationList.some((conversation) => conversation.id === currentSelectedChatId)) {
 							return currentSelectedChatId;
 						}
@@ -175,8 +191,10 @@ const ChatPage = () => {
 								participantId,
 								user: {
 									id: profile.id,
-									login: profile.display_name || profile.login,
+									login: profile.login,
+									displayName: profile.display_name || profile.login,
 									avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
+									avatarUrl: profile.avatar_url,
 									level: 0,
 								} as User,
 							};
@@ -186,7 +204,9 @@ const ChatPage = () => {
 								user: {
 									id: participantId,
 									login: participantId.slice(0, 8),
+									displayName: participantId.slice(0, 8),
 									avatar: participantId.slice(0, 1).toUpperCase(),
+									avatarUrl: null,
 									level: 0,
 								} as User,
 							};
@@ -279,12 +299,12 @@ const ChatPage = () => {
 			if (!response.ok) throw new Error('No se pudo enviar el mensaje');
 
 			const data = await response.json() as SendMessageResponse;
-			setMessages((previousMessages) => [
+			setMessages((previousMessages: Message[]) => [
 				...previousMessages,
 				mapMessageToUI(data.message, currentUserId),
 			]);
 
-			setRawConversations((previousConversations) => previousConversations.map((conversation) => {
+			setRawConversations((previousConversations: BackendConversation[]) => previousConversations.map((conversation: BackendConversation) => {
 				if (conversation.id !== selectedChatId) return conversation;
 
 				const now = new Date().toISOString();
@@ -303,27 +323,41 @@ const ChatPage = () => {
 	};
 
 	const handleStartNewConversation = async () => {
-		if (!token) return;
+		setShowUserPicker(true);
+		setSearchQuery('');
+		void searchUsers('');
+	};
 
-		const login = window.prompt('Introduce el login del usuario con el que quieres chatear:');
-		if (!login) return;
+	const searchUsers = async (query: string) => {
+		if (!token) return;
+		setSearchLoading(true);
+		setSearchError(null);
+
+		try {
+			const response = await fetch(buildApiUrl(`/users/search?q=${encodeURIComponent(query)}&limit=20`), {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+
+			if (!response.ok) {
+				throw new Error('No se pudo buscar usuarios');
+			}
+
+			const profiles = await response.json() as UserProfile[];
+			setSearchResults(profiles.filter((profile) => profile.id !== currentUserId));
+		} catch (error) {
+			setSearchError(error instanceof Error ? error.message : 'No se pudo buscar usuarios');
+		} finally {
+			setSearchLoading(false);
+		}
+	};
+
+	const handleSelectRecipient = async (profile: UserProfile) => {
+		if (!token) return;
 
 		setCreatingConversation(true);
 		setConversationsError(null);
 
 		try {
-			// 1) Buscar usuario por login vía gateway: GET /users/login/:login
-			const userResponse = await fetch(buildApiUrl(`/users/login/${encodeURIComponent(login)}`), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
-
-			if (!userResponse.ok) {
-				throw new Error('No se pudo encontrar el usuario');
-			}
-
-			const profile = await userResponse.json() as UserProfile;
-
-			// 2) Crear o reutilizar conversación en el backend: POST /chat/conversations
 			const convResponse = await fetch(buildApiUrl('/chat/conversations'), {
 				method: 'POST',
 				headers: {
@@ -339,26 +373,26 @@ const ChatPage = () => {
 
 			const { conversation } = await convResponse.json() as { conversation: BackendConversation };
 
-			// 3) Actualizar lista de conversaciones y mapa de usuarios
-			setRawConversations((previous) => {
-				const exists = previous.find((c) => c.id === conversation.id);
-				if (exists) {
-					return previous.map((c) => (c.id === conversation.id ? conversation : c));
-				}
+			setRawConversations((previous: BackendConversation[]) => {
+				const exists = previous.find((c: BackendConversation) => c.id === conversation.id);
+				if (exists) return previous.map((c: BackendConversation) => (c.id === conversation.id ? conversation : c));
 				return [...previous, conversation];
 			});
 
-			setUsersById((previous) => ({
+			setUsersById((previous: Record<string, User>) => ({
 				...previous,
 				[profile.id]: {
 					id: profile.id,
-					login: profile.display_name || profile.login,
+					login: profile.login,
+					displayName: profile.display_name || profile.login,
 					avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
+					avatarUrl: profile.avatar_url,
 					level: 0,
 				},
 			}));
 
 			setSelectedChatId(conversation.id);
+			setShowUserPicker(false);
 		} catch (error) {
 			setConversationsError(error instanceof Error ? error.message : 'No se pudo crear la conversación');
 		} finally {
@@ -374,6 +408,7 @@ const ChatPage = () => {
 				error={conversationsError}
 				selectedChat={selectedChat}
 				onSelectChat={(conversation) => setSelectedChatId(String(conversation.id))}
+				onStartNewConversation={handleStartNewConversation}
 			/>
 			<ChatWindow
 				selectedChat={selectedChat}
@@ -384,6 +419,57 @@ const ChatPage = () => {
 				onSendMessage={handleSendMessage}
 				onStartNewConversation={handleStartNewConversation}
 			/>
+
+			{showUserPicker && (
+				<Modal title="Nuevo mensaje" onClose={() => setShowUserPicker(false)}>
+					<div className="space-y-3">
+						<div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-ft-border bg-ft-bg/60">
+							<SearchIcon />
+							<input
+								type="text"
+								placeholder="Buscar usuario..."
+								value={searchQuery}
+								onChange={(event) => {
+									const nextQuery = event.target.value;
+									setSearchQuery(nextQuery);
+									void searchUsers(nextQuery);
+								}}
+								className="w-full bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none"
+							/>
+						</div>
+
+						<div className="max-h-80 overflow-y-auto rounded-xl border border-ft-border bg-ft-bg/40">
+							{searchLoading && <p className="px-3 py-2 text-sm text-ft-muted">Buscando usuarios...</p>}
+							{!searchLoading && searchError && <p className="px-3 py-2 text-sm text-red-400">{searchError}</p>}
+							{!searchLoading && !searchError && searchResults.length === 0 && (
+								<p className="px-3 py-2 text-sm text-ft-muted">Sin resultados</p>
+							)}
+							{!searchLoading && !searchError && searchResults.map((profile: UserProfile) => (
+								<button
+									key={profile.id}
+									onClick={() => void handleSelectRecipient(profile)}
+									className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-ft-hover transition-colors"
+								>
+									<Avatar login={profile.login} imageUrl={profile.avatar_url} size="md" />
+									<div className="min-w-0">
+										<p className="text-sm text-white font-semibold truncate">{profile.display_name || profile.login}</p>
+										<p className="text-xs text-ft-muted truncate">@{profile.login}</p>
+									</div>
+								</button>
+							))}
+						</div>
+
+						<div className="flex justify-end">
+							<button
+								onClick={() => setShowUserPicker(false)}
+								className="px-4 py-2 text-sm rounded-lg border border-ft-border text-ft-muted hover:text-white hover:bg-ft-hover transition-colors"
+							>
+								Cerrar
+							</button>
+						</div>
+					</div>
+				</Modal>
+			)}
 		</div>
 	);
 };

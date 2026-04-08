@@ -50,9 +50,9 @@ export const ChatWindow = ({
 		<div className="chat-window">
 			<div className="chat-header">
 				<div className="flex items-center gap-3">
-					<Avatar login={selectedChat.user.login} size="md" />
+					<Avatar login={selectedChat.user.login} imageUrl={selectedChat.user.avatarUrl} size="md" />
 					<div>
-						<p className="text-sm font-semibold text-white">{selectedChat.user.login}</p>
+						<p className="text-sm font-semibold text-white">{selectedChat.user.displayName || selectedChat.user.login}</p>
 						<p className="text-xs text-ft-muted">activo {selectedChat.user.lastSeen}</p>
 					</div>
 				</div>

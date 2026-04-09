@@ -5,6 +5,7 @@ export interface PostCardProps {
 }
 
 export interface MessageBubbleProps {
+	key?: string | number;
 	message: Message;
 	showTimestamp: boolean;
 }

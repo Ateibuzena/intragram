@@ -26,6 +26,10 @@ import { ChatService } from './chat.service';
 export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
 
+	private getChatUserId(req: any): string {
+		return req?.user?.chat_user_id ?? req?.user?.sub;
+	}
+
 	/**
 	 * Health check del chat-service a través del gateway.
 	 * No requiere autenticación; útil para monitorización del API público.
@@ -41,7 +45,7 @@ export class ChatController {
 	@UseGuards(AuthGuard)
 	@Get('conversations')
 	getConversations(@Req() req: any) {
-		return this.chatService.getConversations(req.user.sub);
+		return this.chatService.getConversations(this.getChatUserId(req));
 	}
 
 	/**
@@ -50,7 +54,7 @@ export class ChatController {
 	@UseGuards(AuthGuard)
 	@Post('conversations')
 	createConversation(@Req() req: any, @Body() dto: CreateConversationDto) {
-		return this.chatService.createConversation(req.user.sub, dto);
+		return this.chatService.createConversation(this.getChatUserId(req), dto);
 	}
 
 	/**
@@ -59,7 +63,7 @@ export class ChatController {
 	@UseGuards(AuthGuard)
 	@Get('conversations/:conversationId/messages')
 	getMessages(@Req() req: any, @Param('conversationId') conversationId: string) {
-		return this.chatService.getMessages(req.user.sub, conversationId);
+		return this.chatService.getMessages(this.getChatUserId(req), conversationId);
 	}
 
 	/**
@@ -72,6 +76,6 @@ export class ChatController {
 		@Param('conversationId') conversationId: string,
 		@Body() dto: SendMessageDto,
 	) {
-		return this.chatService.sendMessage(req.user.sub, conversationId, dto);
+		return this.chatService.sendMessage(this.getChatUserId(req), conversationId, dto);
 	}
 }

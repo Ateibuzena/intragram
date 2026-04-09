@@ -9,9 +9,11 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
+    "rootDir": "../..",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
@@ -24,6 +26,6 @@
       "@intragram/shared/*": ["../../shared/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../global.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

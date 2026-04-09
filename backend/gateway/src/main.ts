@@ -22,7 +22,7 @@ async function bootstrap() {
 	app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
 
 	app.enableCors({
-		origin: ['https://localhost:8443'],
+		origin: [process.env.CORS_ORIGIN ?? 'https://localhost:8443'],
 		credentials: true,
 	});
 

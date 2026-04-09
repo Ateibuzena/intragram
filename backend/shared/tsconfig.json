@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "Node16",
     "declaration": true,
     "declarationMap": true,
     "emitDecoratorMetadata": true,
@@ -12,10 +12,11 @@
     "rootDir": ".",
     "strict": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
-  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "types/**/*", "users/**/*", "chat/**/*"],
+  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "types/**/*", "users/**/*", "chat/**/*", "../global.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

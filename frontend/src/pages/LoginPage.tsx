@@ -1,5 +1,3 @@
-import { buildApiUrl } from '@/utils/apiBase';
-
 const LoginPage = () => (
 	<div className="min-h-screen bg-ft-bg flex items-center justify-center px-4">
 		<div className="w-full max-w-sm">
@@ -11,7 +9,7 @@ const LoginPage = () => (
 			</div>
 			<div className="bg-ft-card border border-ft-border rounded-2xl p-6">
 				<a
-					href={buildApiUrl('/auth/42')}
+					href="/api/auth/42"
 					className="flex items-center justify-center gap-3 w-full bg-ft-cyan hover:bg-ft-cyan-light text-black font-bold py-3 rounded-xl transition-all duration-200 hover:shadow-ft-glow active:scale-[0.98]"
 				>
 					<span className="text-lg">🎓</span>

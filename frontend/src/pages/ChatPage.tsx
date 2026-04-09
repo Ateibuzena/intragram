@@ -52,8 +52,8 @@ const getCurrentUserIdFromToken = (token: string | null): string | null => {
 
 		const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
 		const decoded = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='));
-		const payload = JSON.parse(decoded) as { sub?: string };
-		return payload.sub ?? null;
+		const payload = JSON.parse(decoded) as { sub?: string; chat_user_id?: string };
+		return payload.chat_user_id ?? payload.sub ?? null;
 	} catch {
 		return null;
 	}
@@ -98,6 +98,9 @@ const mapMessageToUI = (message: BackendMessage, currentUserId: string | null): 
 	}),
 });
 
+const MESSAGES_POLL_INTERVAL_MS = 2000;
+const CONVERSATIONS_POLL_INTERVAL_MS = 3000;
+
 const ChatPage = () => {
 	const { token } = useAuth();
 
@@ -130,6 +133,65 @@ const ChatPage = () => {
 		() => conversations.find((conversation) => String(conversation.id) === selectedChatId) ?? null,
 		[conversations, selectedChatId],
 	);
+
+	const loadMissingUsers = async (conversationList: BackendConversation[]) => {
+		if (!token) return;
+
+		const participantIds = new Set<string>();
+		conversationList.forEach((conversation) => {
+			conversation.participants.forEach((participantId) => {
+				if (participantId !== currentUserId) participantIds.add(participantId);
+			});
+		});
+
+		const missingParticipantIds = [...participantIds].filter((participantId) => !usersById[participantId]);
+		if (missingParticipantIds.length === 0) return;
+
+		const profiles = await Promise.all(
+			missingParticipantIds.map(async (participantId) => {
+				try {
+					const response = await fetch(buildApiUrl(`/users/${participantId}`), {
+						headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+					});
+
+					if (!response.ok) throw new Error('No se pudo cargar el usuario');
+
+					const profile = await response.json() as UserProfile;
+					return {
+						participantId,
+						user: {
+							id: profile.id,
+							login: profile.login,
+							displayName: profile.display_name || profile.login,
+							avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
+							avatarUrl: profile.avatar_url,
+							level: 0,
+						} as User,
+					};
+				} catch {
+					return {
+						participantId,
+						user: {
+							id: participantId,
+							login: participantId.slice(0, 8),
+							displayName: participantId.slice(0, 8),
+							avatar: participantId.slice(0, 1).toUpperCase(),
+							avatarUrl: null,
+							level: 0,
+						} as User,
+					};
+				}
+			}),
+		);
+
+		setUsersById((previousUsersById: Record<string, User>) => {
+			const nextUsersById = { ...previousUsersById };
+			profiles.forEach(({ participantId, user }) => {
+				nextUsersById[participantId] = user;
+			});
+			return nextUsersById;
+		});
+	};
 
 	useEffect(() => {
 		if (!token) {
@@ -170,56 +232,8 @@ const ChatPage = () => {
 					setSelectedChatId(null);
 				}
 
-				const participantIds = new Set<string>();
-				conversationList.forEach((conversation) => {
-					conversation.participants.forEach((participantId) => {
-						if (participantId !== currentUserId) participantIds.add(participantId);
-					});
-				});
-
-				const profiles = await Promise.all(
-					[...participantIds].map(async (participantId) => {
-						try {
-							const response = await fetch(buildApiUrl(`/users/${participantId}`), {
-								headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-							});
-
-							if (!response.ok) throw new Error('No se pudo cargar el usuario');
-
-							const profile = await response.json() as UserProfile;
-							return {
-								participantId,
-								user: {
-									id: profile.id,
-									login: profile.login,
-									displayName: profile.display_name || profile.login,
-									avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
-									avatarUrl: profile.avatar_url,
-									level: 0,
-								} as User,
-							};
-						} catch {
-							return {
-								participantId,
-								user: {
-									id: participantId,
-									login: participantId.slice(0, 8),
-									displayName: participantId.slice(0, 8),
-									avatar: participantId.slice(0, 1).toUpperCase(),
-									avatarUrl: null,
-									level: 0,
-								} as User,
-							};
-						}
-					}),
-				);
-
 				if (!cancelled) {
-					const nextUsersById: Record<string, User> = {};
-					profiles.forEach(({ participantId, user }) => {
-						nextUsersById[participantId] = user;
-					});
-					setUsersById(nextUsersById);
+					await loadMissingUsers(conversationList);
 				}
 			} catch (error) {
 				if (!cancelled) {
@@ -238,6 +252,48 @@ const ChatPage = () => {
 			cancelled = true;
 		};
 	}, [token, currentUserId]);
+
+	useEffect(() => {
+		if (!token) return;
+
+		let disposed = false;
+
+		const pollConversations = async () => {
+			try {
+				const request = await fetch(buildApiUrl('/chat/conversations'), {
+					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+				});
+
+				if (!request.ok || disposed) return;
+
+				const conversationList = await request.json() as BackendConversation[];
+				if (disposed) return;
+
+				setRawConversations(conversationList);
+
+				setSelectedChatId((currentSelectedChatId: string | null) => {
+					if (conversationList.length === 0) return null;
+					if (currentSelectedChatId && conversationList.some((conversation) => conversation.id === currentSelectedChatId)) {
+						return currentSelectedChatId;
+					}
+					return conversationList[0].id;
+				});
+
+				await loadMissingUsers(conversationList);
+			} catch {
+				// Poll silencioso: no sobreescribimos errores de carga inicial.
+			}
+		};
+
+		const interval = setInterval(() => {
+			void pollConversations();
+		}, CONVERSATIONS_POLL_INTERVAL_MS);
+
+		return () => {
+			disposed = true;
+			clearInterval(interval);
+		};
+	}, [token, currentUserId, usersById]);
 
 	useEffect(() => {
 		if (!token || !selectedChatId) {
@@ -277,6 +333,38 @@ const ChatPage = () => {
 
 		return () => {
 			cancelled = true;
+		};
+	}, [token, selectedChatId, currentUserId]);
+
+	useEffect(() => {
+		if (!token || !selectedChatId) return;
+
+		let disposed = false;
+
+		const pollMessages = async () => {
+			try {
+				const response = await fetch(buildApiUrl(`/chat/conversations/${selectedChatId}/messages`), {
+					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+				});
+
+				if (!response.ok || disposed) return;
+
+				const backendMessages = await response.json() as BackendMessage[];
+				if (disposed) return;
+
+				setMessages(backendMessages.map((message) => mapMessageToUI(message, currentUserId)));
+			} catch {
+				// Poll silencioso: no sobreescribimos errores de carga inicial.
+			}
+		};
+
+		const interval = setInterval(() => {
+			void pollMessages();
+		}, MESSAGES_POLL_INTERVAL_MS);
+
+		return () => {
+			disposed = true;
+			clearInterval(interval);
 		};
 	}, [token, selectedChatId, currentUserId]);
 
@@ -429,7 +517,7 @@ const ChatPage = () => {
 								type="text"
 								placeholder="Buscar usuario..."
 								value={searchQuery}
-								onChange={(event) => {
+								onChange={(event: any) => {
 									const nextQuery = event.target.value;
 									setSearchQuery(nextQuery);
 									void searchUsers(nextQuery);

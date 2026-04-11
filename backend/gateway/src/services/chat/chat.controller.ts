@@ -40,15 +40,6 @@ export class ChatController {
 	}
 
 	/**
-	 * Health check del chat-service a través del gateway.
-	 * No requiere autenticación; útil para monitorización del API público.
-	 */
-	@Get('health')
-	getHealth() {
-		return this.chatService.getHealth();
-	}
-
-	/**
 	 * Lista las conversaciones del usuario autenticado.
 	 */
 	@UseGuards(AuthGuard)

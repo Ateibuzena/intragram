@@ -12,11 +12,11 @@
     "rootDir": ".",
     "strict": true,
     "skipLibCheck": true,
-    
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
-    "moduleResolution": "node16"
+    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node16",
   },
-  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "types/**/*", "users/**/*", "chat/**/*", "../global.d.ts"],
+  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "types/**/*", "users/**/*", "chat/**/*"],
   "exclude": ["dist", "node_modules"]
 }

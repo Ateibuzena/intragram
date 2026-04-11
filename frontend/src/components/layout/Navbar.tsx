@@ -2,6 +2,7 @@ import './Navbar.css';
 import type { NavKey } from '@/types/models';
 import { Badge } from '@/components/ui/Badge';
 import { NavIcon } from './NavIcon';
+import { LogOutIcon } from './LogOutIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
@@ -10,7 +11,7 @@ import logoIntragram from '/logo.png';
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
 	{ key: 'home', label: 'Home' },
 	{ key: 'chat', label: 'Chat' },
-	{ key: 'notifications', label: 'Notifs' },
+	{ key: 'profile', label: 'Profile' },
 ];
 
 interface NavbarProps {
@@ -38,7 +39,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 			{/* Logo + buscador */}
 			<div className="flex items-center space-x-3 flex-1 min-w-[260px] max-w-[420px]">
 				<div className="flex items-center space-x-2 shrink-0">
-					<img src={logoIntragram} alt="Intragram logo" className="w-6 h-6 rounded shrink-0" />
+					<img src={logoIntragram} alt="Intragram logo" className="w-10 h-7 rounded shrink-0" />
 					<span className="navbar-logo">Intra<span className="text-white">gram</span></span>
 				</div>
 				<div className="navbar-search">
@@ -64,30 +65,37 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 						className={`nav-btn ${activeNav === item.key ? 'nav-btn--active' : 'nav-btn--default'}`}
 					>
 						<NavIcon navKey={item.key} />
-						<span className="hidden lg:inline">{item.label}</span>
-						{item.key === 'notifications' && (
-							<span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-badge">3</span>
-						)}
 					</button>
 				))}
 			</nav>
 
+			<div className="flex items-center justify-end space-x-3 flex-shrink-0">
 			{/* Avatar del usuario */}
-			<div className="flex items-center space-x-2 justify-end flex-shrink-0">
 				<div className="flex items-center space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-3 py-1.5">
 					<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black">
 						{avatarLetter}
 					</div>
-					<span className="text-xs font-medium text-ft-text hidden lg:inline">{displayLogin}</span>
+
+					<span className="text-xs font-medium text-ft-text hidden lg:inline">
+						{displayLogin}
+					</span>
+
 					{levelLabel && <Badge variant="level">{levelLabel}</Badge>}
-					<button
-						onClick={handleLogout}
-						className="ml-2 text-[10px] font-medium text-ft-muted hover:text-red-400 transition-colors"
-					>
-						Cerrar sesión
-					</button>
 				</div>
+
+				{/* Bloque logout */}
+				<button
+					onClick={handleLogout}
+					className="nav-btn nav-btn--active"
+				>
+					<LogOutIcon />
+				</button>
 			</div>
 		</header>
 	);
 };
+
+{/* <span className="hidden lg:inline">{item.label}</span>
+						{item.key === 'notifications' && (
+							<span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-badge">3</span>
+						)} */}

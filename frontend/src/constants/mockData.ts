@@ -71,5 +71,5 @@ export const FILTERS = [
 	{ key: 'amigos' as const, label: 'Amigos', icon: '👥', desc: 'Solo de personas que sigues y te siguen' },
 	{ key: 'favoritos' as const, label: 'Favoritos', icon: '⭐', desc: 'Publicaciones que has guardado' },
 	{ key: 'trending' as const, label: 'Tendencias', icon: '🔥', desc: 'Lo más popular ahora mismo' },
-	{ key: 'perfil' as const, label: 'Mis publicaciones', icon: '👤', desc: 'Solo tus propias publicaciones' },
+	{ key: 'perfil' as const, label: 'Mis publicaciones', icon: '📝', desc: 'Solo tus propias publicaciones' },
 ];

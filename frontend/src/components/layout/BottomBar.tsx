@@ -5,7 +5,7 @@ import { NavIcon } from './NavIcon';
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
 	{ key: 'home', label: 'Home' },
 	{ key: 'chat', label: 'Chat' },
-	{ key: 'notifications', label: 'Notifs' },
+	{ key: 'profile', label: 'Profile' },
 ];
 
 interface BottomBarProps {

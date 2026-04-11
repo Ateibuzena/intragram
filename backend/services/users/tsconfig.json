@@ -13,19 +13,18 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "ignoreDeprecations": "6.0",
+    
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "baseUrl": "./",
     "paths": {
       "@intragram/shared": ["../../shared/index.ts"],
       "@intragram/shared/*": ["../../shared/*"]
     }
   },
-  "include": ["src/**/*", "../../global.d.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

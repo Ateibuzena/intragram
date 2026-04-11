@@ -9,16 +9,21 @@
 		"target": "ES2021",
 		"sourceMap": true,
 		"outDir": "./dist",
-		"rootDir": "../../",
+		"rootDir": "../..",
+		"baseUrl": "./",
 		"incremental": true,
 		"skipLibCheck": true,
-		"ignoreDeprecations": "6.0",
+		
 		"strictNullChecks": true,
 		"noImplicitAny": true,
 		"strictBindCallApply": true,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"paths": {
+			"@intragram/shared": ["../../shared/index.ts"],
+			"@intragram/shared/*": ["../../shared/*"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]

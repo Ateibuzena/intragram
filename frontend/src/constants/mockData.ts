@@ -67,9 +67,9 @@ export const MOCK_MESSAGES: Message[] = [
 ];
 
 export const FILTERS = [
-	{ key: 'reciente' as const, label: 'Reciente', icon: '🕐', desc: 'Publicaciones más nuevas primero' },
-	{ key: 'amigos' as const, label: 'Amigos', icon: '👥', desc: 'Solo de personas que sigues' },
-	{ key: 'seguidos' as const, label: 'Seguidos', icon: '⭐', desc: 'Tus favoritos' },
+	{ key: 'reciente' as const, label: 'Reciente', icon: '🕐', desc: 'Tus publicaciones y las de tus amigos' },
+	{ key: 'amigos' as const, label: 'Amigos', icon: '👥', desc: 'Solo de personas que sigues y te siguen' },
+	{ key: 'favoritos' as const, label: 'Favoritos', icon: '⭐', desc: 'Publicaciones que has guardado' },
 	{ key: 'trending' as const, label: 'Tendencias', icon: '🔥', desc: 'Lo más popular ahora mismo' },
-	{ key: 'perfil' as const, label: 'Mi perfil', icon: '👤', desc: 'Tus propias publicaciones' },
+	{ key: 'perfil' as const, label: 'Mis publicaciones', icon: '📝', desc: 'Solo tus propias publicaciones' },
 ];

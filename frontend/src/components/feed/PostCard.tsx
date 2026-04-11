@@ -2,10 +2,32 @@ import './PostCard.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { usePost } from '@/hooks/usePost';
+import { useAuth } from '@/hooks/useAuth';
+import { buildApiUrl } from '@/utils/apiBase';
 import type { PostCardProps } from '@/types/props';
 
 export const PostCard = ({ post }: PostCardProps) => {
-	const { liked, likes, saved, animatingLike, animatingSave, handleLike, handleSave } = usePost(post.liked, post.likes);
+	const { token } = useAuth();
+	const { liked, likes, saved, animatingLike, animatingSave, handleLike, handleSave } = usePost(post.liked, post.likes, post.saved ?? false);
+
+	const toggleFavorite = async () => {
+		if (!token) {
+			handleSave();
+			return;
+		}
+		try {
+			await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+		} catch {
+			// En caso de error de red, solo dejamos la animación local.
+		} finally {
+			handleSave();
+		}
+	};
 
 	return (
 		<article className="post-card">
@@ -46,7 +68,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 				</button>
 
 				<button
-					onClick={handleSave}
+					onClick={() => { void toggleFavorite(); }}
 					className={`post-action-btn ml-auto ${saved ? 'post-action-btn--save-active' : 'post-action-btn--save-default'}`}
 				>
 					<svg className={`w-3.5 h-3.5 ${saved ? 'fill-ft-cyan' : ''} ${animatingSave ? 'animate-heartbeat' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

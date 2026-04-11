@@ -157,11 +157,25 @@ export class AuthController {
 	@HttpCode(HttpStatus.FOUND)
 	async oauth42Callback(
 		@Query('code') code: string,
+		@Query('error') oauthError: string,
+		@Query('error_description') oauthErrorDescription: string,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 		@Res() res: any,
 	) {
 		if (!code) {
+			if (oauthError) {
+				const params = new URLSearchParams({
+					error: oauthError,
+				});
+
+				if (oauthErrorDescription) {
+					params.set('error_description', oauthErrorDescription);
+				}
+
+				return res.redirect(`${this.frontendUrl}?${params.toString()}`);
+			}
+
 			return res.redirect(`${this.frontendUrl}?error=no_code`);
 		}
 

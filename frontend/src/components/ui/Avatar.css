@@ -2,6 +2,10 @@
 	@apply rounded-full flex items-center justify-center font-bold text-black uppercase flex-shrink-0;
 }
 
+.avatar-image {
+	@apply w-full h-full object-cover rounded-full;
+}
+
 .avatar-sm {
 	@apply w-7 h-7 text-xs;
 }

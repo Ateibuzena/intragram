@@ -9,6 +9,9 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UserProfileEntity } from './entities/user-profile.entity';
+import { UserPostEntity } from './entities/user-post.entity';
+import { UserFriendshipEntity } from './entities/user-friendship.entity';
+import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 
 @Module({
 	imports: [
@@ -19,7 +22,7 @@ import { UserProfileEntity } from './entities/user-profile.entity';
 			username: process.env.DB_USERNAME || 'users_user',
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
-			entities: [UserProfileEntity],
+			entities: [UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity],
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {
@@ -28,7 +31,7 @@ import { UserProfileEntity } from './entities/user-profile.entity';
 				statement_timeout: 10000,
 			},
 		}),
-		TypeOrmModule.forFeature([UserProfileEntity]),
+		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity]),
 		PrometheusModule.register(),
 	],
 	controllers: [UsersController],

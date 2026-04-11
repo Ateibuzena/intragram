@@ -12,6 +12,7 @@ export const ChatWindow = ({
 	error = null,
 	sending = false,
 	onSendMessage,
+ 	onStartNewConversation,
 }: ChatWindowProps) => {
 	const [messageText, setMessageText] = useState('');
 
@@ -33,7 +34,14 @@ export const ChatWindow = ({
 				</div>
 				<h3 className="text-xl font-bold text-white mb-2">Tus mensajes</h3>
 				<p className="text-ft-muted text-sm text-center max-w-sm">Envía fotos y mensajes privados a un amigo o grupo</p>
-				<Button variant="primary" size="md" className="mt-6">Enviar mensaje</Button>
+				<Button
+					variant="primary"
+					size="md"
+					className="mt-6"
+					onClick={onStartNewConversation}
+				>
+					Enviar mensaje
+				</Button>
 			</div>
 		);
 	}
@@ -42,9 +50,9 @@ export const ChatWindow = ({
 		<div className="chat-window">
 			<div className="chat-header">
 				<div className="flex items-center gap-3">
-					<Avatar login={selectedChat.user.login} size="md" />
+					<Avatar login={selectedChat.user.login} imageUrl={selectedChat.user.avatarUrl} size="md" />
 					<div>
-						<p className="text-sm font-semibold text-white">{selectedChat.user.login}</p>
+						<p className="text-sm font-semibold text-white">{selectedChat.user.displayName || selectedChat.user.login}</p>
 						<p className="text-xs text-ft-muted">activo {selectedChat.user.lastSeen}</p>
 					</div>
 				</div>
@@ -83,8 +91,8 @@ export const ChatWindow = ({
 					</button>
 					<div className="chat-input-wrapper">
 						<input type="text" placeholder="Envía un mensaje..." value={messageText}
-							onChange={(e) => setMessageText(e.target.value)}
-							onKeyDown={(e) => {
+							onChange={(e: any) => setMessageText(e.target.value)}
+							onKeyDown={(e: any) => {
 								if (e.key === 'Enter') {
 									void handleSend();
 								}
@@ -100,7 +108,7 @@ export const ChatWindow = ({
 						className="p-2.5 bg-ft-cyan hover:bg-ft-cyan-light rounded-full transition-all hover:shadow-ft-glow-sm active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						<svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11l18-8-8 18-2-7-8-3z" />
 						</svg>
 					</button>
 				</div>

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import './ConversationList.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Input } from '@/components/ui/Input';
-import type { ChatTab } from '@/types/models';
 import type { ConversationListProps } from '@/types/props';
 
 const SearchIcon = () => (
@@ -11,9 +10,8 @@ const SearchIcon = () => (
 	</svg>
 );
 
-export const ConversationList = ({ conversations, loading = false, error = null, selectedChat, onSelectChat }: ConversationListProps) => {
+export const ConversationList = ({ conversations, loading = false, error = null, selectedChat, onSelectChat, onStartNewConversation }: ConversationListProps) => {
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeTab, setActiveTab] = useState<ChatTab>('mensajes');
 
 	const filtered = conversations.filter(c =>
 		c.user.login.toLowerCase().includes(searchQuery.toLowerCase())
@@ -22,15 +20,22 @@ export const ConversationList = ({ conversations, loading = false, error = null,
 	return (
 		<aside className="conversation-list">
 			<div className="p-4 border-b border-ft-border">
-				<h2 className="text-lg font-bold text-white mb-4">Mensajes</h2>
-				<Input icon={<SearchIcon />} placeholder="Buscar" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-				<div className="flex gap-2 mt-4">
-					{(['mensajes', 'solicitudes'] as ChatTab[]).map((tab) => (
-						<button key={tab} onClick={() => setActiveTab(tab)}
-							className={`conv-tab ${activeTab === tab ? 'conv-tab--active' : 'conv-tab--default'}`}>
-							{tab.charAt(0).toUpperCase() + tab.slice(1)}
-						</button>
-					))}
+				<div className="flex items-center justify-between mb-3">
+					<h2 className="text-lg font-bold text-white">Mensajes</h2>
+				</div>
+				<div className="flex items-center gap-2">
+					<div className="flex-1">
+						<Input icon={<SearchIcon />} placeholder="Buscar" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+					</div>
+					<button
+						onClick={() => onStartNewConversation?.()}
+						className="w-10 h-10 rounded-xl bg-ft-cyan text-black flex items-center justify-center hover:bg-ft-cyan-light transition-colors"
+						title="Nuevo chat"
+					>
+						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+						</svg>
+					</button>
 				</div>
 			</div>
 
@@ -44,12 +49,14 @@ export const ConversationList = ({ conversations, loading = false, error = null,
 					<button key={conv.id} onClick={() => onSelectChat(conv)}
 						className={`conv-item ${selectedChat?.id === conv.id ? 'conv-item--selected' : ''}`}>
 						<div className="relative flex-shrink-0">
-							<Avatar login={conv.user.login} size="lg" />
+							<Avatar login={conv.user.login} imageUrl={conv.user.avatarUrl} size="lg" />
 							{conv.unread && <span className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border-2 border-ft-card rounded-full" />}
 						</div>
 						<div className="flex-1 min-w-0 text-left">
 							<div className="flex items-center justify-between mb-1">
-								<p className={`text-sm font-semibold truncate ${conv.unread ? 'text-white' : 'text-ft-text'}`}>{conv.user.login}</p>
+								<p className={`text-sm font-semibold truncate ${conv.unread ? 'text-white' : 'text-ft-text'}`}>
+									{conv.user.displayName || conv.user.login}
+								</p>
 								<span className="text-xs text-ft-muted flex-shrink-0 ml-2">{conv.timestamp}</span>
 							</div>
 							<p className={`text-xs truncate ${conv.unread ? 'text-white font-medium' : 'text-ft-muted'}`}>{conv.lastMessage}</p>

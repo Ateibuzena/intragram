@@ -36,7 +36,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - grafana-data:/var/lib/grafana
-      - grafana-provisioning:/etc/grafana/provisioning
     environment:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
@@ -260,7 +259,6 @@ services:
       - "${NGINX_HTTPS_PORT}:443"
     volumes:
       - ./backend/nginx/config/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx-logs:/var/log/nginx
     networks:
       - backend-net
       - frontend-net
@@ -291,9 +289,10 @@ networks:
 # ==============================
 volumes:
   auth-db-data:
+    name: auth-db-data
   users-db-data:
+    name: users-db-data
   chat-db-data:
+    name: chat-db-data
   grafana-data:
-  grafana-provisioning:
-  nginx-logs:
-  frontend-data:
+    name: grafana-data

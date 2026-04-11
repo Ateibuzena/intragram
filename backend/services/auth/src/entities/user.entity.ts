@@ -35,6 +35,10 @@ export class UserEntity {
 	@Column({ type: 'varchar', length: 100, nullable: true })
 	display_name!: string | null;
 
+	@Column({ type: 'uuid', nullable: true })
+	@Index('IDX_USER_PROFILE_ID')
+	user_profile_id!: string | null;
+
 	@Column({ type: 'boolean', default: true })
 	is_active!: boolean;
 

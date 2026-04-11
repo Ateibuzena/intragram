@@ -5,6 +5,7 @@ export interface PostCardProps {
 }
 
 export interface MessageBubbleProps {
+	key?: string | number;
 	message: Message;
 	showTimestamp: boolean;
 }
@@ -15,6 +16,7 @@ export interface ConversationListProps {
 	error?: string | null;
 	selectedChat: Conversation | null;
 	onSelectChat: (chat: Conversation) => void;
+	onStartNewConversation?: () => void;
 }
 
 export interface ChatWindowProps {
@@ -24,6 +26,7 @@ export interface ChatWindowProps {
 	error?: string | null;
 	sending?: boolean;
 	onSendMessage: (message: string) => Promise<void>;
+	onStartNewConversation?: () => void;
 }
 
 export interface SidebarProps {
@@ -49,6 +52,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export interface AvatarProps {
 	login: string;
+	imageUrl?: string | null;
 	size?: 'sm' | 'md' | 'lg';
 	online?: boolean;
 }

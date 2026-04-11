@@ -354,9 +354,12 @@ export class AuthService implements OnModuleInit {
 		ip?: string,
 		userAgent?: string,
 	): Promise<AuthResponse> {
+		const chatUserId = await this.resolveChatUserId(user);
+
 		// Generar access token JWT
 		const payload: TokenPayload = {
 			sub: user.id,
+			chat_user_id: chatUserId ?? user.id,
 			username: user.username,
 			email: user.email,
 		};
@@ -439,6 +442,34 @@ export class AuthService implements OnModuleInit {
 	 */
 	private hashToken(token: string): string {
 		return crypto.createHash('sha256').update(token).digest('hex');
+	}
+
+	/**
+	 * Resuelve el id de perfil del users-service para usarlo como identidad de chat.
+	 * Si no está guardado en auth, intenta recuperarlo por login y persiste el mapeo.
+	 */
+	private async resolveChatUserId(user: UserEntity): Promise<string | null> {
+		if (user.user_profile_id) {
+			return user.user_profile_id;
+		}
+
+		try {
+			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
+			const response = await axios.get(`${usersServiceUrl}/users/login/${encodeURIComponent(user.username)}`, {
+				timeout: 5000,
+			});
+
+			const profileId = response.data?.id as string | undefined;
+			if (profileId) {
+				user.user_profile_id = profileId;
+				await this.userRepo.update(user.id, { user_profile_id: profileId });
+				return profileId;
+			}
+		} catch {
+			// Mantener compatibilidad: si users-service falla, seguimos con user.id.
+		}
+
+		return null;
 	}
 
 	/**
@@ -583,12 +614,14 @@ export class AuthService implements OnModuleInit {
 					email: normalizedEmail,
 					password: hashedPassword,
 					display_name: displayName,
+					user_profile_id: profile.id,
 					is_active: true,
 					failed_login_attempts: 0,
 				});
 			} else {
 				// Usuario existente: sincronizar algunos campos básicos.
 				authUser.display_name = displayName;
+				authUser.user_profile_id = profile.id;
 				authUser.is_active = true;
 			}
 

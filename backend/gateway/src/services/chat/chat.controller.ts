@@ -21,6 +21,8 @@ import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/comm
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { ChatService } from './chat.service';
+import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
+import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
 
 @Controller('chat')
 export class ChatController {
@@ -35,6 +37,8 @@ export class ChatController {
 	 * No requiere autenticación; útil para monitorización del API público.
 	 */
 	@Get('health')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(120, 60_000, 'chat:health')
 	getHealth() {
 		return this.chatService.getHealth();
 	}

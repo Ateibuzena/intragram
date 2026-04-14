@@ -48,6 +48,31 @@ Esto reduce inconsistencias entre gateway, servicios y frontend.
 - El `chat-service` no valida JWT directamente; recibe identidad interna vía header `x-user-id` desde el gateway.
 - El `users-service` queda protegido por el gateway para las rutas expuestas al frontend.
 
+## Rate Limiting
+
+El gateway aplica rate limit en endpoints publicos mediante un guard dedicado:
+
+- `PublicRateLimitGuard`
+- Decorador `@PublicRateLimit(limit, windowMs, key)`
+
+Semantica:
+
+- `limit`: maximo de peticiones permitidas por IP dentro de la ventana.
+- `windowMs`: tamano de la ventana en milisegundos.
+- `key`: nombre logico del bucket para separar limites entre rutas.
+
+Ejemplo:
+
+- `@PublicRateLimit(120, 60_000, 'chat:health')`
+  - Permite 120 peticiones por IP en 60 segundos para `GET /chat/health`.
+  - Si se excede, la API responde `429 Too Many Requests` hasta el reset de la ventana.
+
+Tambien expone cabeceras de control de cuota:
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+
 ## Persistence
 
 Se usan tres instancias separadas de PostgreSQL:

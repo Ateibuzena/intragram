@@ -29,9 +29,12 @@ import {
 	Get,
 	Query,
 	Res,
+	UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse } from '@intragram/shared';
+import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
+import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -44,6 +47,8 @@ export class AuthController {
 	 * Envía el registro al auth-service.
 	 */
 	@Post('register')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(10, 60_000, 'auth:register')
 	@HttpCode(HttpStatus.CREATED)
 	async register(
 		@Body() registerDto: RegisterDto,
@@ -65,6 +70,8 @@ export class AuthController {
 	 * Envía el login al auth-service.
 	 */
 	@Post('login')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(12, 60_000, 'auth:login')
 	@HttpCode(HttpStatus.OK)
 	async login(
 		@Body() loginDto: LoginDto,
@@ -86,6 +93,8 @@ export class AuthController {
 	 * Renueva el access token en el auth-service.
 	 */
 	@Post('refresh')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(60, 60_000, 'auth:refresh')
 	@HttpCode(HttpStatus.OK)
 	async refresh(
 		@Body() refreshTokenDto: RefreshTokenDto,
@@ -107,6 +116,8 @@ export class AuthController {
 	 * Cierra la sesión actual.
 	 */
 	@Post('logout')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(60, 60_000, 'auth:logout')
 	@HttpCode(HttpStatus.OK)
 	async logout(@Body('refresh_token') refreshToken: string) {
 		try {
@@ -124,6 +135,8 @@ export class AuthController {
 	 * Redirige al login OAuth de 42.
 	 */
 	@Get('42/login')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(30, 60_000, 'auth:42-login')
 	async oauth42Redirect(@Res() res: any) {
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
@@ -141,6 +154,8 @@ export class AuthController {
 	 * Redirige al login OAuth de 42.
 	 */
 	@Get('42')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(30, 60_000, 'auth:42')
 	async oauth42Login(@Res() res: any) {
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
@@ -154,6 +169,8 @@ export class AuthController {
 	 * Procesa el callback OAuth y redirige al frontend con la sesión.
 	 */
 	@Get('42/callback')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(60, 60_000, 'auth:42-callback')
 	@HttpCode(HttpStatus.FOUND)
 	async oauth42Callback(
 		@Query('code') code: string,

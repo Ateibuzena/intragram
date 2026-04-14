@@ -35,6 +35,8 @@ import {
 import { UsersService } from './users.service';
 import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
+import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
 
 @Controller('users')
 export class UsersController {
@@ -44,6 +46,8 @@ export class UsersController {
 	 * Crea o actualiza el usuario local a partir del perfil OAuth42 recibido.
 	 */
 	@Post('oauth/42/upsert')
+	@UseGuards(PublicRateLimitGuard)
+	@PublicRateLimit(120, 60_000, 'users:oauth-upsert')
 	async upsertOAuth42User(@Body() dto: UpsertOAuth42UserDto): Promise<IUserProfile> {
 		try {
 			return await this.usersService.upsertOAuth42User(dto);

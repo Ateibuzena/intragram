@@ -64,6 +64,33 @@ El guard principal es `AuthGuard`:
 
 Para el chat, el gateway traduce la identidad autenticada a un `x-user-id` interno antes de hablar con `chat-service`.
 
+## Public Rate Limiting
+
+Los endpoints publicos del gateway tienen control de tasa con:
+
+- `@UseGuards(PublicRateLimitGuard)`
+- `@PublicRateLimit(limit, windowMs, key)`
+
+Reglas activas (resumen):
+
+- Auth publico (`/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/42`, `/auth/42/login`, `/auth/42/callback`).
+- Upsert OAuth de users (`POST /users/oauth/42/upsert`).
+- Endpoints publicos de salud/metricas (`/health`, `/metrics`, `/chat/health`).
+
+Ejemplo real:
+
+- `@PublicRateLimit(120, 60_000, 'chat:health')`
+	- Ventana: 60 segundos.
+	- Limite: 120 peticiones por IP dentro de esa ventana.
+
+Al exceder el limite, el gateway responde `429 Too Many Requests`.
+
+Cabeceras de cuota devueltas por respuesta:
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+
 ## Observability
 
 - `MetricsInterceptor` registra duración y conteo de peticiones.

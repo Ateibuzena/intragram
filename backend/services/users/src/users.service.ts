@@ -64,6 +64,11 @@ export class UsersService {
 			existing.staff = !!profile.staff;
 			existing.alumni = !!profile.alumni;
 			existing.active = profile.active !== false;
+			existing.skills = profile.skills || null;
+			existing.levels = profile.levels || null;
+			existing.titles = profile.titles || null;
+			existing.projects_users = profile.projects_users || null;
+			existing.dashes_users = profile.dashes_users || null;
 			existing.last_login_at = new Date();
 			existing.raw_profile = profile as unknown as Record<string, unknown>;
 
@@ -89,6 +94,11 @@ export class UsersService {
 			staff: !!profile.staff,
 			alumni: !!profile.alumni,
 			active: profile.active !== false,
+			skills: profile.skills || null,
+			levels: profile.levels || null,
+			titles: profile.titles || null,
+			projects_users: profile.projects_users || null,
+			dashes_users: profile.dashes_users || null,
 			last_login_at: new Date(),
 			raw_profile: profile as unknown as Record<string, unknown>,
 		});

@@ -44,6 +44,8 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
@@ -512,6 +514,57 @@ export class AuthService implements OnModuleInit {
 			});
 
 			const user42 = userResponse.data as any;
+			// Paso 2b: extraer stats de perfil para persistir.
+			let skills: any[] = [];
+			let levels: any[] = [];
+			let dashesUsers: any[] = [];
+			let titles: any[] = [];
+			let projectsUsers: any[] = [];
+
+			// Solo usamos datos del cursus principal (id 21) para el ProfilePage.
+			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
+				const cursus21 = user42.cursus_users.find(
+					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
+				);
+
+				if (cursus21) {
+					if (typeof cursus21.level === 'number') {
+						levels = [
+							{
+								id: cursus21.cursus_id || 21,
+								name: cursus21.cursus?.name || '42cursus',
+								level: cursus21.level,
+							},
+						];
+					}
+
+					if (Array.isArray(cursus21.skills)) {
+						skills = cursus21.skills.map((skill: any) => ({
+							id: skill.id,
+							name: skill.name,
+							level: skill.level,
+						}));
+					}
+			if (Array.isArray(user42.titles)) {
+				titles = user42.titles
+					.filter((title: any) => title && title.id && title.name)
+					.map((title: any) => ({ id: title.id, name: title.name }));
+			}
+
+			if (Array.isArray(user42.projects_users)) {
+				projectsUsers = user42.projects_users
+					.filter((projectUser: any) => Array.isArray(projectUser?.cursus_ids) && projectUser.cursus_ids.includes(21))
+					.map((projectUser: any) => ({
+						id: projectUser.id,
+						name: projectUser?.project?.name || 'Unnamed project',
+						status: projectUser.status || 'unknown',
+						final_mark: projectUser.final_mark,
+					}));			}
+
+			// Check for dashes in user42
+			if (Array.isArray(user42.dashes_users)) {
+				dashesUsers = user42.dashes_users;
+			}
 
 			// Paso 3: mapear solo los campos permitidos por UpsertOAuth42UserDto
 			// y sincronizar el perfil local en users-service.
@@ -532,6 +585,11 @@ export class AuthService implements OnModuleInit {
 				staff: user42['staff?'] ?? user42.staff,
 				alumni: user42['alumni?'] ?? user42.alumni,
 				active: user42['active?'] ?? user42.active,
+				skills,
+				levels,
+				titles,
+				projects_users: projectsUsers,
+				dashes_users: dashesUsers,
 				image: user42.image
 					? {
 						link: user42.image.link,

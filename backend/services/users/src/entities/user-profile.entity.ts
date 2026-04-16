@@ -75,6 +75,21 @@ export class UserProfileEntity {
 	last_login_at!: Date | null;
 
 	@Column({ type: 'jsonb', nullable: true })
+	skills!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
+	levels!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
+	titles!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
+	projects_users!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
+	dashes_users!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
 	raw_profile!: Record<string, unknown> | null;
 
 	@CreateDateColumn({ type: 'timestamp' })

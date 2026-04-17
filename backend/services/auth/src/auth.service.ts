@@ -44,8 +44,6 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
@@ -62,6 +60,8 @@ const LOCKOUT_DURATION_MINUTES = 15;
 const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
+
+
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -84,10 +84,7 @@ export class AuthService implements OnModuleInit {
 	/**
 	 * Log de arranque útil para validar configuración sensible en runtime.
 	 */
-	async onModuleInit() {
-		console.log('AuthService inicializado correctamente');
-		console.log(`Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
-	}
+	async onModuleInit() {}
 
 	// ═══════════════════════════════════════════════
 	//  REGISTRO
@@ -136,7 +133,6 @@ export class AuthService implements OnModuleInit {
 		});
 
 		const savedUser = await this.userRepo.save(user);
-		console.log(`Usuario registrado: ${savedUser.username} (${savedUser.id})`);
 
 		// Generar tokens
 		return this.generateAuthResponse(savedUser, ip, userAgent);
@@ -203,8 +199,6 @@ export class AuthService implements OnModuleInit {
 		// Login exitoso: resetear intentos fallidos
 		await this.handleSuccessfulLogin(user);
 
-		console.log(`Login exitoso: ${user.username} (${user.id})`);
-
 		return this.generateAuthResponse(user, ip, userAgent);
 	}
 
@@ -251,8 +245,6 @@ export class AuthService implements OnModuleInit {
 		// Revocar el token actual (rotación de tokens)
 		await this.refreshTokenRepo.update(storedToken.id, { is_revoked: true });
 
-		console.log(`🔄 Token renovado para: ${storedToken.user.username}`);
-
 		return this.generateAuthResponse(storedToken.user, ip, userAgent);
 	}
 
@@ -285,7 +277,6 @@ export class AuthService implements OnModuleInit {
 			{ is_revoked: true },
 		);
 
-		console.log(`Todas las sesiones revocadas para usuario: ${userId}`);
 		return { message: 'Todas las sesiones cerradas correctamente' };
 	}
 
@@ -417,8 +408,6 @@ export class AuthService implements OnModuleInit {
 			const lockUntil = new Date();
 			lockUntil.setMinutes(lockUntil.getMinutes() + LOCKOUT_DURATION_MINUTES);
 			updateData.locked_until = lockUntil;
-
-			console.log(`Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
 		}
 
 		await this.userRepo.update(user.id, updateData);
@@ -457,9 +446,6 @@ export class AuthService implements OnModuleInit {
 			.execute();
 
 		const deleted = result.affected || 0;
-		if (deleted > 0) {
-			console.log(`${deleted} tokens expirados/revocados eliminados`);
-		}
 		return deleted;
 	}
 	// ═══════════════════════════════════════════════
@@ -514,6 +500,7 @@ export class AuthService implements OnModuleInit {
 			});
 
 			const user42 = userResponse.data as any;
+
 			// Paso 2b: extraer stats de perfil para persistir.
 			let skills: any[] = [];
 			let levels: any[] = [];
@@ -545,6 +532,9 @@ export class AuthService implements OnModuleInit {
 							level: skill.level,
 						}));
 					}
+				}
+			}
+
 			if (Array.isArray(user42.titles)) {
 				titles = user42.titles
 					.filter((title: any) => title && title.id && title.name)
@@ -559,7 +549,8 @@ export class AuthService implements OnModuleInit {
 						name: projectUser?.project?.name || 'Unnamed project',
 						status: projectUser.status || 'unknown',
 						final_mark: projectUser.final_mark,
-					}));			}
+					}));
+			}
 
 			// Check for dashes in user42
 			if (Array.isArray(user42.dashes_users)) {
@@ -653,12 +644,9 @@ export class AuthService implements OnModuleInit {
 			authUser.last_login = new Date();
 			const savedAuthUser = await this.userRepo.save(authUser);
 
-			console.log(`Login OAuth 42 exitoso: ${savedAuthUser.username} (${savedAuthUser.id})`);
-
 			// Paso 5: generar tokens propios del sistema.
 			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
 		} catch (error: any) {
-			console.error('Error en OAuth 42:', error.response?.data || error.message);
 			throw new UnauthorizedError('Error al autenticar con 42');
 		}
 	}

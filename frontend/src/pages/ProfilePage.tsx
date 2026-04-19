@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MOCK_POSTS } from '@/constants/mockData';
 import { useAuth } from '@/hooks/useAuth';
 import { buildApiUrl } from '@/utils/apiBase';
 import { PostCard } from '@/components/feed/PostCard';
@@ -126,7 +125,14 @@ const ProfilePage = () => {
 	const displayName = profile?.display_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profileLogin;
 	const profileInitial = displayName.charAt(0).toUpperCase();
 
-	const posts = MOCK_POSTS.filter((post) => post.user.login === profileLogin);
+	const posts = profile?.dashes_users
+		?.filter((dash) => dash.level === 21)
+		.map((dash) => ({
+			id: dash.id,
+			title: dash.name,
+			content: '',
+			createdAt: profile?.updated_at ?? new Date().toISOString(),
+		})) ?? [];
 
 	const wallet = profile?.wallet ?? 0;
 	const correctionPoint = profile?.correction_point ?? 0;

@@ -61,6 +61,8 @@ const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
 
+
+
 @Injectable()
 export class AuthService implements OnModuleInit {
 	private readonly jwtSecret: string;
@@ -82,10 +84,7 @@ export class AuthService implements OnModuleInit {
 	/**
 	 * Log de arranque útil para validar configuración sensible en runtime.
 	 */
-	async onModuleInit() {
-		console.log('AuthService inicializado correctamente');
-		console.log(`Configuración: bcrypt rounds=${BCRYPT_SALT_ROUNDS}, access_token=${ACCESS_TOKEN_EXPIRY}, refresh_token=${REFRESH_TOKEN_EXPIRY_DAYS}d`);
-	}
+	async onModuleInit() {}
 
 	// ═══════════════════════════════════════════════
 	//  REGISTRO
@@ -134,7 +133,6 @@ export class AuthService implements OnModuleInit {
 		});
 
 		const savedUser = await this.userRepo.save(user);
-		console.log(`Usuario registrado: ${savedUser.username} (${savedUser.id})`);
 
 		// Generar tokens
 		return this.generateAuthResponse(savedUser, ip, userAgent);
@@ -201,8 +199,6 @@ export class AuthService implements OnModuleInit {
 		// Login exitoso: resetear intentos fallidos
 		await this.handleSuccessfulLogin(user);
 
-		console.log(`Login exitoso: ${user.username} (${user.id})`);
-
 		return this.generateAuthResponse(user, ip, userAgent);
 	}
 
@@ -249,8 +245,6 @@ export class AuthService implements OnModuleInit {
 		// Revocar el token actual (rotación de tokens)
 		await this.refreshTokenRepo.update(storedToken.id, { is_revoked: true });
 
-		console.log(`🔄 Token renovado para: ${storedToken.user.username}`);
-
 		return this.generateAuthResponse(storedToken.user, ip, userAgent);
 	}
 
@@ -283,7 +277,6 @@ export class AuthService implements OnModuleInit {
 			{ is_revoked: true },
 		);
 
-		console.log(`Todas las sesiones revocadas para usuario: ${userId}`);
 		return { message: 'Todas las sesiones cerradas correctamente' };
 	}
 
@@ -418,8 +411,6 @@ export class AuthService implements OnModuleInit {
 			const lockUntil = new Date();
 			lockUntil.setMinutes(lockUntil.getMinutes() + LOCKOUT_DURATION_MINUTES);
 			updateData.locked_until = lockUntil;
-
-			console.log(`Cuenta bloqueada: ${user.username} (${attempts} intentos fallidos) hasta ${lockUntil.toISOString()}`);
 		}
 
 		await this.userRepo.update(user.id, updateData);
@@ -486,9 +477,6 @@ export class AuthService implements OnModuleInit {
 			.execute();
 
 		const deleted = result.affected || 0;
-		if (deleted > 0) {
-			console.log(`${deleted} tokens expirados/revocados eliminados`);
-		}
 		return deleted;
 	}
 	// ═══════════════════════════════════════════════
@@ -544,6 +532,62 @@ export class AuthService implements OnModuleInit {
 
 			const user42 = userResponse.data as any;
 
+			// Paso 2b: extraer stats de perfil para persistir.
+			let skills: any[] = [];
+			let levels: any[] = [];
+			let dashesUsers: any[] = [];
+			let titles: any[] = [];
+			let projectsUsers: any[] = [];
+
+			// Solo usamos datos del cursus principal (id 21) para el ProfilePage.
+			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
+				const cursus21 = user42.cursus_users.find(
+					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
+				);
+
+				if (cursus21) {
+					if (typeof cursus21.level === 'number') {
+						levels = [
+							{
+								id: cursus21.cursus_id || 21,
+								name: cursus21.cursus?.name || '42cursus',
+								level: cursus21.level,
+							},
+						];
+					}
+
+					if (Array.isArray(cursus21.skills)) {
+						skills = cursus21.skills.map((skill: any) => ({
+							id: skill.id,
+							name: skill.name,
+							level: skill.level,
+						}));
+					}
+				}
+			}
+
+			if (Array.isArray(user42.titles)) {
+				titles = user42.titles
+					.filter((title: any) => title && title.id && title.name)
+					.map((title: any) => ({ id: title.id, name: title.name }));
+			}
+
+			if (Array.isArray(user42.projects_users)) {
+				projectsUsers = user42.projects_users
+					.filter((projectUser: any) => Array.isArray(projectUser?.cursus_ids) && projectUser.cursus_ids.includes(21))
+					.map((projectUser: any) => ({
+						id: projectUser.id,
+						name: projectUser?.project?.name || 'Unnamed project',
+						status: projectUser.status || 'unknown',
+						final_mark: projectUser.final_mark,
+					}));
+			}
+
+			// Check for dashes in user42
+			if (Array.isArray(user42.dashes_users)) {
+				dashesUsers = user42.dashes_users;
+			}
+
 			// Paso 3: mapear solo los campos permitidos por UpsertOAuth42UserDto
 			// y sincronizar el perfil local en users-service.
 			const upsertPayload = {
@@ -563,6 +607,11 @@ export class AuthService implements OnModuleInit {
 				staff: user42['staff?'] ?? user42.staff,
 				alumni: user42['alumni?'] ?? user42.alumni,
 				active: user42['active?'] ?? user42.active,
+				skills,
+				levels,
+				titles,
+				projects_users: projectsUsers,
+				dashes_users: dashesUsers,
 				image: user42.image
 					? {
 						link: user42.image.link,
@@ -628,12 +677,9 @@ export class AuthService implements OnModuleInit {
 			authUser.last_login = new Date();
 			const savedAuthUser = await this.userRepo.save(authUser);
 
-			console.log(`Login OAuth 42 exitoso: ${savedAuthUser.username} (${savedAuthUser.id})`);
-
 			// Paso 5: generar tokens propios del sistema.
 			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
 		} catch (error: any) {
-			console.error('Error en OAuth 42:', error.response?.data || error.message);
 			throw new UnauthorizedError('Error al autenticar con 42');
 		}
 	}

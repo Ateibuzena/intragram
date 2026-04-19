@@ -118,4 +118,24 @@ export class UpsertOAuth42UserDto {
 	@ValidateNested({ each: true })
 	@Type(() => OAuth42CampusDto)
 	campus?: OAuth42CampusDto[];
+
+	@IsOptional()
+	@IsArray()
+	skills?: Record<string, unknown>[];
+
+	@IsOptional()
+	@IsArray()
+	levels?: Record<string, unknown>[];
+
+	@IsOptional()
+	@IsArray()
+	titles?: Record<string, unknown>[];
+
+	@IsOptional()
+	@IsArray()
+	projects_users?: Record<string, unknown>[];
+
+	@IsOptional()
+	@IsArray()
+	dashes_users?: Record<string, unknown>[];
 }

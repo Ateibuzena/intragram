@@ -39,8 +39,8 @@ const HomePage = () => {
 						<div className="py-4 md:py-6 px-3 md:px-4">
 							<div className="max-w-xl mx-auto">
 								<div key={activeNav} className="animate-page-switch">
-									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
-									{activeNav === 'profile' && <ProfilePage />}
+									{activeNav === 'home' && <Feed activeFilter={activeFilter} />}
+									{activeNav === 'notifications' && <NotificationsPage />}
 								</div>
 							</div>
 						</div>

@@ -316,6 +316,48 @@ export class UsersService {
 	}
 
 	/**
+	 * Agrega un amigo por su id interno y devuelve el perfil agregado.
+	 */
+	async addFriend(userId: string, friendId: string): Promise<UserProfileEntity> {
+		if (userId === friendId) {
+			throw Object.assign(new Error('No puedes agregarte a ti mismo como amigo'), { statusCode: 400 });
+		}
+
+		const [user, friend] = await Promise.all([
+			this.userProfileRepo.findOne({ where: { id: userId } }),
+			this.userProfileRepo.findOne({ where: { id: friendId } }),
+		]);
+
+		if (!user) {
+			throw Object.assign(new Error(`Usuario con id ${userId} no encontrado`), { statusCode: 404 });
+		}
+		if (!friend) {
+			throw Object.assign(new Error(`Usuario con id ${friendId} no encontrado`), { statusCode: 404 });
+		}
+
+		const existing = await this.friendshipRepo.findOne({
+			where: [
+				{ user_id: userId, friend_id: friendId },
+				{ user_id: friendId, friend_id: userId },
+			],
+		});
+
+		if (!existing) {
+			const relation = this.friendshipRepo.create({
+				user_id: userId,
+				friend_id: friendId,
+				status: 'accepted',
+			});
+			await this.friendshipRepo.save(relation);
+		} else if (existing.status !== 'accepted') {
+			existing.status = 'accepted';
+			await this.friendshipRepo.save(existing);
+		}
+
+		return friend;
+	}
+
+	/**
 	 * Devuelve el feed de posts guardados (favoritos) por el usuario.
 	 */
 	async getFavoritesFeed(userId: string, limit = 50): Promise<IFeedPost[]> {

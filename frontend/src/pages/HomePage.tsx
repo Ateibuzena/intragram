@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { FriendsList } from '@/components/layout/FriendsList';
 import { Feed } from '@/components/feed/Feed';
 import type { FilterKey, NavKey } from '@/types/models';
 import ChatPage from './ChatPage';
@@ -47,11 +46,6 @@ const HomePage = () => {
 					)}
 				</main>
 
-				{activeNav !== 'chat' && (
-					<div className="hidden lg:block flex-shrink-0">
-						<FriendsList />
-					</div>
-				)}
 			</div>
 
 		</div>

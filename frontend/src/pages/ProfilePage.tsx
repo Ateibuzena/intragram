@@ -52,10 +52,18 @@ const formatDate = (value: string | null) => {
 	return date.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
 };
 
-const splitLabel = (value: string): [string, string?] => {
-	if (value.length <= 16) return [value];
+const splitLabel = (value: string): [string, string?, string?] => {
+	if (value.length <= 18) return [value];
 	const words = value.split(' ');
-	if (words.length < 2) return [value.slice(0, 16), value.slice(16)];
+	if (words.length === 1) {
+		// Single long word - split into chunks
+		const third = Math.ceil(value.length / 3);
+		return [value.slice(0, third), value.slice(third, third * 2), value.slice(third * 2)];
+	}
+	if (words.length === 2) {
+		return [words[0], words[1]];
+	}
+	// Multiple words - split into 2-3 parts
 	const mid = Math.ceil(words.length / 2);
 	return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
 };
@@ -161,9 +169,10 @@ const ProfilePage = () => {
 	const radarData = useMemo(() => {
 		if (radarSkills.length === 0) return null;
 
-		const size = 240;
+		const size = 320;
 		const center = size / 2;
-		const radius = 74;
+		const radius = 85;
+		const labelOffset = 38;
 		const rings = 4;
 		const maxLevel = 20;
 		const count = radarSkills.length;
@@ -173,8 +182,8 @@ const ProfilePage = () => {
 			return {
 				x: center + Math.cos(angle) * radius,
 				y: center + Math.sin(angle) * radius,
-				labelX: center + Math.cos(angle) * (radius + 28),
-				labelY: center + Math.sin(angle) * (radius + 28),
+				labelX: center + Math.cos(angle) * (radius + labelOffset),
+				labelY: center + Math.sin(angle) * (radius + labelOffset),
 			};
 		});
 
@@ -195,74 +204,80 @@ const ProfilePage = () => {
 	return (
 		<div className="relative left-1/2 right-1/2 w-screen -ml-[40vw] -mr-[40vw] px-3 md:px-6 lg:px-8 mr-3 md:mr-6 lg:mr-10">
 			<section className="mb-4 space-y-3">
-				<div className="bg-ft-card border border-ft-border rounded-2xl p-4 md:p-5">
-					<div className="flex items-start justify-between gap-3">
-						<div className="flex items-center gap-4 min-w-0">
-							<div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-ft-cyan text-black font-black text-2xl flex items-center justify-center overflow-hidden shrink-0">
-								{profile?.avatar_url ? (
-									<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-								) : (
-									<span>{profileInitial}</span>
-								)}
-							</div>
-							<div className="min-w-0">
-								<p className="text-[11px] text-ft-cyan uppercase tracking-wide">Perfil</p>
-								<h1 className="text-xl md:text-2xl font-black text-white truncate">{displayName}</h1>
-								<p className="text-xs md:text-sm text-ft-muted truncate">@{profileLogin} · 42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+					{/* Left column: Profile Picture + Common Core Progress */}
+					<div className="space-y-3">
+						{/* Bigger Profile Picture */}
+						<div className="bg-ft-card border border-ft-border rounded-2xl p-6">
+							<div className="flex flex-col items-center">
+								<div className="w-40 h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden">
+									{profile?.avatar_url ? (
+										<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+									) : (
+										<span>{profileInitial}</span>
+									)}
+								</div>
+								<h2 className="text-center mt-4 text-2xl font-black text-white">{displayName}</h2>
+								<p className="text-center text-sm text-ft-muted mt-1">@{profileLogin}</p>
+								<p className="text-center text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+								<span className={`text-[10px] px-3 py-1 rounded-full border mt-3 ${profile?.active ? 'border-emerald-400/40 text-emerald-300 bg-emerald-500/10' : 'border-ft-border text-ft-muted bg-ft-hover/60'}`}>
+									{profile?.active ? 'Activo' : 'Inactivo'}
+								</span>
+						{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
+								{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
 							</div>
 						</div>
-						<span className={`text-[10px] px-2 py-1 rounded-full border ${profile?.active ? 'border-emerald-400/40 text-emerald-300 bg-emerald-500/10' : 'border-ft-border text-ft-muted bg-ft-hover/60'}`}>
-							{profile?.active ? 'Activo' : 'Inactivo'}
-						</span>
-					</div>
-					{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
-					{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
-				</div>
 
-				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-					<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
-						<h3 className="text-sm font-bold text-white mb-3">Common Core Progress</h3>
-						<div className="flex items-center gap-3">
-							<div className="relative w-16 h-16 flex-shrink-0">
-								<svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-									{/* Background circle */}
-									<circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="6" className="text-ft-border" />
-									{/* Progress circle */}
-									<circle
-										cx="32"
-										cy="32"
-										r="28"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="6"
-										strokeDasharray={`${(progressPercentage / 100) * 2 * Math.PI * 28} ${2 * Math.PI * 28}`}
-										strokeLinecap="round"
-										className="text-ft-cyan transition-all duration-300"
-									/>
-								</svg>
-								{/* Center level display */}
-								<div className="absolute inset-0 flex items-center justify-center">
-									<div className="text-center">
-										<p className="text-xs font-bold text-ft-cyan">{levelInteger}</p>
+						{/* Common Core Progress and Titles Row */}
+						<div className="grid grid-cols-2 gap-3">
+							{/* Common Core Progress */}
+							<div className="bg-ft-card border border-ft-border rounded-2xl p-4">
+								<h3 className="text-sm font-bold text-white mb-3">Common Core Progress</h3>
+								<div className="flex items-center gap-3">
+									<div className="relative w-16 h-16 flex-shrink-0">
+										<svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+											{/* Background circle */}
+											<circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="6" className="text-ft-border" />
+											{/* Progress circle */}
+											<circle
+												cx="32"
+												cy="32"
+												r="28"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="6"
+												strokeDasharray={`${(progressPercentage / 100) * 2 * Math.PI * 28} ${2 * Math.PI * 28}`}
+												strokeLinecap="round"
+												className="text-ft-cyan transition-all duration-300"
+											/>
+										</svg>
+										{/* Center level display */}
+										<div className="absolute inset-0 flex items-center justify-center">
+											<div className="text-center">
+												<p className="text-xs font-bold text-ft-cyan">{levelInteger}</p>
+											</div>
+										</div>
+									</div>
+									<div>
+										<p className="text-xs text-ft-muted">Current level cursus</p>
+										<p className="text-xl font-black text-white">{level}</p>
+										<p className="text-xs text-ft-muted">Grade: {cursusGrade}</p>
 									</div>
 								</div>
 							</div>
-							<div>
-								<p className="text-xs text-ft-muted">Current level cursus</p>
-								<p className="text-xl font-black text-white">{level}</p>
-								<p className="text-xs text-ft-muted">Grade: {cursusGrade}</p>
-							</div>
-						</div>
-						<div className="mt-4 border-t border-ft-border pt-3">
-							<p className="text-[10px] text-ft-cyan uppercase mb-2 font-semibold">Titles</p>
-							<div className="space-y-1">
-								{profile?.titles && profile.titles.length > 0 ? (
-									profile.titles.map((title, idx) => (
-										<p key={idx} className="text-xs text-ft-muted truncate">{title.name || 'Untitled'}</p>
-									))
-								) : (
-									<p className="text-xs text-ft-muted">No titles data</p>
-								)}
+
+							{/* Titles */}
+							<div className="bg-ft-card border border-ft-border rounded-2xl p-4">
+								<p className="text-[10px] text-ft-cyan uppercase mb-2 font-semibold">Titles</p>
+								<div className="space-y-1">
+									{profile?.titles && profile.titles.length > 0 ? (
+										profile.titles.map((title, idx) => (
+											<p key={idx} className="text-xs text-ft-muted truncate">{title.name || 'Untitled'}</p>
+										))
+									) : (
+										<p className="text-xs text-ft-muted">No titles data</p>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -270,8 +285,8 @@ const ProfilePage = () => {
 					<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
 						<h3 className="text-sm font-bold text-white mb-3">Skills</h3>
 						{radarData ? (
-							<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-2">
-								<svg viewBox={`0 0 ${radarData.size} ${radarData.size}`} className="w-[220px] h-[220px] mx-auto" role="img" aria-label="Skills radar chart">
+							<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-1">
+								<svg viewBox={`0 0 ${radarData.size} ${radarData.size}`} className="w-full h-auto mx-auto" role="img" aria-label="Skills radar chart">
 									{Array.from({ length: radarData.rings }, (_, ringIdx) => {
 										const r = ((ringIdx + 1) / radarData.rings) * radarData.radius;
 										return (
@@ -307,18 +322,20 @@ const ProfilePage = () => {
 									/>
 
 									{radarData.axisPoints.map((point, idx) => {
-										const [line1, line2] = splitLabel(radarSkills[idx].name);
+										const [line1, line2, line3] = splitLabel(radarSkills[idx].name);
 										return (
 											<text
 												key={`label-${idx}`}
 												x={point.labelX}
 												y={point.labelY}
 												textAnchor="middle"
-												fontSize="9"
+												fontSize="10"
+												fontWeight="500"
 												fill="#94a3b8"
 											>
 												<tspan x={point.labelX} dy="0">{line1}</tspan>
-												{line2 ? <tspan x={point.labelX} dy="11">{line2}</tspan> : null}
+												{line2 ? <tspan x={point.labelX} dy="12">{line2}</tspan> : null}
+												{line3 ? <tspan x={point.labelX} dy="12">{line3}</tspan> : null}
 											</text>
 										);
 									})}
@@ -329,19 +346,19 @@ const ProfilePage = () => {
 						)}
 					</div>
 
-					<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
-						<h3 className="text-sm font-bold text-white mb-3">Projects</h3>
-						{profile?.projects_users && profile.projects_users.length > 0 ? (
-							<div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+				<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
+					<h3 className="text-sm font-bold text-white mb-3">Projects</h3>
+					{profile?.projects_users && profile.projects_users.length > 0 ? (
+						<div className="space-y-1 max-h-80 overflow-y-auto pr-1">
 								{profile.projects_users.map((project, idx) => (
 									<div key={project.id ?? idx} className="border border-ft-border rounded-lg p-2">
-										<p className="text-sm font-semibold text-white truncate">{project.name || 'Unnamed project'}</p>
+										<p className="text-xs font-semibold text-white truncate">{project.name || 'Unnamed project'}</p>
 										<div className="mt-1 flex items-center justify-between text-xs">
 											<p className="text-ft-muted">
-												Status: <span className="text-white">{project.status || 'unknown'}</span>
+												Status: <span className="text-white text-xs">{project.status || 'unknown'}</span>
 											</p>
 											<p className="text-ft-muted">
-												Final Mark: <span className="text-ft-cyan font-semibold">{project.final_mark ?? '-'}</span>
+												Mark: <span className="text-ft-cyan font-semibold text-xs">{project.final_mark ?? '-'}</span>
 											</p>
 										</div>
 									</div>
@@ -352,21 +369,43 @@ const ProfilePage = () => {
 						)}
 					</div>
 
-
 				</div>
 
 				<div className="bg-ft-card border border-ft-border rounded-2xl p-4">
 					<h3 className="text-sm font-bold text-white mb-3">Profile Details</h3>
-					<div className="space-y-2 text-xs">
-						<p className="text-ft-muted">Email: <span className="text-white">{profile?.email ?? 'N/A'}</span></p>
-						<p className="text-ft-muted">Campus: <span className="text-white">{campus}</span></p>
-						<p className="text-ft-muted">Pool: <span className="text-white">{profile?.pool_month ?? 'N/A'} {profile?.pool_year ?? ''}</span></p>
-						<p className="text-ft-muted">Location: <span className="text-white">{profile?.location ?? 'N/A'}</span></p>
-						<p className="text-ft-muted">Phone: <span className="text-white">{profile?.phone ?? 'N/A'}</span></p>
-						<p className="text-ft-muted">Role: <span className="text-white">{profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student'}</span></p>
-						<p className="text-ft-muted">Last login: <span className="text-white">{formatDate(profile?.last_login_at ?? null)}</span></p>
-						<p className="text-ft-muted">Created: <span className="text-white">{formatDate(profile?.created_at ?? null)}</span></p>
-						<p className="text-ft-muted">Updated: <span className="text-white">{formatDate(profile?.updated_at ?? null)}</span></p>
+					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Email</p>
+							<p className="text-white truncate">{profile?.email ?? 'N/A'}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Campus</p>
+							<p className="text-white">{campus}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Pool</p>
+							<p className="text-white">{profile?.pool_month ?? 'N/A'} {profile?.pool_year ?? ''}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Location</p>
+							<p className="text-white truncate">{profile?.location ?? 'N/A'}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Phone</p>
+							<p className="text-white truncate">{profile?.phone ?? 'N/A'}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Role</p>
+							<p className="text-white">{profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student'}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Last Login</p>
+							<p className="text-white text-[11px]">{formatDate(profile?.last_login_at ?? null)}</p>
+						</div>
+						<div>
+							<p className="text-ft-muted uppercase text-[10px] font-semibold">Created</p>
+							<p className="text-white text-[11px]">{formatDate(profile?.created_at ?? null)}</p>
+						</div>
 					</div>
 				</div>
 
@@ -406,11 +445,6 @@ const ProfilePage = () => {
 				</div>
 			)}
 
-			{posts.map((post, index) => (
-				<div key={post.id} className={`animate-fade-in-up-delay-${Math.min(index + 1, 3)}`}>
-					<PostCard post={post} />
-				</div>
-			))}
 		</div>
 	);
 };

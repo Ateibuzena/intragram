@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { SERVICE_URLS } from '../../config/microservices.config';
 
 @Injectable()
@@ -239,6 +239,22 @@ export class UsersService {
 			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'obtener amigos del usuario');
+		}
+	}
+
+	/**
+	 * Agrega un amigo para el usuario autenticado.
+	 */
+	async addFriend(userId: string, dto: CreateFriendDto): Promise<IUserProfile> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.post<IUserProfile>(`${this.usersBaseUrl}/friends/${userId}`, dto, {
+					timeout: 5000,
+				}),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'agregar amigo');
 		}
 	}
 

@@ -33,7 +33,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
@@ -215,6 +215,20 @@ export class UsersController {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			return await this.usersService.getFriends(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Agrega un amigo para el usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Post('friends/me')
+	async addFriend(@Req() req: any, @Body() dto: CreateFriendDto): Promise<IUserProfile> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.addFriend(profile.id, dto);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

@@ -31,6 +31,29 @@
 - `GET /feed/favorites/:id`
 - `POST /feed/favorites/:id`
 - `GET /friends/:id`
+- `POST /friends/:id`
+
+## Friends Management
+
+La gestion de amistades en `users-service` contempla actualmente estos casos:
+
+- obtener la lista de amistades aceptadas de un usuario,
+- agregar amistad por usuario objetivo (resuelto por login en gateway antes de llegar aqui).
+
+### Endpoint `POST /friends/:id`
+
+Permite agregar un amigo al usuario `:id`.
+
+Comportamiento:
+
+- valida que el usuario origen y destino existan,
+- evita auto-amistad,
+- evita duplicados en ambos sentidos (`A -> B` y `B -> A`),
+- si existe una relacion con estado distinto de `accepted`, la actualiza a `accepted`.
+
+Respuesta:
+
+- devuelve el perfil del amigo agregado.
 
 ## Domain Model
 

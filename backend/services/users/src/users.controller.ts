@@ -32,7 +32,7 @@ import {
 	Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -197,5 +197,21 @@ export class UsersController {
 	@Get('friends/:id')
 	async getFriends(@Param('id') id: string) {
 		return this.usersService.getFriends(id);
+	}
+
+	/**
+	 * Agrega un amigo al usuario indicado.
+	 */
+	@Post('friends/:id')
+	async addFriend(@Param('id') id: string, @Body() dto: CreateFriendDto) {
+		try {
+			const friend = await this.usersService.findByLogin(dto.friend_login);
+			return await this.usersService.addFriend(id, friend.id);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al agregar amigo',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
 	}
 }

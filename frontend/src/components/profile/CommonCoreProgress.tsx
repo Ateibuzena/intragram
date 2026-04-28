@@ -7,7 +7,6 @@ interface CommonCoreProgressProps {
 }
 
 export const CommonCoreProgress = ({
-	cursusLevel,
 	cursusGrade,
 	levelInteger,
 	level,

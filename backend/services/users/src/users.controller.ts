@@ -55,6 +55,36 @@ export class UsersController {
 	}
 
 	/**
+	 * Refresca el perfil de un usuario desde la API de 42.
+	 * 
+	 * Requiere:
+	 * - user_id: ID interno del usuario
+	 * - access_token (query param): Access token válido de OAuth42
+	 */
+	@Patch('users/:id/refresh')
+	@HttpCode(HttpStatus.OK)
+	async refreshProfileFromOAuth42(
+		@Param('id') userId: string,
+		@Query('access_token') accessToken: string,
+	) {
+		if (!accessToken) {
+			throw new HttpException(
+				'Access token de OAuth42 requerido',
+				HttpStatus.BAD_REQUEST,
+			);
+		}
+
+		try {
+			return await this.usersService.refreshFromOAuth42Token(userId, accessToken);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al refrescar perfil desde OAuth42',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
 	 * Busca usuarios por login o display_name con limite para no sobrecargar la BBDD.
 	 */
 	@Get('users/search')

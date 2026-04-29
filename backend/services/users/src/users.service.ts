@@ -12,6 +12,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import axios from 'axios';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
@@ -124,6 +125,122 @@ export class UsersService {
 		});
 
 		return this.userProfileRepo.save(created);
+	}
+
+	/**
+	 * Refresca el perfil de un usuario desde la API de 42 usando su access token.
+	 * 
+	 * Proceso:
+	 * 1. Consulta el perfil actual desde https://api.intra.42.fr/v2/me
+	 * 2. Extrae la información relevante
+	 * 3. Sincroniza el perfil local usando upsertFromOAuth42
+	 * 
+	 * @param userId - ID interno del usuario (para validación)
+	 * @param oauth42AccessToken - Access token válido de OAuth42
+	 * @returns El perfil actualizado
+	 */
+	async refreshFromOAuth42Token(userId: string, oauth42AccessToken: string): Promise<UserProfileEntity> {
+		// Validar que el usuario existe
+		const user = await this.findById(userId);
+
+		try {
+			// Consultar perfil actual desde API de 42
+			const response = await axios.get('https://api.intra.42.fr/v2/me', {
+				headers: { Authorization: `Bearer ${oauth42AccessToken}` },
+				timeout: 5000,
+			});
+
+			const user42 = response.data as any;
+
+			// Extraer stats de perfil similar a handleOAuth42Callback en auth.service
+			let skills: any[] = [];
+			let levels: any[] = [];
+			let titles: any[] = [];
+			let projectsUsers: any[] = [];
+			let dashesUsers: any[] = [];
+
+			// Solo usamos datos del cursus principal (id 21)
+			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
+				const cursus21 = user42.cursus_users.find(
+					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
+				);
+
+				if (cursus21) {
+					if (typeof cursus21.level === 'number') {
+						levels = [
+							{
+								id: cursus21.cursus_id || 21,
+								name: cursus21.cursus?.name || '42cursus',
+								level: cursus21.level,
+							},
+						];
+					}
+
+					if (Array.isArray(cursus21.skills)) {
+						skills = cursus21.skills.map((skill: any) => ({
+							id: skill.id,
+							name: skill.name,
+							level: skill.level,
+						}));
+					}
+				}
+			}
+
+			if (Array.isArray(user42.titles)) {
+				titles = user42.titles
+					.filter((title: any) => title && title.id && title.name)
+					.map((title: any) => ({ id: title.id, name: title.name }));
+			}
+
+			if (Array.isArray(user42.projects_users)) {
+				projectsUsers = user42.projects_users
+					.filter((projectUser: any) => Array.isArray(projectUser?.cursus_ids) && projectUser.cursus_ids.includes(21))
+					.map((projectUser: any) => ({
+						id: projectUser.id,
+						name: projectUser?.project?.name || 'Unnamed project',
+						status: projectUser.status || 'unknown',
+						final_mark: projectUser.final_mark,
+					}));
+			}
+
+			if (Array.isArray(user42.dashes_users)) {
+				dashesUsers = user42.dashes_users;
+			}
+
+			// Mapear datos a UpsertOAuth42UserDto
+			const upsertPayload: UpsertOAuth42UserDto = {
+				id: user42.id,
+				login: user42.login,
+				email: user42.email,
+				first_name: user42.first_name,
+				last_name: user42.last_name,
+				displayname: user42.displayname,
+				usual_full_name: user42.usual_full_name,
+				image: user42.image,
+				campus: user42.campus,
+				pool_month: user42.pool_month,
+				pool_year: user42.pool_year,
+				wallet: user42.wallet,
+				correction_point: user42.correction_point,
+				location: user42.location,
+				phone: user42.phone,
+				staff: !!user42.staff,
+				alumni: !!user42.alumni,
+				active: user42.active,
+				skills,
+				levels,
+				titles,
+				projects_users: projectsUsers,
+				dashes_users: dashesUsers,
+			};
+
+			// Sincronizar perfil
+			return this.upsertFromOAuth42(upsertPayload);
+		} catch (error: any) {
+			const statusCode = error.response?.status || 500;
+			const message = error.response?.data?.message || error.message || 'Error al consultar API de 42';
+			throw Object.assign(new Error(message), { statusCode });
+		}
 	}
 
 	/**

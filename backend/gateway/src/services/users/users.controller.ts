@@ -4,11 +4,12 @@
  * Protege las rutas de consulta con AuthGuard para asegurar que solo usuarios autenticados puedan acceder.
  *
  * Endpoints:
- * - POST   /users/oauth/42/upsert → Crea o actualiza perfil a partir de OAuth42
- * - GET    /users/:id             → Busca perfil por ID interno
- * - GET    /users/42/:fortyTwoId  → Busca perfil por ID de 42
- * - GET    /users/login/:login    → Busca perfil por login normalizado
- * - PATCH  /users/:id/profile     → Actualiza campos editables del perfil (solo propio)
+ * - POST   /users/oauth/42/upsert        → Crea o actualiza perfil a partir de OAuth42
+ * - PATCH  /users/:id/refresh-profile    → Refresca perfil desde API de 42 (requiere access_token)
+ * - GET    /users/:id                    → Busca perfil por ID interno
+ * - GET    /users/42/:fortyTwoId         → Busca perfil por ID de 42
+ * - GET    /users/login/:login           → Busca perfil por login normalizado
+ * - PATCH  /users/:id/profile            → Actualiza campos editables del perfil (solo propio)
  * 
  * Seguridad:
  * - Validación de datos con DTOs y pipes de NestJS
@@ -116,6 +117,47 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al actualizar perfil',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Refresca el perfil de un usuario desde la API de 42.
+	 * 
+	 * Soporta dos formas:
+	 * - PATCH /users/me/refresh-profile (usa el usuario autenticado)
+	 * - PATCH /users/:id/refresh-profile (usa el ID especificado, solo el propietario)
+	 * 
+	 * Query params:
+	 * - access_token: Access token válido de OAuth42
+	 */
+	@UseGuards(AuthGuard)
+	@Patch(':id/refresh-profile')
+	async refreshProfile(
+		@Param('id') id: string,
+		@Query('access_token') accessToken: string,
+		@Req() req: any,
+	): Promise<IUserProfile> {
+		// Solo permitir refrescar el propio perfil o si se usa "me"
+		if (id !== 'me' && req.user?.sub !== id) {
+			throw new ForbiddenException('You can only refresh your own profile');
+		}
+
+		const userId = id === 'me' ? req.user?.sub : id;
+
+		if (!accessToken) {
+			throw new HttpException(
+				'Access token de OAuth42 requerido (parámetro: access_token)',
+				HttpStatus.BAD_REQUEST,
+			);
+		}
+
+		try {
+			return await this.usersService.refreshProfileFromOAuth42(userId, accessToken);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al refrescar perfil desde OAuth42',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}

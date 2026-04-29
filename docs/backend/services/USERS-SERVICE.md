@@ -17,6 +17,7 @@
 ## Exposed Endpoints
 
 - `POST /users/oauth/42/upsert`
+- `PATCH /users/:id/refresh`
 - `GET /users/search`
 - `GET /users/:id`
 - `GET /users/42/:fortyTwoId`
@@ -32,6 +33,61 @@
 - `POST /feed/favorites/:id`
 - `GET /friends/:id`
 - `POST /friends/:id`
+
+## Refresh Profile From 42
+
+### Endpoint `PATCH /users/:id/refresh`
+
+Refresca y sincroniza el perfil local de un usuario usando datos en vivo de la API de 42 (`/v2/me`).
+
+#### Query Params
+
+- `access_token` (obligatorio): access token OAuth42 valido del usuario.
+
+#### Reglas
+
+- Si falta `access_token`, responde `400`.
+- Si el token es invalido o expiro, propaga el error de 42 (normalmente `401`).
+- Si el usuario `:id` no existe en base de datos local, responde `404`.
+- Si todo es correcto, actualiza el perfil local y devuelve el perfil sincronizado.
+
+#### Request de ejemplo
+
+```http
+PATCH /users/9f8d5caa-5e7a-4d8f-9f58-a42b8b8a0f2d/refresh?access_token=eyJhbGciOi...
+```
+
+#### Respuesta esperada (200)
+
+```json
+{
+	"id": "9f8d5caa-5e7a-4d8f-9f58-a42b8b8a0f2d",
+	"forty_two_id": 12345,
+	"login": "mfernand",
+	"display_name": "Mariano",
+	"avatar_url": "https://cdn.intra.42.fr/users/...",
+	"wallet": 420,
+	"correction_point": 7,
+	"skills": [],
+	"levels": [],
+	"projects_users": [],
+	"updated_at": "2026-04-29T10:00:00.000Z"
+}
+```
+
+#### Flujo interno
+
+1. Valida existencia del usuario local por `:id`.
+2. Llama a `https://api.intra.42.fr/v2/me` con `Authorization: Bearer <access_token>`.
+3. Mapea campos relevantes (perfil, cursus 21, skills, levels, projects, titles, dashes).
+4. Ejecuta upsert local con la misma logica de sincronizacion OAuth42.
+
+#### Nota de integracion con gateway
+
+La API publica recomendada para frontend es el endpoint del gateway:
+
+- `PATCH /users/me/refresh-profile?access_token=...`
+- `PATCH /users/:id/refresh-profile?access_token=...`
 
 ## Friends Management
 

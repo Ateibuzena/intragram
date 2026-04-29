@@ -115,6 +115,27 @@ export class UsersService {
 	}
 
 	/**
+	 * Refresca el perfil de un usuario desde la API de 42.
+	 */
+	async refreshProfileFromOAuth42(userId: string, oauth42AccessToken: string): Promise<IUserProfile> {
+		try {
+			const response = await firstValueFrom(
+				this.httpService.patch<IUserProfile>(
+					`${this.usersBaseUrl}/users/${userId}/refresh`,
+					{},
+					{
+						timeout: 10000,
+						params: { access_token: oauth42AccessToken },
+					},
+				),
+			);
+			return response.data;
+		} catch (error) {
+			this.handleHttpError(error, 'refrescar perfil desde OAuth42');
+		}
+	}
+
+	/**
 	 * Devuelve el feed "Reciente" personalizado del usuario.
 	 */
 	async getRecentFeed(userId: string): Promise<IFeedPost[]> {

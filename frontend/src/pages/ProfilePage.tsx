@@ -29,7 +29,7 @@ const ProfilePage = () => {
 	const progressPercentage = levelProgress * 100;
 
 	return (
-		<div className="relative left-1/2 right-1/2 w-screen -ml-[40vw] -mr-[40vw] px-3 md:px-6 lg:px-8 mr-3 md:mr-6 lg:mr-10">
+		<div className="w-full h-full">
 		<section className="mb-4 space-y-3">
 			<div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
 				{/* Left column: Profile Picture + Common Core Progress + Titles */}

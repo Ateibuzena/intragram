@@ -33,13 +33,21 @@ const HomePage = () => {
 				)}
 
 				<main className="flex-1 overflow-y-auto min-w-0">
-					{activeNav === 'chat' && <div className="h-full"><ChatPage /></div>}
-					{activeNav !== 'chat' && (
+					{activeNav === 'chat' && (
+						<div className="h-full">
+							<ChatPage />
+						</div>
+					)}
+					{activeNav === 'profile' && (
+						<div className="px-4">
+							<ProfilePage />
+						</div>
+					)}
+					{activeNav !== 'chat' && activeNav !== 'profile' && (
 						<div className="py-4 md:py-6 px-3 md:px-4">
 							<div className="max-w-xl mx-auto">
 								<div key={activeNav} className="animate-page-switch">
 									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
-									{activeNav === 'profile' && <ProfilePage />}
 								</div>
 							</div>
 						</div>

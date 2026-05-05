@@ -9,7 +9,7 @@ export const ProjectsCard = ({ profile }: ProjectsCardProps) => {
 		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
 			<h3 className="text-sm font-bold text-white mb-3">Projects</h3>
 			{profile?.projects_users && profile.projects_users.length > 0 ? (
-				<div className="space-y-1 max-h-80 overflow-y-auto pr-1">
+				<div className="space-y-1 max-h-96 overflow-y-auto pr-1">
 					{profile.projects_users.map((project, idx) => (
 						<div key={project.id ?? idx} className="border border-ft-border rounded-lg p-2">
 							<p className="text-xs font-semibold text-white truncate">{project.name || 'Unnamed project'}</p>

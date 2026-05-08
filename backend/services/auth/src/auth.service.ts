@@ -346,6 +346,7 @@ export class AuthService implements OnModuleInit {
 		user: UserEntity,
 		ip?: string,
 		userAgent?: string,
+		oauth42AccessToken?: string,
 	): Promise<AuthResponse> {
 		const chatUserId = await this.resolveChatUserId(user);
 
@@ -386,6 +387,7 @@ export class AuthService implements OnModuleInit {
 			refresh_token: refreshToken,
 			token_type: 'Bearer',
 			expires_in: 900, // 15 minutos en segundos
+			oauth42_access_token: oauth42AccessToken,
 			user: {
 				id: user.id,
 				username: user.username,
@@ -678,7 +680,7 @@ export class AuthService implements OnModuleInit {
 			const savedAuthUser = await this.userRepo.save(authUser);
 
 			// Paso 5: generar tokens propios del sistema.
-			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
+			return this.generateAuthResponse(savedAuthUser, ip, userAgent, access_token);
 		} catch (error: any) {
 			throw new UnauthorizedError('Error al autenticar con 42');
 		}

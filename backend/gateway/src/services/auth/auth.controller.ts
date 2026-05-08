@@ -198,8 +198,16 @@ export class AuthController {
 
 		try {
 			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
+			const query = new URLSearchParams({
+				token: authResponse.access_token,
+				user: JSON.stringify(authResponse.user),
+			});
 
-			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			if (authResponse.oauth42_access_token) {
+				query.set('oauth42_access_token', authResponse.oauth42_access_token);
+			}
+
+			const redirectUrl = `${this.frontendUrl}?${query.toString()}`;
 			return res.redirect(redirectUrl);
 		} catch (error: any) {
 			return res.redirect(`${this.frontendUrl}?error=auth_failed`);

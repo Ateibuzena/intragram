@@ -53,11 +53,15 @@ export const useAuthState = () => {
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
 		const urlToken = params.get('token');
+		const urlOauth42Token = params.get('oauth42_access_token');
 		const urlUser = params.get('user');
 
 		if (urlToken) {
 			localStorage.setItem('auth_token', urlToken);
 			setToken(urlToken);
+			if (urlOauth42Token) {
+				localStorage.setItem('oauth42_access_token', urlOauth42Token);
+			}
 			if (urlUser) {
 				try {
 					const parsed: AuthUser = JSON.parse(urlUser);
@@ -68,6 +72,7 @@ export const useAuthState = () => {
 				}
 			}
 			params.delete('token');
+			params.delete('oauth42_access_token');
 			params.delete('user');
 			navigate({ pathname: ROUTES.HOME, search: params.toString() ? `?${params.toString()}` : '' }, { replace: true });
 		} else {
@@ -114,6 +119,7 @@ export const useAuthState = () => {
 
 	const logout = () => {
 		localStorage.removeItem('auth_token');
+		localStorage.removeItem('oauth42_access_token');
 		localStorage.removeItem('auth_user');
 		setToken(null);
 		setUser(null);

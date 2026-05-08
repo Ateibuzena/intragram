@@ -139,13 +139,6 @@ export class UsersController {
 		@Query('access_token') accessToken: string,
 		@Req() req: any,
 	): Promise<IUserProfile> {
-		// Solo permitir refrescar el propio perfil o si se usa "me"
-		if (id !== 'me' && req.user?.sub !== id) {
-			throw new ForbiddenException('You can only refresh your own profile');
-		}
-
-		const userId = id === 'me' ? req.user?.sub : id;
-
 		if (!accessToken) {
 			throw new HttpException(
 				'Access token de OAuth42 requerido (parámetro: access_token)',
@@ -154,8 +147,25 @@ export class UsersController {
 		}
 
 		try {
-			return await this.usersService.refreshProfileFromOAuth42(userId, accessToken);
+			let profileId: string;
+
+			if (id === 'me') {
+				const ownProfile = await this.usersService.findByLogin(req.user.username);
+				profileId = ownProfile.id;
+			} else {
+				const requestedProfile = await this.usersService.findById(id);
+				if (requestedProfile.login !== req.user?.username) {
+					throw new ForbiddenException('You can only refresh your own profile');
+				}
+				profileId = requestedProfile.id;
+			}
+
+			return await this.usersService.refreshProfileFromOAuth42(profileId, accessToken);
 		} catch (error: any) {
+			if (error instanceof HttpException) {
+				throw error;
+			}
+
 			throw new HttpException(
 				error.message || 'Error al refrescar perfil desde OAuth42',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,

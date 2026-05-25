@@ -1,0 +1,16 @@
+{{ define "slack.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
+
+{{ define "slack.text" }}
+{{ if gt (len .Alerts.Firing) 0 -}}
+*Firing:* {{ range .Alerts.Firing }}{{ .Annotations.summary }}{{ if .Labels.instance }} on {{ .Labels.instance }}{{ end }}
+{{ end }}
+{{- end }}
+{{ if gt (len .Alerts.Resolved) 0 -}}
+*Resolved:* {{ range .Alerts.Resolved }}{{ .Annotations.summary }}{{ if .Labels.instance }} on {{ .Labels.instance }}{{ end }}
+{{ end }}
+{{- end }}
+*Labels:* {{ range $k, $v := .CommonLabels }}{{ $k }}={{ $v }} {{ end }}
+*Annotations:* {{ range $k, $v := .CommonAnnotations }}{{ $k }}={{ $v }} {{ end }}
+{{ end }}
+
+{{ define "email.subject" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}

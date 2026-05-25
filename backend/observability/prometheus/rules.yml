@@ -11,19 +11,33 @@ groups:
           description: "Instance {{ $labels.instance }} has been down for more than 5 minutes."
 
       - alert: HighErrorRate
-        expr: (sum(rate(request_count_total{status_code=~\"5..\"}[5m])) by (instance)) / (sum(rate(request_count_total[5m])) by (instance)) > 0.05
+        expr: |
+          (sum(rate(request_count_total{status_code=~"5.."}[5m])) by (job, instance))
+          /
+          (sum(rate(request_count_total[5m])) by (job, instance)) > 0.05
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High 5xx rate on {{ $labels.instance }}"
-          description: "5xx error rate is > 5% over the last 5 minutes on {{ $labels.instance }}."
+          summary: "High 5xx rate on {{ $labels.job }} ({{ $labels.instance }})"
+          description: "5xx error rate is > 5% over the last 5 minutes for job {{ $labels.job }} on {{ $labels.instance }}."
 
       - alert: HighLatency
-        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance)) > 1
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job, instance)) > 1
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High latency on {{ $labels.instance }}"
-          description: "P95 request latency is > 1s on {{ $labels.instance }}."
+          summary: "High latency on {{ $labels.job }} ({{ $labels.instance }})"
+          description: "P95 request latency is > 1s for job {{ $labels.job }} on {{ $labels.instance }}."
+
+      - alert: ExporterDown
+        expr: |
+          up{job=~"node_exporter|nginx_exporter|postgres_exporter_.*"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Exporter down on {{ $labels.job }} ({{ $labels.instance }})"
+          description: "The exporter {{ $labels.job }} is not reachable on {{ $labels.instance }} for more than 5 minutes."

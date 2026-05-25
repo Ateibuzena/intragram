@@ -47,10 +47,13 @@ services:
     image: prom/alertmanager:v0.31.0
     ports:
       - "9093:9093"
-    volumes:
-      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./backend/observability/prometheus/templates:/etc/alertmanager/templates:ro
+      - alertmanager-data:/alertmanager
     networks:
       - backend-net
     restart: unless-stopped
@@ -369,3 +372,5 @@ volumes:
     name: grafana-data
   prometheus-data:
     name: prometheus-data
+  alertmanager-data:
+    name: alertmanager-data

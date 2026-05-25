@@ -21,6 +21,10 @@
       "types": "./dist/dto/index.d.ts",
       "default": "./dist/dto/index.js"
     },
+    "./health": {
+      "types": "./dist/health/index.d.ts",
+      "default": "./dist/health/index.js"
+    },
     "./types": {
       "types": "./dist/types/index.d.ts",
       "default": "./dist/types/index.js"

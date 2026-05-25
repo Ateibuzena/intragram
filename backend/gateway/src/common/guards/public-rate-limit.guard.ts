@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, TooManyRequestsException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PUBLIC_RATE_LIMIT_METADATA, type PublicRateLimitOptions } from '../decorators/public-rate-limit.decorator';
 
 interface Bucket {
@@ -43,7 +43,7 @@ export class PublicRateLimitGuard implements CanActivate {
 
 		if (current.count > config.limit) {
 			const retryAfterSeconds = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
-			throw new TooManyRequestsException(`Rate limit exceeded. Retry in ${retryAfterSeconds}s.`);
+			throw new HttpException(`Rate limit exceeded. Retry in ${retryAfterSeconds}s.`, HttpStatus.TOO_MANY_REQUESTS);
 		}
 
 		return true;

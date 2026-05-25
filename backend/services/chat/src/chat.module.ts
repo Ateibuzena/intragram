@@ -8,6 +8,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { ChatHealthController } from './health.controller';
 import { MetricsController } from './metrics.controller';
 import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
 import { MetricsModule } from './observability/metrics/metrics.module';
@@ -34,7 +35,7 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 		}),
 		TypeOrmModule.forFeature([ChatConversationEntity, ChatMessageEntity]),
 		MetricsModule],
-	controllers: [ChatController, MetricsController],
+	controllers: [ChatController, ChatHealthController, MetricsController],
 	providers: [ChatService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],
 	exports: [ChatService],
 })

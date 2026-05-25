@@ -4,37 +4,33 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
-import { firstValueFrom } from 'rxjs';
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { LoginDto, RegisterDto, AuthResponse, TokenValidationResult } from '@intragram/shared';
+import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
 
 @Injectable()
 export class AuthService {
 	private readonly authBaseUrl = SERVICE_URLS.auth;
 
-	constructor(private readonly httpService: HttpService) {}
+	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
 	/**
 	 * Reenvía el registro al auth-service.
 	 */
 	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<AuthResponse>(
-					`${this.authBaseUrl}/auth/register`,
-					registerDto,
-					{
-						timeout: 10000,
-						headers: {
-							'X-Forwarded-For': ip || '',
-							'X-Original-User-Agent': userAgent || '',
-						},
+			return await this.httpClient.post<AuthResponse, RegisterDto>(
+				`${this.authBaseUrl}/auth/register`,
+				registerDto,
+				{
+					timeoutMs: 10000,
+					headers: {
+						'X-Forwarded-For': ip || '',
+						'X-Original-User-Agent': userAgent || '',
 					},
-				),
+				},
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'registrar usuario');
 		}
@@ -45,20 +41,17 @@ export class AuthService {
 	 */
 	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<AuthResponse>(
-					`${this.authBaseUrl}/auth/login`,
-					loginDto,
-					{
-						timeout: 10000,
-						headers: {
-							'X-Forwarded-For': ip || '',
-							'X-Original-User-Agent': userAgent || '',
-						},
+			return await this.httpClient.post<AuthResponse, LoginDto>(
+				`${this.authBaseUrl}/auth/login`,
+				loginDto,
+				{
+					timeoutMs: 10000,
+					headers: {
+						'X-Forwarded-For': ip || '',
+						'X-Original-User-Agent': userAgent || '',
 					},
-				),
+				},
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'iniciar sesión');
 		}
@@ -69,20 +62,17 @@ export class AuthService {
 	 */
 	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<AuthResponse>(
-					`${this.authBaseUrl}/auth/refresh`,
-					{ refresh_token: refreshToken },
-					{
-						timeout: 10000,
-						headers: {
-							'X-Forwarded-For': ip || '',
-							'X-Original-User-Agent': userAgent || '',
-						},
+			return await this.httpClient.post<AuthResponse, { refresh_token: string }>(
+				`${this.authBaseUrl}/auth/refresh`,
+				{ refresh_token: refreshToken },
+				{
+					timeoutMs: 10000,
+					headers: {
+						'X-Forwarded-For': ip || '',
+						'X-Original-User-Agent': userAgent || '',
 					},
-				),
+				},
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'renovar token');
 		}
@@ -93,14 +83,11 @@ export class AuthService {
 	 */
 	async logout(refreshToken: string): Promise<{ message: string }> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<{ message: string }>(
-					`${this.authBaseUrl}/auth/logout`,
-					{ refresh_token: refreshToken },
-					{ timeout: 5000 },
-				),
+			return await this.httpClient.post<{ message: string }, { refresh_token: string }>(
+				`${this.authBaseUrl}/auth/logout`,
+				{ refresh_token: refreshToken },
+				{ timeoutMs: 5000 },
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'cerrar sesión');
 		}
@@ -111,14 +98,11 @@ export class AuthService {
 	 */
 	async validateToken(accessToken: string): Promise<TokenValidationResult> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<TokenValidationResult>(
-					`${this.authBaseUrl}/auth/validate`,
-					{ access_token: accessToken },
-					{ timeout: 5000 },
-				),
+			return await this.httpClient.post<TokenValidationResult, { access_token: string }>(
+				`${this.authBaseUrl}/auth/validate`,
+				{ access_token: accessToken },
+				{ timeoutMs: 5000 },
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'validar token');
 		}
@@ -129,13 +113,7 @@ export class AuthService {
 	 */
 	async getOAuth42AuthUrl(): Promise<{ url: string }> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.get<{ url: string }>(
-					`${this.authBaseUrl}/auth/42`,
-					{ timeout: 5000 },
-				),
-			);
-			return response.data;
+			return await this.httpClient.get<{ url: string }>(`${this.authBaseUrl}/auth/42`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener URL de OAuth 42');
 		}
@@ -146,20 +124,14 @@ export class AuthService {
 	 */
 	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.get<AuthResponse>(
-					`${this.authBaseUrl}/auth/42/callback`,
-					{
-						params: { code },
-						timeout: 15000,
-						headers: {
-							'X-Forwarded-For': ip || '',
-							'X-Original-User-Agent': userAgent || '',
-						},
-					},
-				),
-			);
-			return response.data;
+			return await this.httpClient.get<AuthResponse>(`${this.authBaseUrl}/auth/42/callback`, {
+				params: { code },
+				timeoutMs: 15000,
+				headers: {
+					'X-Forwarded-For': ip || '',
+					'X-Original-User-Agent': userAgent || '',
+				},
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'procesar callback de OAuth 42');
 		}

@@ -24,6 +24,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "rxjs": ["../node_modules/rxjs"],
+      "rxjs/*": ["../node_modules/rxjs/*"],
       "@intragram/shared": ["../shared/index.ts"],
       "@intragram/shared/*": ["../shared/*"]
     }

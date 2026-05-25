@@ -15,6 +15,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
+import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 
@@ -40,12 +41,8 @@ export class ChatService {
 	/**
 	 * Health check del servicio.
 	 */
-	getHealth(): { service: string; status: string; connectedUsers: number } {
-		return {
-			service: 'chat-service',
-			status: 'ok',
-			connectedUsers: this.getConnectedUsers().length,
-		};
+	getHealth(): HealthResponse {
+		return createHealthResponse('chat');
 	}
 
 	/**

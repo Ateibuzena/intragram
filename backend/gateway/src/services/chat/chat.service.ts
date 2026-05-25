@@ -4,9 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
-import { firstValueFrom } from 'rxjs';
 import {
 	ChatConversation,
 	ChatMessage,
@@ -16,21 +14,22 @@ import {
 	SendMessageResponse,
 } from '@intragram/shared/chat';
 import { SERVICE_URLS } from '../../config/microservices.config';
+import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
+import { HealthResponse } from '@intragram/shared/health';
 
 @Injectable()
 export class ChatService {
 	// URL base del microservicio de chat.
 	private readonly chatBaseUrl = SERVICE_URLS.chat;
 
-	constructor(private readonly httpService: HttpService) {}
+	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
 	/**
 	 * Obtiene el health del chat-service.
 	 */
-	async getHealth(): Promise<{ status: string; service?: string; connectedUsers?: number }> {
+	async getHealth(): Promise<HealthResponse> {
 		try {
-			const response = await firstValueFrom(this.httpService.get(`${this.chatBaseUrl}/chat/health`, { timeout: 5000 }));
-			return response.data;
+			return await this.httpClient.get<HealthResponse>(`${this.chatBaseUrl}/health`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener health del chat-service');
 		}
@@ -41,13 +40,10 @@ export class ChatService {
 	 */
 	async getConversations(userId: string): Promise<ChatConversation[]> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.get<ChatConversation[]>(`${this.chatBaseUrl}/chat/conversations`, {
-					timeout: 5000,
-					headers: this.buildUserHeaders(userId),
-				}),
-			);
-			return response.data;
+			return await this.httpClient.get<ChatConversation[]>(`${this.chatBaseUrl}/chat/conversations`, {
+				timeoutMs: 5000,
+				headers: this.buildUserHeaders(userId),
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'obtener conversaciones');
 		}
@@ -58,13 +54,14 @@ export class ChatService {
 	 */
 	async createConversation(userId: string, dto: CreateConversationDto): Promise<CreateConversationResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<CreateConversationResponse>(`${this.chatBaseUrl}/chat/conversations`, dto, {
-					timeout: 5000,
+			return await this.httpClient.post<CreateConversationResponse, CreateConversationDto>(
+				`${this.chatBaseUrl}/chat/conversations`,
+				dto,
+				{
+					timeoutMs: 5000,
 					headers: this.buildUserHeaders(userId),
-				}),
+				},
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'crear conversación');
 		}
@@ -75,13 +72,10 @@ export class ChatService {
 	 */
 	async getMessages(userId: string, conversationId: string): Promise<ChatMessage[]> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.get<ChatMessage[]>(`${this.chatBaseUrl}/chat/conversations/${conversationId}/messages`, {
-					timeout: 5000,
-					headers: this.buildUserHeaders(userId),
-				}),
-			);
-			return response.data;
+			return await this.httpClient.get<ChatMessage[]>(`${this.chatBaseUrl}/chat/conversations/${conversationId}/messages`, {
+				timeoutMs: 5000,
+				headers: this.buildUserHeaders(userId),
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'obtener mensajes');
 		}
@@ -92,14 +86,11 @@ export class ChatService {
 	 */
 	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto): Promise<SendMessageResponse> {
 		try {
-			const response = await firstValueFrom(
-				this.httpService.post<SendMessageResponse>(
-					`${this.chatBaseUrl}/chat/conversations/${conversationId}/messages`,
-					dto,
-					{ timeout: 5000, headers: this.buildUserHeaders(userId) },
-				),
+			return await this.httpClient.post<SendMessageResponse, SendMessageDto>(
+				`${this.chatBaseUrl}/chat/conversations/${conversationId}/messages`,
+				dto,
+				{ timeoutMs: 5000, headers: this.buildUserHeaders(userId) },
 			);
-			return response.data;
 		} catch (error) {
 			this.handleHttpError(error, 'enviar mensaje');
 		}

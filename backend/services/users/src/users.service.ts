@@ -18,6 +18,7 @@ import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
+import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 @Injectable()
 export class UsersService {
@@ -316,21 +317,8 @@ export class UsersService {
 	/**
 	 * Verifica conectividad básica con la base de datos.
 	 */
-	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
-		try {
-			await this.userProfileRepo.query('SELECT 3');
-			return {
-				status: 'ok',
-				database: 'connected',
-				timestamp: new Date().toISOString(),
-			};
-		} catch {
-			return {
-				status: 'error',
-				database: 'disconnected',
-				timestamp: new Date().toISOString(),
-			};
-		}
+	async getHealth(): Promise<HealthResponse> {
+		return createHealthResponse('users');
 	}
 
 	/**

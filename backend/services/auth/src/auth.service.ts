@@ -47,6 +47,7 @@ import * as crypto from 'crypto';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
+import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import axios from 'axios';
 
 // ─── Constantes de seguridad ───────────────────────
@@ -317,22 +318,8 @@ export class AuthService implements OnModuleInit {
 	//  HEALTH CHECK
 	// ═══════════════════════════════════════════════
 
-	async getHealth(): Promise<{ status: string; database: string; timestamp: string }> {
-		try {
-			// Verificar conexión a la BBDD
-			await this.userRepo.query('SELECT 4');
-			return {
-				status: 'ok',
-				database: 'connected',
-				timestamp: new Date().toISOString(),
-			};
-		} catch {
-			return {
-				status: 'error',
-				database: 'disconnected',
-				timestamp: new Date().toISOString(),
-			};
-		}
+	async getHealth(): Promise<HealthResponse> {
+		return createHealthResponse('auth');
 	}
 
 	// ═══════════════════════════════════════════════

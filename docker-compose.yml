@@ -29,8 +29,6 @@ services:
       - --storage.tsdb.retention.time=15d
       - --web.external-url=https://localhost:8443/prometheus/
       - --web.route-prefix=/
-    ports:
-      - "9090:9090"
     volumes:
       - prometheus-data:/prometheus
       - ./backend/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -47,13 +45,13 @@ services:
     build:
       context: ./backend/observability/prometheus
       dockerfile: alertmanager/Dockerfile
-    ports:
-      - "9093:9093"
     env_file:
       - ./.env
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
+      - --web.external-url=https://localhost:8443/alertmanager/
+      - --web.route-prefix=/
     volumes:
       - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml.template:ro
       - ./backend/observability/prometheus/templates:/etc/alertmanager/templates:ro
@@ -112,13 +110,23 @@ services:
     build:
       context: ./backend/observability/grafana
       dockerfile: Dockerfile
+    env_file:
+      - ./.env
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
-      GF_SERVER_ROOT_URL: /grafana/
+      GF_SERVER_DOMAIN: localhost
+      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_SERVER_ENFORCE_DOMAIN: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_SECURITY_COOKIE_SAMESITE: lax
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
       interval: 10s

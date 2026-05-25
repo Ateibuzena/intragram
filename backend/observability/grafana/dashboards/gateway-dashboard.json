@@ -1,68 +1,94 @@
 
 {
-	"annotations": {
-		"list": []
-	},
+	"annotations": { "list": [] },
 	"editable": true,
-	"uid": "gateway-service-observability",
+	"gnetId": null,
+	"graphTooltip": 0,
+	"id": null,
+	"iteration": 1620000000000,
+	"links": [],
 	"panels": [
 		{
-			"type": "timeseries",
-			"title": "HTTP Request Duration (p95)",
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+			"id": 2,
+			"options": { "reduceOptions": { "calcs": ["last"], "fields": "","values": false } },
+			"pluginVersion": "9.0.0",
+			"targets": [{ "expr": "up{instance=\"gateway:3000\"}", "format": "time_series" }],
+			"title": "Gateway Up",
+			"type": "stat"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "m" }, "overrides": [] },
+			"gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+			"id": 3,
+			"options": {},
+			"targets": [
+				{ "expr": "(time() - process_start_time_seconds{instance=\"gateway:3000\"}) / 60", "refId": "A" }
+			],
+			"title": "Uptime (minutes)",
+			"type": "stat"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+			"id": 4,
 			"targets": [
 				{
 					"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{instance=\"gateway:3000\"}[1m])) by (le))",
-					"legendFormat": "p95 latency"
+					"refId": "A"
 				}
 			],
-			"gridPos": {
-				"x": 0,
-				"y": 0,
-				"w": 24,
-				"h": 8
-			}
+			"title": "HTTP Request Duration (p95)",
+			"type": "timeseries"
 		},
 		{
-			"type": "stat",
-			"title": "Total Requests",
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+			"id": 5,
 			"targets": [
-				{
-					"expr": "sum(request_count_total{instance=\"gateway:3000\"})",
-					"legendFormat": "requests"
-				}
+				{ "expr": "sum(rate(request_count_total{instance=\"gateway:3000\"}[1m]))","refId":"A" },
+				{ "expr": "sum(rate(request_count_total{instance=\"gateway:3000\", status_code=~\"5..\"}[5m]))","refId":"B" }
 			],
-			"gridPos": {
-				"x": 0,
-				"y": 8,
-				"w": 12,
-				"h": 6
-			}
+			"title": "Requests: total (1m) and 5xx (5m)",
+			"type": "timeseries"
 		},
 		{
-			"type": "gauge",
-			"title": "Active Users",
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+			"id": 6,
 			"targets": [
-				{
-					"expr": "active_users{instance=\"gateway:3000\"}",
-					"legendFormat": "users"
-				}
+				{ "expr": "process_resident_memory_bytes{instance=\"gateway:3000\"} / 1024 / 1024", "refId": "A" }
 			],
-			"fieldConfig": {
-				"defaults": {
-					"min": 0,
-					"max": 100
-				}
-			},
-			"gridPos": {
-				"x": 12,
-				"y": 8,
-				"w": 12,
-				"h": 6
-			}
+			"title": "Memory RSS (MB)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+			"id": 7,
+			"targets": [
+				{ "expr": "nodejs_eventloop_lag_p99_seconds{instance=\"gateway:3000\"} * 1000", "refId": "A" }
+			],
+			"title": "Event Loop Lag p99 (ms)",
+			"type": "timeseries"
 		}
 	],
+	"refresh": "10s",
 	"schemaVersion": 36,
 	"style": "dark",
-	"title": "NestJS Observability",
-	"version": 1
+	"tags": ["gateway", "nestjs", "prometheus"],
+	"templating": { "list": [] },
+	"time": { "from": "now-15m", "to": "now" },
+	"timepicker": {},
+	"timezone": "",
+	"title": "Gateway - Observability",
+	"uid": "gateway-observability",
+	"version": 2
 }

@@ -55,13 +55,42 @@ services:
       - backend-net
     restart: unless-stopped
 
-  postgres-exporter:
-    container_name: postgres-exporter
+  postgres-exporter-auth:
+    container_name: postgres-exporter-auth
     image: wrouesnel/postgres_exporter:v0.10.0
     environment:
       - DATA_SOURCE_NAME=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
     networks:
       - service-net
+    restart: unless-stopped
+
+  postgres-exporter-users:
+    container_name: postgres-exporter-users
+    image: wrouesnel/postgres_exporter:v0.10.0
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${USERS_DB_USER}:${USERS_DB_PASSWORD}@users-db:5432/${USERS_DB_NAME}
+    networks:
+      - service-net
+    restart: unless-stopped
+
+  postgres-exporter-chat:
+    container_name: postgres-exporter-chat
+    image: wrouesnel/postgres_exporter:v0.10.0
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASSWORD}@chat-db:5432/${CHAT_DB_NAME}
+    networks:
+      - service-net
+    restart: unless-stopped
+
+  nginx-exporter:
+    container_name: nginx-exporter
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    command:
+      - --nginx.scrape-uri=http://nginx:8080/stub_status
+    networks:
+      - backend-net
+    depends_on:
+      - nginx
     restart: unless-stopped
 
   node-exporter:

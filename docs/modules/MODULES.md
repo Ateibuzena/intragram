@@ -71,7 +71,7 @@ Para este proyecto, un framework se define como una herramienta integral que pro
 
 ## 🔴 Módulos Mayores
 
-### Frameworks (Frontend y Backend)
+### Frameworks (Frontend y Backend) ✅
 Usar un framework tanto para frontend como para backend.
 - Usar un framework de frontend (React, Vue, Angular, Svelte, etc.).
 - Usar un framework de backend (Express, NestJS, Django, Flask, Ruby on Rails, etc.).

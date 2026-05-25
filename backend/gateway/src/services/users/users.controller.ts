@@ -43,6 +43,23 @@ import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guar
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
+	private async resolveAuthenticatedProfileId(req: any): Promise<string | null> {
+		const chatUserId = req.user?.chat_user_id;
+		if (typeof chatUserId === 'string' && chatUserId.length > 0) {
+			return chatUserId;
+		}
+
+		const username = req.user?.username;
+		if (!username) return null;
+
+		try {
+			const profile = await this.usersService.findByLogin(username);
+			return profile.id;
+		} catch {
+			return null;
+		}
+	}
+
 	/**
 	 * Crea o actualiza el usuario local a partir del perfil OAuth42 recibido.
 	 */
@@ -108,7 +125,8 @@ export class UsersController {
 	@UseGuards(AuthGuard)
 	@Patch(':id/profile')
 	async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto, @Req() req: any): Promise<IUserProfile> {
-		if (req.user?.sub !== id) {
+		const authenticatedProfileId = await this.resolveAuthenticatedProfileId(req);
+		if (!authenticatedProfileId || authenticatedProfileId !== id) {
 			throw new ForbiddenException('You can only update your own profile');
 		}
 
@@ -140,11 +158,15 @@ export class UsersController {
 		@Req() req: any,
 	): Promise<IUserProfile> {
 		// Solo permitir refrescar el propio perfil o si se usa "me"
-		if (id !== 'me' && req.user?.sub !== id) {
+		const authenticatedProfileId = await this.resolveAuthenticatedProfileId(req);
+		if (id !== 'me' && authenticatedProfileId !== id) {
 			throw new ForbiddenException('You can only refresh your own profile');
 		}
 
-		const userId = id === 'me' ? req.user?.sub : id;
+		const userId = id === 'me' ? authenticatedProfileId : id;
+		if (!userId) {
+			throw new ForbiddenException('You can only refresh your own profile');
+		}
 
 		if (!accessToken) {
 			throw new HttpException(

@@ -4,6 +4,32 @@ import { buildApiUrl } from '@/utils/apiBase';
 import { UserProfileEntityDto } from './profileTypes';
 import { decodeTokenPayload } from './profileUtils';
 
+const fetchProfileFromBackend = async (
+	token: string,
+	tokenPayload: { username?: string; sub?: string } | null,
+): Promise<UserProfileEntityDto | null> => {
+	if (!token || (!tokenPayload?.username && !tokenPayload?.sub)) return null;
+
+	const endpoints = [
+		tokenPayload?.username ? `/users/login/${encodeURIComponent(tokenPayload.username)}` : null,
+		tokenPayload?.sub ? `/users/${tokenPayload.sub}` : null,
+	].filter(Boolean) as string[];
+
+	for (const endpoint of endpoints) {
+		const response = await fetch(buildApiUrl(endpoint), {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+
+		if (response.ok) {
+			return (await response.json()) as UserProfileEntityDto;
+		}
+	}
+
+	return null;
+};
+
 export const useProfileData = () => {
 	const { token } = useAuth();
 	const tokenPayload = useMemo(() => decodeTokenPayload(token), [token]);
@@ -11,7 +37,28 @@ export const useProfileData = () => {
 
 	const [profile, setProfile] = useState<UserProfileEntityDto | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const refreshProfile = async (options: { silent?: boolean } = {}) => {
+		if (!token) return null;
+
+		setRefreshing(true);
+		if (!options.silent) setError(null);
+		try {
+			const data = await fetchProfileFromBackend(token, tokenPayload);
+			if (!data) throw new Error('PROFILE_NOT_FOUND');
+			setProfile(data);
+			return data;
+		} catch {
+			if (!options.silent) {
+				setError('No se pudieron cargar los datos del perfil.');
+			}
+			return null;
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!token || (!tokenPayload?.username && !tokenPayload?.sub)) {
@@ -25,25 +72,7 @@ export const useProfileData = () => {
 			setLoading(true);
 			setError(null);
 			try {
-				const candidates = [
-					tokenPayload?.username ? `/users/login/${encodeURIComponent(tokenPayload.username)}` : null,
-					tokenPayload?.sub ? `/users/${tokenPayload.sub}` : null,
-				].filter(Boolean) as string[];
-
-				let data: UserProfileEntityDto | null = null;
-				for (const endpoint of candidates) {
-					const response = await fetch(buildApiUrl(endpoint), {
-						headers: {
-							Authorization: `Bearer ${token}`,
-						},
-					});
-
-					if (response.ok) {
-						data = (await response.json()) as UserProfileEntityDto;
-						break;
-					}
-				}
-
+				const data = await fetchProfileFromBackend(token, tokenPayload);
 				if (!data) {
 					throw new Error('PROFILE_NOT_FOUND');
 				}
@@ -65,5 +94,5 @@ export const useProfileData = () => {
 		};
 	}, [token, tokenPayload?.sub, tokenPayload?.username]);
 
-	return { profile, loading, error, fallbackLogin };
+	return { profile, setProfile, loading, refreshing, error, fallbackLogin, refreshProfile };
 };

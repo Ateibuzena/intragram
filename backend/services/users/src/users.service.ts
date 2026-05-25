@@ -69,13 +69,14 @@ export class UsersService {
 
 		if (existing) {
 			// Actualiza solo los campos sincronizados desde 42.
+			const importedDisplayName = profile.displayname || profile.usual_full_name || login;
 			existing.forty_two_id = profile.id;
 			existing.login = login;
 			existing.email = email;
 			existing.first_name = profile.first_name || existing.first_name;
 			existing.last_name = profile.last_name || existing.last_name;
-			existing.display_name = displayName;
-			existing.avatar_url = avatarUrl;
+			existing.display_name = existing.display_name || importedDisplayName;
+			existing.avatar_url = existing.avatar_url || avatarUrl;
 			existing.campus = campusName;
 			existing.pool_month = profile.pool_month || null;
 			existing.pool_year = profile.pool_year || null;

@@ -1,13 +1,20 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+
+const trimString = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 export class UpdateUserProfileDto {
 	@IsOptional()
+	@Transform(trimString)
 	@IsString()
-	@MaxLength(160)
+	@IsNotEmpty()
+	@MaxLength(80)
 	display_name?: string;
 
 	@IsOptional()
+	@Transform(trimString)
 	@IsString()
-	@MaxLength(255)
+	@IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+	@MaxLength(2048)
 	avatar_url?: string;
 }

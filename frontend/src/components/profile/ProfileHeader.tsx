@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/Button';
 import { UserProfileEntityDto } from './profileTypes';
 
 interface ProfileHeaderProps {
@@ -7,11 +8,29 @@ interface ProfileHeaderProps {
 	profileInitial: string;
 	loading: boolean;
 	error: string | null;
+	canEditProfile?: boolean;
+	onEditProfile?: () => void;
 }
 
-export const ProfileHeader = ({ profile, displayName, profileLogin, profileInitial, loading, error }: ProfileHeaderProps) => {
+export const ProfileHeader = ({
+	profile,
+	displayName,
+	profileLogin,
+	profileInitial,
+	loading,
+	error,
+	canEditProfile,
+	onEditProfile,
+}: ProfileHeaderProps) => {
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-6">
+		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6">
+			{canEditProfile && onEditProfile && (
+				<div className="absolute top-4 right-4">
+					<Button variant="outline" size="sm" onClick={onEditProfile} className="text-[11px] px-3 py-1.5">
+						Editar perfil
+					</Button>
+				</div>
+			)}
 			<div className="flex flex-col items-center">
 				<div className="w-40 h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden">
 					{profile?.avatar_url ? (

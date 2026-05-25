@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { MetricsController } from './metrics.controller';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
@@ -34,7 +35,7 @@ import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity]),
 		PrometheusModule.register(),
 	],
-	controllers: [UsersController],
+	controllers: [UsersController, MetricsController],
 	providers: [UsersService],
 	exports: [UsersService],
 })

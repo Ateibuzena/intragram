@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { MetricsController } from './metrics.controller';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
@@ -32,7 +33,7 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 		TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
 		PrometheusModule.register(),
 	],
-	controllers: [AuthController],
+	controllers: [AuthController, MetricsController],
 	providers: [AuthService],
 	exports: [AuthService],
 })

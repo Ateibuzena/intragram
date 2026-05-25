@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { MetricsController } from './metrics.controller';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 
@@ -31,7 +32,7 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 		}),
 		TypeOrmModule.forFeature([ChatConversationEntity, ChatMessageEntity]),
 		PrometheusModule.register()],
-	controllers: [ChatController],
+	controllers: [ChatController, MetricsController],
 	providers: [ChatService],
 	exports: [ChatService],
 })

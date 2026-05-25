@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend/src:/app/src
-      - /app/node_modules
+      - frontend-node-modules:/app/node_modules
     networks:
       - frontend-net
     restart: unless-stopped
@@ -217,7 +217,7 @@ services:
     volumes:
       - ./backend/services/chat/src:/app/services/chat/src
       - ./backend/shared:/app/shared
-      - /app/node_modules
+      - chat-service-node-modules:/app/node_modules
     networks:
       - service-net
     depends_on:
@@ -251,7 +251,7 @@ services:
     volumes:
       - ./backend/services/auth/src:/app/services/auth/src
       - ./backend/shared:/app/shared
-      - /app/node_modules
+      - auth-service-node-modules:/app/node_modules
     networks:
       - service-net
     depends_on:
@@ -281,7 +281,7 @@ services:
     volumes:
       - ./backend/services/users/src:/app/services/users/src
       - ./backend/shared:/app/shared
-      - /app/node_modules
+      - users-service-node-modules:/app/node_modules
     networks:
       - service-net
     depends_on:
@@ -317,7 +317,7 @@ services:
     volumes:
       - ./backend/gateway/src:/app/gateway/src
       - ./backend/shared:/app/shared
-      - /app/node_modules
+      - gateway-node-modules:/app/node_modules
     networks:
       - backend-net
       - service-net
@@ -374,6 +374,16 @@ networks:
 # VOLUMENES PERSISTENTES
 # ==============================
 volumes:
+  frontend-node-modules:
+    name: frontend-node-modules
+  gateway-node-modules:
+    name: gateway-node-modules
+  auth-service-node-modules:
+    name: auth-service-node-modules
+  users-service-node-modules:
+    name: users-service-node-modules
+  chat-service-node-modules:
+    name: chat-service-node-modules
   auth-db-data:
     name: auth-db-data
   users-db-data:

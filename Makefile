@@ -25,28 +25,19 @@ down:
 	@$(COMPOSE) down
 
 # ---------------------------
-# ---------------------------
-# Clean containers, volumes, networks, and data
+# Clean only this Compose project images
 clean:
 	@echo "🧹 Starting cleanup process..."
-	@echo "🚫 Stopping containers..."
-	-@docker stop $$(docker ps -aq) 2>/dev/null || echo "❎ No containers running."
-	@echo "🗑️ Removing containers..."
-	-@docker rm -f $$(docker ps -aq) 2>/dev/null || echo "❎ No containers to remove."
-	@echo "📦 Removing Docker volumes..."
-	-@docker volume rm $$(docker volume ls -q) 2>/dev/null || echo "❎ No volumes to remove."
-	@echo "🌐 Removing custom networks..."
-	-@docker network rm $$(docker network ls -q | grep -vE "bridge|host|none") 2>/dev/null || echo "❎ No custom networks to remove."
+	@echo "🖼️ Removing images built by this Compose project..."
+	-@docker images --format '{{.Repository}}:{{.Tag}}' | grep '^intragram-' | xargs -r docker rmi -f 2>/dev/null || echo "❎ No project images to remove."
 	@echo "✨ Clean completed!"
 
 # ---------------------------
-# Remove absolutely everything (images, containers, volumes)
-fclean: clean
+# Remove only project volumes
+fclean: down clean
 	@echo "⚠️ Deep cleaning Docker system..."
-	@echo "🖼️ Removing Docker images..."
-	-@docker rmi -f $$(docker images -q) 2>/dev/null || echo "❎ No images to delete."
-	@echo "🧨 Running system prune (everything, including volumes)..."
-	-@docker system prune -af --volumes
+	@echo "📦 Removing project volumes..."
+	-@docker volume rm frontend-node-modules gateway-node-modules auth-service-node-modules users-service-node-modules chat-service-node-modules auth-db-data users-db-data chat-db-data grafana-data prometheus-data alertmanager-data 2>/dev/null || echo "❎ No project volumes to remove."
 	@echo "🧹 Full cleanup completed successfully!"
 
 

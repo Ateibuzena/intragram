@@ -120,6 +120,8 @@ Monitoring system with Prometheus and Grafana.
 - Use REST APIs or message queues for communication.
 - Each service should have a single responsibility.
 
+View more documentation in [MICROSERVICES](MICROSERVICES.md)
+
 ### Advanced Analytics Dashboard
 Advanced analytics dashboard with data visualization.
 - Interactive charts and graphs (line, bar, pie, etc.).

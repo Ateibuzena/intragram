@@ -1,146 +1,146 @@
-# 1. General Requirements
+# 1. Requisitos Generales
 
-Building an entire project is complicated, and many things can go wrong. To help you, we will provide a list of general requirements.
+Construir un proyecto completo es complicado y muchas cosas pueden salir mal. Para ayudarte, te proporcionamos una lista de requisitos generales.
 
-The requirements are the following:
+Los requisitos son los siguientes:
 
-- The project must be a web application, and requires a frontend, backend, and a database.
-- Git must be used with clear and meaningful commit messages. The repository must show:
-  - Commits from all team members.
-  - Clear commit messages describing the changes.
-  - Proper work distribution across the team.
-- Deployment must use a containerization solution (Docker, Podman, or equivalent) and run with a single command.
-- Your website must be compatible with the latest stable version of Google Chrome.
-- No warnings or errors should appear in the browser console.
-- The project must include accessible Privacy Policy and Terms of Service pages with relevant content.
+- El proyecto debe ser una aplicación web y requiere frontend, backend y base de datos.
+- Se debe usar Git con mensajes de commit claros y significativos. El repositorio debe mostrar:
+  - Commits de todos los miembros del equipo.
+  - Mensajes de commit claros que describan los cambios.
+  - Distribución adecuada del trabajo entre el equipo.
+- El despliegue debe utilizar una solución de contenedorización (Docker, Podman o equivalente) y ejecutarse con un único comando.
+- Tu sitio web debe ser compatible con la versión estable más reciente de Google Chrome.
+- No deben aparecer advertencias ni errores en la consola del navegador.
+- El proyecto debe incluir páginas accesibles de Política de Privacidad y Términos de Servicio con contenido relevante.
 
-### Privacy Policy and Terms of Service
+### Política de Privacidad y Términos de Servicio
 
-These pages will be verified during evaluation. They must:
+Estas páginas serán verificadas durante la evaluación. Deben:
 
-- Be easily accessible from the application (e.g., footer links).
-- Contain relevant and appropriate content for your project.
-- Not be placeholder or empty pages.
+- Ser fácilmente accesibles desde la aplicación (por ejemplo, enlaces en el pie de página).
+- Contener contenido relevante y apropiado para tu proyecto.
+- No ser páginas de relleno ni vacías.
 
-> ⚠️ Missing or inadequate Privacy Policy/Terms of Service pages will result in project rejection.
+> ⚠️ La ausencia de páginas de Política de Privacidad/Términos de Servicio, o que sean inadecuadas, provocará el rechazo del proyecto.
 
-### Multi-user Support (Mandatory)
+### Soporte Multiusuario (Obligatorio)
 
-Your website must support multiple users simultaneously. This is a core requirement of the project. Users should be able to interact with the application at the same time without conflicts or performance issues. This includes:
+Tu sitio web debe soportar múltiples usuarios simultáneamente. Este es un requisito central del proyecto. Los usuarios deben poder interactuar con la aplicación al mismo tiempo sin conflictos ni problemas de rendimiento. Esto incluye:
 
-- Multiple users can be logged in and active at the same time.
-- Concurrent actions by different users are handled properly.
-- Real-time updates are reflected across all connected users when applicable.
-- No data corruption or race conditions occur with simultaneous user actions.
-
----
-
-# 2. Technical Requirements
-
-This section, like the previous one, is mandatory. You will then be able to choose the modules you want to use in the next chapter.
-
-- A frontend that is clear, responsive, and accessible across all devices.
-- Use a CSS framework or styling solution of your choice (e.g., Tailwind CSS, Bootstrap, Material-UI, Styled Components, etc.).
-- Store credentials (API keys, environment variables, etc.) in a local `.env` file that is ignored by Git, and provide an `.env.example` file.
-- The database must have a clear schema and well-defined relations.
-- Your application must have a basic user management system. Users must be able to sign up and log in securely:
-  - At minimum: email and password authentication with proper security (hashed passwords, salted, etc.).
-  - Additional authentication methods (OAuth, 2FA, etc.) can be implemented via modules.
-- All forms and user inputs must be properly validated in both the frontend and backend.
-- Any connection to the backend, from a browser, from a script, from an external API, etc., must use **HTTPS**. Connections inside the backend itself (e.g., web server and database, software inside your container(s)) can be without encryption.
-
-### What is a Framework?
-
-For this project, a framework is defined as a comprehensive tool that provides:
-
-- A structured architecture and conventions for organizing code.
-- Built-in features for common tasks (routing, state management, etc.).
-- A complete ecosystem of tools and libraries.
-
-**Examples:**
-
-- **Frontend frameworks:** React, Vue, Angular, Svelte, Next.js (these are frameworks).
-- **Backend frameworks:** Express, Fastify, NestJS, Django, Flask, Ruby on Rails.
-- **Not frameworks:** jQuery (library), Lodash (utility library), Axios (HTTP client).
-
-> **Note:** React is considered a framework in this context due to its ecosystem and architectural patterns, even though it is technically a library.
+- Múltiples usuarios conectados y activos al mismo tiempo.
+- Acciones concurrentes de distintos usuarios gestionadas correctamente.
+- Actualizaciones en tiempo real reflejadas en todos los usuarios conectados cuando aplique.
+- Ausencia de corrupción de datos o condiciones de carrera durante acciones simultáneas.
 
 ---
 
-# 3. Modules
+# 2. Requisitos Técnicos
 
-## 🔴 Major Modules
+Esta sección, al igual que la anterior, es obligatoria. Luego podrás elegir los módulos que quieras usar en el siguiente capítulo.
 
-### Frameworks (Frontend & Backend)
-Use a framework for both the frontend and backend.
-- Use a frontend framework (React, Vue, Angular, Svelte, etc.).
-- Use a backend framework (Express, NestJS, Django, Flask, Ruby on Rails, etc.).
-- Full-stack frameworks (Next.js, Nuxt.js, SvelteKit) count as both if you use both their frontend and backend capabilities.
+- Un frontend claro, responsive y accesible en todos los dispositivos.
+- Usar un framework CSS o solución de estilos de tu elección (por ejemplo: Tailwind CSS, Bootstrap, Material-UI, Styled Components, etc.).
+- Guardar credenciales (API keys, variables de entorno, etc.) en un archivo local .env ignorado por Git, y proporcionar un archivo .env.example.
+- La base de datos debe tener un esquema claro y relaciones bien definidas.
+- Tu aplicación debe tener un sistema básico de gestión de usuarios. Los usuarios deben poder registrarse e iniciar sesión de forma segura:
+  - Como mínimo: autenticación por email y contraseña con seguridad adecuada (passwords hasheadas, salting, etc.).
+  - Métodos adicionales de autenticación (OAuth, 2FA, etc.) pueden implementarse vía módulos.
+- Todos los formularios y entradas de usuario deben validarse correctamente tanto en frontend como en backend.
+- Cualquier conexión al backend, desde un navegador, script, API externa, etc., debe usar HTTPS. Las conexiones internas del backend (por ejemplo, entre servidor web y base de datos, o software dentro de los contenedores) pueden no ir cifradas.
 
-### Real-time Features
-Implement real-time features using WebSockets or similar technology.
-- Real-time updates across clients.
-- Handle connection/disconnection gracefully.
-- Efficient message broadcasting.
+### ¿Qué es un Framework?
 
-### User Interaction
-Allow users to interact with other users. The minimum requirements are:
-- A basic chat system (send/receive messages between users).
-- A profile system (view user information).
-- A friends system (add/remove friends, see friends list).
+Para este proyecto, un framework se define como una herramienta integral que proporciona:
 
-### Public API
-A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints:
-- `GET /api/{something}`
-- `POST /api/{something}`
-- `PUT /api/{something}`
-- `DELETE /api/{something}`
+- Una arquitectura estructurada y convenciones para organizar el código.
+- Funcionalidades integradas para tareas comunes (routing, gestión de estado, etc.).
+- Un ecosistema completo de herramientas y librerías.
 
-### Standard User Management & Authentication
-- Users can update their profile information.
-- Users can upload an avatar (with a default avatar if none provided).
-- Users can add other users as friends and see their online status.
-- Users have a profile page displaying their information.
+**Ejemplos:**
+
+- **Frameworks de frontend:** React, Vue, Angular, Svelte, Next.js (todos cuentan como frameworks).
+- **Frameworks de backend:** Express, Fastify, NestJS, Django, Flask, Ruby on Rails.
+- **No son frameworks:** jQuery (librería), Lodash (librería utilitaria), Axios (cliente HTTP).
+
+> **Nota:** React se considera framework en este contexto por su ecosistema y patrones de arquitectura, aunque técnicamente sea una librería.
+
+---
+
+# 3. Módulos
+
+## 🔴 Módulos Mayores
+
+### Frameworks (Frontend y Backend)
+Usar un framework tanto para frontend como para backend.
+- Usar un framework de frontend (React, Vue, Angular, Svelte, etc.).
+- Usar un framework de backend (Express, NestJS, Django, Flask, Ruby on Rails, etc.).
+- Los frameworks full-stack (Next.js, Nuxt.js, SvelteKit) cuentan como ambos si usas tanto su capacidad frontend como backend.
+
+### Funcionalidades en Tiempo Real
+Implementar funcionalidades en tiempo real usando WebSockets o tecnología similar.
+- Actualizaciones en tiempo real entre clientes.
+- Manejar conexión/desconexión de forma correcta.
+- Difusión de mensajes eficiente.
+
+### Interacción entre Usuarios
+Permitir que los usuarios interactúen con otros usuarios. Requisitos mínimos:
+- Sistema básico de chat (enviar/recibir mensajes entre usuarios).
+- Sistema de perfil (ver información de usuario).
+- Sistema de amistades (agregar/eliminar amigos, ver lista de amigos).
+
+### API Pública
+Una API pública para interactuar con la base de datos con API key segura, rate limiting, documentación y al menos 5 endpoints:
+- GET /api/{something}
+- POST /api/{something}
+- PUT /api/{something}
+- DELETE /api/{something}
+
+### Gestión Estándar de Usuarios y Autenticación
+- Los usuarios pueden actualizar su información de perfil.
+- Los usuarios pueden subir un avatar (con avatar por defecto si no se sube uno).
+- Los usuarios pueden agregar a otros usuarios como amigos y ver su estado en línea.
+- Los usuarios tienen una página de perfil con su información.
 
 ### WAF/ModSecurity + HashiCorp Vault
-Implement WAF/ModSecurity (hardened) + HashiCorp Vault for secrets:
-- Configure strict ModSecurity/WAF.
-- Manage secrets in Vault (API keys, credentials, environment variables), encrypted and isolated.
+Implementar WAF/ModSecurity (endurecido) + HashiCorp Vault para secretos:
+- Configurar ModSecurity/WAF estricto.
+- Gestionar secretos en Vault (API keys, credenciales, variables de entorno), cifrados y aislados.
 
-### Monitoring System
-Monitoring system with Prometheus and Grafana.
-- Set up Prometheus to collect metrics.
-- Configure exporters and integrations.
-- Create custom Grafana dashboards.
-- Set up alerting rules.
-- Secure access to Grafana.
+### Sistema de Monitoreo ✅
+Sistema de monitoreo con Prometheus y Grafana.
+- Configurar Prometheus para recolectar métricas.
+- Configurar exporters e integraciones.
+- Crear dashboards personalizados de Grafana.
+- Configurar reglas de alerta.
+- Asegurar el acceso a Grafana.
 
-### Backend as Microservices
-- Design loosely-coupled services with clear interfaces.
-- Use REST APIs or message queues for communication.
-- Each service should have a single responsibility.
+### Backend como Microservicios ✅
+- Diseñar servicios desacoplados con interfaces claras.
+- Usar APIs REST o colas de mensajes para la comunicación.
+- Cada servicio debe tener una única responsabilidad.
 
-View more documentation in [MICROSERVICES](MICROSERVICES.md)
+Ver más documentación en [MICROSERVICES](MICROSERVICES.md)
 
-### Advanced Analytics Dashboard
-Advanced analytics dashboard with data visualization.
-- Interactive charts and graphs (line, bar, pie, etc.).
-- Real-time data updates.
-- Export functionality (PDF, CSV, etc.).
-- Customizable date ranges and filters.
+### Dashboard de Analítica Avanzada
+Dashboard de analítica avanzada con visualización de datos.
+- Gráficos interactivos (línea, barras, torta, etc.).
+- Actualizaciones en tiempo real.
+- Funcionalidad de exportación (PDF, CSV, etc.).
+- Rangos de fecha y filtros personalizables.
 
 ---
 
-## 🟡 Minor Modules
+## 🟡 Módulos Menores
 
-### Custom Design System
-Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components).
+### Sistema de Diseño Personalizado
+Sistema de diseño propio con componentes reutilizables, incluyendo una paleta de colores adecuada, tipografía e íconos (mínimo: 10 componentes reutilizables).
 
-### Advanced Search
-Implement advanced search functionality with filters, sorting, and pagination.
+### Búsqueda Avanzada
+Implementar funcionalidad de búsqueda avanzada con filtros, ordenamiento y paginación.
 
 ### OAuth 2.0
-Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
+Implementar autenticación remota con OAuth 2.0 (Google, GitHub, 42, etc.).
 
-### User Activity Analytics
-User activity analytics and insights dashboard.
+### Analítica de Actividad de Usuario
+Dashboard de analítica e insights de actividad de usuarios.

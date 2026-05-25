@@ -29,14 +29,30 @@ services:
       - --storage.tsdb.retention.time=15d
       - --web.external-url=https://localhost:8443/prometheus/
       - --web.route-prefix=/
+    ports:
+      - "9090:9090"
     volumes:
       - prometheus-data:/prometheus
       - ./backend/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./backend/observability/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
     healthcheck:
       test: ["CMD", "wget", "-qS", "--spider", "http://localhost:9090/-/ready"]
       interval: 15s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:v0.31.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    networks:
+      - backend-net
     restart: unless-stopped
 
   postgres-exporter:

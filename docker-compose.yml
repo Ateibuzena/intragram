@@ -25,8 +25,34 @@ services:
       - service-net
     command:
       - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
       - --web.external-url=https://localhost:8443/prometheus/
       - --web.route-prefix=/
+    volumes:
+      - prometheus-data:/prometheus
+      - ./backend/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qS", "--spider", "http://localhost:9090/-/ready"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-exporter:
+    container_name: postgres-exporter
+    image: wrouesnel/postgres_exporter:v0.10.0
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+    networks:
+      - service-net
+    restart: unless-stopped
+
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:v1.5.0
+    networks:
+      - service-net
     restart: unless-stopped
 
   grafana:
@@ -296,3 +322,5 @@ volumes:
     name: chat-db-data
   grafana-data:
     name: grafana-data
+  prometheus-data:
+    name: prometheus-data

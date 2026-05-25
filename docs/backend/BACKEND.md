@@ -73,31 +73,6 @@ Tambien expone cabeceras de control de cuota:
 - `X-RateLimit-Remaining`
 - `X-RateLimit-Reset`
 
-## Rate Limiting
-
-El gateway aplica rate limit en endpoints publicos mediante un guard dedicado:
-
-- `PublicRateLimitGuard`
-- Decorador `@PublicRateLimit(limit, windowMs, key)`
-
-Semantica:
-
-- `limit`: maximo de peticiones permitidas por IP dentro de la ventana.
-- `windowMs`: tamano de la ventana en milisegundos.
-- `key`: nombre logico del bucket para separar limites entre rutas.
-
-Ejemplo:
-
-- `@PublicRateLimit(120, 60_000, 'chat:health')`
-  - Permite 120 peticiones por IP en 60 segundos para `GET /chat/health`.
-  - Si se excede, la API responde `429 Too Many Requests` hasta el reset de la ventana.
-
-Tambien expone cabeceras de control de cuota:
-
-- `X-RateLimit-Limit`
-- `X-RateLimit-Remaining`
-- `X-RateLimit-Reset`
-
 ## Persistence
 
 Se usan tres instancias separadas de PostgreSQL:
@@ -110,14 +85,8 @@ Cada servicio usa TypeORM con `synchronize` activado fuera de producción.
 
 ## Observability
 
-- El gateway expone `/metrics` y `/health`.
-- Los servicios Nest registran Prometheus mediante `@willsoto/nestjs-prometheus`.
-- Prometheus scrapea:
-  - `gateway:3000`
-  - `auth-service:3003`
-  - `users-service:3006`
-  - `chat-service:3009`
-- Grafana carga dashboards desde archivos provisionados.
+- La observabilidad completa está documentada en [METRICS](services/METRICS.md).
+- Incluye Prometheus, Grafana, Alertmanager, exporters, dashboards y validación operativa.
 
 ## Configuration
 
@@ -167,4 +136,4 @@ Scripts destacados en `backend/package.json`:
 - [CHAT-SERVICE](services/CHAT-SERVICE.md)
 - [GATEWAY-SERVICE](services/GATEWAY-SERVICE.md)
 - [NGINX-SERVICE](services/NGINX-SERVICE.md)
-- [METRICS-SERVICE](services/METRICS-SERVICE.md)
+- [METRICS](services/METRICS.md)

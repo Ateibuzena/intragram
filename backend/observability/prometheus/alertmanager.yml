@@ -32,27 +32,27 @@ templates:
 receivers:
   - name: 'slack-default'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/REPLACE/ME/DEFAULT'
-        channel: '#alerts'
+      - api_url: '${ALERTMANAGER_SLACK_DEFAULT_WEBHOOK_URL}'
+        channel: '#${ALERTMANAGER_SLACK_DEFAULT_CHANNEL}'
         send_resolved: true
         title: '{{ template "slack.title" . }}'
         text: '{{ template "slack.text" . }}'
 
   - name: 'slack-critical'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/REPLACE/ME/CRITICAL'
-        channel: '#alerts-critical'
+      - api_url: '${ALERTMANAGER_SLACK_CRITICAL_WEBHOOK_URL}'
+        channel: '#${ALERTMANAGER_SLACK_CRITICAL_CHANNEL}'
         send_resolved: true
         title: '{{ template "slack.title" . }}'
         text: '{{ template "slack.text" . }}'
 
   - name: 'email-warnings'
     email_configs:
-      - to: 'alerts@example.com'
-        from: 'prometheus@example.com'
-        smarthost: 'smtp.example.com:587'
-        auth_username: 'prometheus@example.com'
-        auth_password: 'REPLACE_ME'
+      - to: '${ALERTMANAGER_EMAIL_TO}'
+        from: '${ALERTMANAGER_EMAIL_FROM}'
+        smarthost: '${ALERTMANAGER_SMARTHOST}'
+        auth_username: '${ALERTMANAGER_EMAIL_USERNAME}'
+        auth_password: '${ALERTMANAGER_EMAIL_PASSWORD}'
         require_tls: true
         send_resolved: true
         headers:

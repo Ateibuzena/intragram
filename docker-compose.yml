@@ -44,14 +44,18 @@ services:
 
   alertmanager:
     container_name: alertmanager
-    image: prom/alertmanager:v0.31.0
+    build:
+      context: ./backend/observability/prometheus
+      dockerfile: alertmanager/Dockerfile
     ports:
       - "9093:9093"
+    env_file:
+      - ./.env
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
     volumes:
-      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml.template:ro
       - ./backend/observability/prometheus/templates:/etc/alertmanager/templates:ro
       - alertmanager-data:/alertmanager
     networks:

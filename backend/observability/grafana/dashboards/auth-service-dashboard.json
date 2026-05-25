@@ -1,99 +1,120 @@
 {
-  "annotations": { "list": [] },
-  "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": null,
-  "iteration": 1620000000001,
-  "links": [],
-  "panels": [
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": {}, "overrides": [] },
-	  "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
-	  "id": 2,
-	  "targets": [{ "expr": "up{instance=\"auth-service:3003\"}", "format": "time_series" }],
-	  "title": "Auth Service Up",
-	  "type": "stat"
+	"annotations": { "list": [] },
+	"editable": true,
+	"gnetId": null,
+	"graphTooltip": 0,
+	"id": null,
+	"iteration": 1620000000001,
+	"links": [],
+	"panels": [
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+			"id": 2,
+			"targets": [{ "expr": "up{instance=~\"$instance\"}", "format": "time_series" }],
+			"title": "Auth Service Up",
+			"type": "stat"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "m" }, "overrides": [] },
+			"gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+			"id": 3,
+			"targets": [
+				{ "expr": "(time() - process_start_time_seconds{instance=~\"$instance\"}) / 60", "refId": "A" }
+			],
+			"title": "Uptime (minutes)",
+			"type": "stat"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+			"id": 4,
+			"targets": [
+				{ "expr": "rate(process_cpu_user_seconds_total{instance=~\"$instance\"}[1m]) + rate(process_cpu_system_seconds_total{instance=~\"$instance\"}[1m])", "refId": "A" }
+			],
+			"title": "CPU Usage (seconds/s)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+			"id": 5,
+			"targets": [
+				{ "expr": "process_resident_memory_bytes{instance=~\"$instance\"} / 1024 / 1024", "refId": "A" }
+			],
+			"title": "Memory RSS (MB)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+			"id": 6,
+			"targets": [
+				{ "expr": "nodejs_heap_size_used_bytes{instance=~\"$instance\"} / 1024 / 1024", "refId": "A" },
+				{ "expr": "nodejs_heap_size_total_bytes{instance=~\"$instance\"} / 1024 / 1024", "refId": "B" }
+			],
+			"title": "Node.js Heap (MB)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+			"id": 7,
+			"targets": [
+				{ "expr": "nodejs_eventloop_lag_p99_seconds{instance=~\"$instance\"} * 1000", "refId": "A" }
+			],
+			"title": "Event Loop Lag p99 (ms)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": null,
+			"fieldConfig": { "defaults": {}, "overrides": [] },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+			"id": 8,
+			"targets": [
+				{ "expr": "sum(rate(request_count_total{instance=~\"$instance\"}[1m]))", "refId": "A" },
+				{ "expr": "sum(rate(request_count_total{instance=~\"$instance\", status_code=~\"5..\"}[5m]))", "refId": "B" }
+			],
+			"title": "Requests (1m) and 5xx (5m)",
+			"type": "timeseries"
+		}
+	],
+	"refresh": "10s",
+	"schemaVersion": 36,
+	"style": "dark",
+	"tags": ["auth-service", "nestjs", "prometheus"],
+	"templating": {
+		"list": [
+			{
+				"allValue": "",
+				"current": { "selected": true, "text": "auth-service:3003", "value": "auth-service:3003" },
+				"datasource": null,
+				"definition": "label_values(up, instance)",
+				"hide": 0,
+				"includeAll": false,
+				"label": "Instance",
+				"multi": false,
+				"name": "instance",
+				"options": [],
+				"query": "label_values(up, instance)",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"type": "query"
+			}
+		]
 	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": { "unit": "m" }, "overrides": [] },
-	  "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
-	  "id": 3,
-	  "targets": [
-		{ "expr": "(time() - process_start_time_seconds{instance=\"auth-service:3003\"}) / 60", "refId": "A" }
-	  ],
-	  "title": "Uptime (minutes)",
-	  "type": "stat"
-	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": {}, "overrides": [] },
-	  "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-	  "id": 4,
-	  "targets": [
-		{ "expr": "rate(process_cpu_user_seconds_total{instance=\"auth-service:3003\"}[1m]) + rate(process_cpu_system_seconds_total{instance=\"auth-service:3003\"}[1m])", "refId": "A" }
-	  ],
-	  "title": "CPU Usage (seconds/s)",
-	  "type": "timeseries"
-	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
-	  "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-	  "id": 5,
-	  "targets": [
-		{ "expr": "process_resident_memory_bytes{instance=\"auth-service:3003\"} / 1024 / 1024", "refId": "A" }
-	  ],
-	  "title": "Memory RSS (MB)",
-	  "type": "timeseries"
-	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": {}, "overrides": [] },
-	  "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-	  "id": 6,
-	  "targets": [
-		{ "expr": "nodejs_heap_size_used_bytes{instance=\"auth-service:3003\"} / 1024 / 1024", "refId": "A" },
-		{ "expr": "nodejs_heap_size_total_bytes{instance=\"auth-service:3003\"} / 1024 / 1024", "refId": "B" }
-	  ],
-	  "title": "Node.js Heap (MB)",
-	  "type": "timeseries"
-	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
-	  "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-	  "id": 7,
-	  "targets": [
-		{ "expr": "nodejs_eventloop_lag_p99_seconds{instance=\"auth-service:3003\"} * 1000", "refId": "A" }
-	  ],
-	  "title": "Event Loop Lag p99 (ms)",
-	  "type": "timeseries"
-	},
-	{
-	  "datasource": null,
-	  "fieldConfig": { "defaults": {}, "overrides": [] },
-	  "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-	  "id": 8,
-	  "targets": [
-		{ "expr": "sum(rate(request_count_total{instance=\"auth-service:3003\"}[1m]))", "refId": "A" },
-		{ "expr": "sum(rate(request_count_total{instance=\"auth-service:3003\", status_code=~\"5..\"}[5m]))", "refId": "B" }
-	  ],
-	  "title": "Requests (1m) and 5xx (5m)",
-	  "type": "timeseries"
-	}
-  ],
-  "refresh": "10s",
-  "schemaVersion": 36,
-  "style": "dark",
-  "tags": ["auth-service", "nestjs", "prometheus"],
-  "templating": { "list": [] },
-  "time": { "from": "now-15m", "to": "now" },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Auth Service - Observability",
-  "uid": "auth-service-observability",
-  "version": 2
+	"time": { "from": "now-15m", "to": "now" },
+	"timepicker": {},
+	"timezone": "",
+	"title": "Auth Service - Observability",
+	"uid": "auth-service-observability",
+	"version": 3
 }

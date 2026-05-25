@@ -4,11 +4,13 @@
  */
 
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
+import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
@@ -31,10 +33,10 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 			},
 		}),
 		TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
-		PrometheusModule.register(),
+		MetricsModule,
 	],
 	controllers: [AuthController, MetricsController],
-	providers: [AuthService],
+	providers: [AuthService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],
 	exports: [AuthService],
 })
 export class AuthModule {}

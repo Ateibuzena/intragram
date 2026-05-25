@@ -4,11 +4,13 @@
  */
 
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
+import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
@@ -33,10 +35,10 @@ import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 			},
 		}),
 		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity]),
-		PrometheusModule.register(),
+		MetricsModule,
 	],
 	controllers: [UsersController, MetricsController],
-	providers: [UsersService],
+	providers: [UsersService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],
 	exports: [UsersService],
 })
 export class UsersModule {}

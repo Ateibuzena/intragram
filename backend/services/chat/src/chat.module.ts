@@ -4,11 +4,13 @@
  */
 
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
+import { MetricsModule } from './observability/metrics/metrics.module';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 
@@ -31,9 +33,9 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 			},
 		}),
 		TypeOrmModule.forFeature([ChatConversationEntity, ChatMessageEntity]),
-		PrometheusModule.register()],
+		MetricsModule],
 	controllers: [ChatController, MetricsController],
-	providers: [ChatService],
+	providers: [ChatService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],
 	exports: [ChatService],
 })
 export class ChatModule {}

@@ -62,7 +62,7 @@ services:
 
   postgres-exporter-auth:
     container_name: postgres-exporter-auth
-    image: wrouesnel/postgres_exporter:v0.10.0
+    image: prometheuscommunity/postgres-exporter:v0.19.1
     environment:
       - DATA_SOURCE_NAME=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
     networks:
@@ -71,7 +71,7 @@ services:
 
   postgres-exporter-users:
     container_name: postgres-exporter-users
-    image: wrouesnel/postgres_exporter:v0.10.0
+    image: prometheuscommunity/postgres-exporter:v0.19.1
     environment:
       - DATA_SOURCE_NAME=postgresql://${USERS_DB_USER}:${USERS_DB_PASSWORD}@users-db:5432/${USERS_DB_NAME}
     networks:
@@ -80,7 +80,7 @@ services:
 
   postgres-exporter-chat:
     container_name: postgres-exporter-chat
-    image: wrouesnel/postgres_exporter:v0.10.0
+    image: prometheuscommunity/postgres-exporter:v0.19.1
     environment:
       - DATA_SOURCE_NAME=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASSWORD}@chat-db:5432/${CHAT_DB_NAME}
     networks:

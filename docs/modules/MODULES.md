@@ -67,7 +67,7 @@ Para este proyecto, un framework se define como una herramienta integral que pro
 
 ---
 
-# 3. Módulos
+# 3. Móduloss
 
 ## 🔴 Módulos Mayores
 

@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
       - frontend-node-modules:/app/node_modules
     networks:
       - frontend-net
@@ -351,6 +352,7 @@ services:
     depends_on:
       - frontend
       - gateway
+      - alertmanager
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s

@@ -1,5 +1,5 @@
 const LoginPage = () => (
-	<div className="min-h-screen bg-ft-bg flex items-center justify-center px-4">
+	<div className="min-h-screen bg-ft-bg flex flex-col items-center justify-center px-4">
 		<div className="w-full max-w-sm">
 			<div className="text-center mb-8">
 				<img
@@ -26,6 +26,11 @@ const LoginPage = () => (
 					Solo para estudiantes de la red 42
 				</p>
 			</div>
+			<p className="text-[11px] text-ft-muted text-center mt-6 space-x-2">
+				<a href="/privacy" className="hover:text-ft-cyan transition-colors">Política de Privacidad</a>
+				<span>·</span>
+				<a href="/terms" className="hover:text-ft-cyan transition-colors">Términos de Servicio</a>
+			</p>
 		</div>
 	</div>
 );

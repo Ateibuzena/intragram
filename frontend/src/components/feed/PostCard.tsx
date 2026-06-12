@@ -32,7 +32,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 	return (
 		<article className="post-card">
 			<div className="flex items-center space-x-3 mb-4">
-				<Avatar login={post.user.login} size="md" />
+				<Avatar login={post.user.login} imageUrl={post.user.avatarUrl} size="md" />
 				<div className="flex-1 min-w-0">
 					<p className="text-sm font-semibold text-white truncate">
 						{post.user.login}

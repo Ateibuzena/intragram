@@ -464,6 +464,25 @@ export class UsersService {
 	}
 
 	/**
+	 * Elimina una amistad entre dos usuarios.
+	 */
+	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
+		const existing = await this.friendshipRepo.findOne({
+			where: [
+				{ user_id: userId, friend_id: friendId },
+				{ user_id: friendId, friend_id: userId },
+			],
+		});
+
+		if (!existing) {
+			throw Object.assign(new Error('Amistad no encontrada'), { statusCode: 404 });
+		}
+
+		await this.friendshipRepo.remove(existing);
+		return { removed: true };
+	}
+
+	/**
 	 * Devuelve el feed de posts guardados (favoritos) por el usuario.
 	 */
 	async getFavoritesFeed(userId: string, limit = 50): Promise<IFeedPost[]> {

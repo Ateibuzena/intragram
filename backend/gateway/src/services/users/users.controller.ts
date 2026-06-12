@@ -25,6 +25,7 @@ import {
 	Get,
 	HttpException,
 	HttpStatus,
+	Delete,
 	Param,
 	Patch,
 	Post,
@@ -281,6 +282,20 @@ export class UsersController {
 			return await this.usersService.getFriends(profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Elimina un amigo del usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Delete('friends/me/:friendId')
+	async removeFriend(@Req() req: any, @Param('friendId') friendId: string): Promise<{ removed: boolean }> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.removeFriend(profile.id, friendId);
+		} catch (error: any) {
+			throw new HttpException(error.message || 'Error al eliminar amigo', error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 

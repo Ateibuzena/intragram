@@ -21,6 +21,7 @@ const mapApiPostToPost = (api: IFeedPost): Post => ({
 	user: {
 		login: api.author?.login ?? 'desconocido',
 		level: api.author?.correction_point ?? 0,
+		avatarUrl: api.author?.avatar_url ?? null,
 	},
 	content: api.content ?? '',
 	time: formatTime(api.created_at),

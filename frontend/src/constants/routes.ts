@@ -4,4 +4,6 @@ export const ROUTES = {
 	CHAT: '/chat',
 	NOTIFICATIONS: '/notifications',
 	PROFILE: '/profile/:login',
+	PRIVACY: '/privacy',
+	TERMS: '/terms',
 } as const;

@@ -44,7 +44,7 @@ const extractErrorMessage = async (response: Response) => {
 };
 
 const ProfilePage = () => {
-	const { token, user } = useAuth();
+	const { token } = useAuth();
 	const { profile, setProfile, loading, error, fallbackLogin, refreshProfile } = useProfileData();
 	const [editOpen, setEditOpen] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -59,12 +59,11 @@ const ProfilePage = () => {
 	const profileLogin = profile?.login ?? fallbackLogin;
 	const displayName = profile?.display_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profileLogin;
 	const profileInitial = displayName.charAt(0).toUpperCase();
-	const authLogin = (user?.username ?? tokenPayload?.username ?? '').toLowerCase();
-	const canonicalProfileId = tokenPayload?.chat_user_id ?? profile?.id ?? null;
+	// chat_user_id es el ID de perfil del usuario autenticado almacenado en el JWT.
+	// Si no está presente, no se puede verificar ownership y no se permite editar.
+	const canonicalProfileId = tokenPayload?.chat_user_id ?? null;
 	const canEditProfile = Boolean(
-		profile && token && canonicalProfileId && profile.id === canonicalProfileId && (
-			profile.login.toLowerCase() === authLogin || canonicalProfileId === tokenPayload?.chat_user_id
-		),
+		profile && token && canonicalProfileId && profile.id === canonicalProfileId,
 	);
 
 	useEffect(() => {
@@ -168,25 +167,27 @@ const ProfilePage = () => {
 	const progressPercentage = levelProgress * 100;
 
 	return (
-		<div className="relative left-1/2 right-1/2 w-screen -ml-[40vw] -mr-[40vw] px-3 md:px-6 lg:px-8 mr-3 md:mr-6 lg:mr-10">
+		<div className="w-full px-3 md:px-6 lg:px-8">
 			<section className="mb-4 space-y-3">
-				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
 					{/* Left column: Profile Picture + Common Core Progress + Titles */}
-					<div className="space-y-3">
-						{/* Profile Header */}
-						<ProfileHeader
-							profile={profile}
-							displayName={displayName}
-							profileLogin={profileLogin}
-							profileInitial={profileInitial}
-							loading={loading}
-							error={error}
-							canEditProfile={canEditProfile}
-							onEditProfile={openEditModal}
-						/>
+					<div className="flex flex-col gap-3 xl:h-[34rem]">
+						{/* Profile Header — crece para igualar la altura de Skills y Projects */}
+						<div className="flex-1 min-h-0">
+							<ProfileHeader
+								profile={profile}
+								displayName={displayName}
+								profileLogin={profileLogin}
+								profileInitial={profileInitial}
+								loading={loading}
+								error={error}
+								canEditProfile={canEditProfile}
+								onEditProfile={openEditModal}
+							/>
+						</div>
 
 						{/* Common Core Progress and Titles Row */}
-						<div className="grid grid-cols-2 gap-3">
+						<div className="grid grid-cols-2 gap-3 flex-shrink-0">
 							<CommonCoreProgress
 								cursusLevel={cursusLevel}
 								cursusGrade={cursusGrade}

@@ -55,7 +55,7 @@ export const SkillsRadar = ({ skills }: SkillsRadarProps) => {
 
 	if (!radarData) {
 		return (
-			<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
+			<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1 xl:h-[34rem] overflow-hidden flex flex-col">
 				<h3 className="text-sm font-bold text-white mb-3">Skills</h3>
 				<p className="text-xs text-ft-muted">No skills data</p>
 			</div>
@@ -63,10 +63,16 @@ export const SkillsRadar = ({ skills }: SkillsRadarProps) => {
 	}
 
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1">
+		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1 xl:h-[34rem] overflow-hidden flex flex-col">
 			<h3 className="text-sm font-bold text-white mb-3">Skills</h3>
-			<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-1">
-				<svg viewBox={`0 0 ${radarData.size} ${radarData.size}`} className="w-full h-auto mx-auto" role="img" aria-label="Skills radar chart">
+			<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-1 flex-1 min-h-0 overflow-hidden flex items-center justify-center">
+				<svg
+					viewBox={`0 0 ${radarData.size} ${radarData.size}`}
+					preserveAspectRatio="xMidYMid meet"
+					className="w-full h-full block"
+					role="img"
+					aria-label="Skills radar chart"
+				>
 					{Array.from({ length: radarData.rings }, (_, ringIdx) => {
 						const r = ((ringIdx + 1) / radarData.rings) * radarData.radius;
 						return (

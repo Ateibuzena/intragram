@@ -224,6 +224,19 @@ export class UsersService {
 	}
 
 	/**
+	 * Elimina una amistad del usuario autenticado.
+	 */
+	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
+		try {
+			return await this.httpClient.delete<{ removed: boolean }>(`${this.usersBaseUrl}/friends/${userId}/${friendId}`, {
+				timeoutMs: 5000,
+			});
+		} catch (error) {
+			this.handleHttpError(error, 'eliminar amigo');
+		}
+	}
+
+	/**
 	 * Normaliza las respuestas de error HTTP del users-service.
 	 */
 	private handleHttpError(error: unknown, action: string): never {

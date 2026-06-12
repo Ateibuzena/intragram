@@ -3,6 +3,8 @@ import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
+import PrivacyPage from '@/pages/PrivacyPage';
+import TermsPage from '@/pages/TermsPage';
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const auth = useAuthState();
@@ -62,6 +64,9 @@ const App = () => {
 							</ProtectedRoute>
 						}
 					/>
+
+					<Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
+					<Route path={ROUTES.TERMS} element={<TermsPage />} />
 
 					<Route path="*" element={<NotFoundRedirect />} />
 				</Routes>

@@ -23,7 +23,7 @@ export const ProfileHeader = ({
 	onEditProfile,
 }: ProfileHeaderProps) => {
 	return (
-		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6">
+		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6 h-full flex flex-col items-center justify-center">
 			{canEditProfile && onEditProfile && (
 				<div className="absolute top-4 right-4">
 					<Button variant="outline" size="sm" onClick={onEditProfile} className="text-[11px] px-3 py-1.5">

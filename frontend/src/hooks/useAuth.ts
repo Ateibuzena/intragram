@@ -1,7 +1,7 @@
 // Hook y contexto de sesión de usuario en el frontend.
 // Se encarga de leer/guardar el token de la URL/localStorage
 // y exponer un estado simple de "estoy autenticado" a la app.
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -47,6 +47,7 @@ export const useAuthState = () => {
 	const [user, setUser] = useState<AuthUser | null>(null);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [loadingProfile, setLoadingProfile] = useState(false);
+	const fetchingProfileRef = useRef(false);
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -85,8 +86,9 @@ export const useAuthState = () => {
 	}, [location.search, navigate]);
 
 	useEffect(() => {
-		if (!token || !user || profile || loadingProfile) return;
+		if (!token || !user || profile || fetchingProfileRef.current) return;
 
+		fetchingProfileRef.current = true;
 		const controller = new AbortController();
 		const fetchProfile = async () => {
 			try {
@@ -104,13 +106,14 @@ export const useAuthState = () => {
 			} catch {
 				// Silenciamos errores de perfil para no romper la app principal.
 			} finally {
+				fetchingProfileRef.current = false;
 				setLoadingProfile(false);
 			}
 		};
 
-		fetchProfile();
+		void fetchProfile();
 		return () => controller.abort();
-	}, [token, user, profile, loadingProfile]);
+	}, [token, user, profile]);
 
 	const logout = () => {
 		localStorage.removeItem('auth_token');

@@ -42,6 +42,10 @@ export class GatewayHttpClientService {
 		return this.request<TResponse, TData>({ ...options, method: 'post', url, data });
 	}
 
+	delete<TResponse>(url: string, options: GatewayHttpRequestOptions = {}): Promise<TResponse> {
+		return this.request<TResponse>({ ...options, method: 'delete', url });
+	}
+
 	patch<TResponse, TData = unknown>(url: string, data?: TData, options: GatewayHttpRequestOptions<TData> = {}): Promise<TResponse> {
 		return this.request<TResponse, TData>({ ...options, method: 'patch', url, data });
 	}

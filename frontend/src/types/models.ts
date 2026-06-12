@@ -11,7 +11,7 @@ export interface User {
 
 export interface Post {
 	id: string | number;
-	user: Pick<User, 'login' | 'level'>;
+	user: Pick<User, 'login' | 'level' | 'avatarUrl'>;
 	content: string;
 	time: string;
 	likes: number;

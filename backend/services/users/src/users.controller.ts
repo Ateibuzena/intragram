@@ -26,6 +26,7 @@ import {
 	HttpException,
 	HttpStatus,
 	Param,
+	Delete,
 	Patch,
 	Post,
 	ParseIntPipe,
@@ -240,6 +241,21 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al agregar amigo',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Elimina una amistad del usuario indicado.
+	 */
+	@Delete('friends/:id/:friendId')
+	async removeFriend(@Param('id') id: string, @Param('friendId') friendId: string) {
+		try {
+			return await this.usersService.removeFriend(id, friendId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al eliminar amigo',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}

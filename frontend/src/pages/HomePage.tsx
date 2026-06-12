@@ -36,7 +36,7 @@ const HomePage = () => {
 					{activeNav === 'chat' && <div className="h-full"><ChatPage /></div>}
 					{activeNav !== 'chat' && (
 						<div className="py-4 md:py-6 px-3 md:px-4">
-							<div className="max-w-xl mx-auto">
+							<div className={activeNav === 'home' ? 'max-w-xl mx-auto' : 'w-full'}>
 								<div key={activeNav} className="animate-page-switch">
 									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
 									{activeNav === 'profile' && <ProfilePage />}

@@ -96,7 +96,7 @@ Una API pública para interactuar con la base de datos con API key segura, rate 
 - PUT /api/{something}
 - DELETE /api/{something}
 
-### Gestión Estándar de Usuarios y Autenticación
+### Gestión Estándar de Usuarios y Autenticación ✅
 - Los usuarios pueden actualizar su información de perfil.
 - Los usuarios pueden subir un avatar (con avatar por defecto si no se sube uno).
 - Los usuarios pueden agregar a otros usuarios como amigos y ver su estado en línea.

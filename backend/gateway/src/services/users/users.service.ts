@@ -209,17 +209,58 @@ export class UsersService {
 	}
 
 	/**
-	 * Agrega un amigo para el usuario autenticado.
+	 * Agrega un amigo para el usuario autenticado (solicitud pending o aceptación automática).
 	 */
-	async addFriend(userId: string, dto: CreateFriendDto): Promise<IUserProfile> {
+	async addFriend(userId: string, dto: CreateFriendDto): Promise<{ status: 'pending' | 'accepted'; friend: IUserProfile }> {
 		try {
-			return await this.httpClient.post<IUserProfile, CreateFriendDto>(
+			return await this.httpClient.post<{ status: 'pending' | 'accepted'; friend: IUserProfile }, CreateFriendDto>(
 				`${this.usersBaseUrl}/friends/${userId}`,
 				dto,
 				{ timeoutMs: 5000 },
 			);
 		} catch (error) {
 			this.handleHttpError(error, 'agregar amigo');
+		}
+	}
+
+	/**
+	 * Devuelve solicitudes de amistad pendientes entrantes del usuario.
+	 */
+	async getPendingFriendRequests(userId: string): Promise<IUserProfile[]> {
+		try {
+			return await this.httpClient.get<IUserProfile[]>(`${this.usersBaseUrl}/friends/pending/${userId}`, { timeoutMs: 5000 });
+		} catch (error) {
+			this.handleHttpError(error, 'obtener solicitudes pendientes');
+		}
+	}
+
+	/**
+	 * Acepta una solicitud de amistad pendiente.
+	 */
+	async acceptFriendRequest(userId: string, requesterId: string): Promise<IUserProfile> {
+		try {
+			return await this.httpClient.patch<IUserProfile, Record<string, never>>(
+				`${this.usersBaseUrl}/friends/${userId}/accept/${requesterId}`,
+				{},
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'aceptar solicitud de amistad');
+		}
+	}
+
+	/**
+	 * Alterna el like del usuario autenticado en un post.
+	 */
+	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
+		try {
+			return await this.httpClient.post<{ liked: boolean; likes_count: number }, { postId: string }>(
+				`${this.usersBaseUrl}/feed/like/${userId}`,
+				{ postId },
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'actualizar like');
 		}
 	}
 

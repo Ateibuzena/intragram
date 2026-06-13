@@ -27,7 +27,7 @@ const mapApiPostToPost = (api: IFeedPost): Post => ({
 	time: formatTime(api.created_at),
 	likes: api.likes_count ?? 0,
 	comments: api.comments_count ?? 0,
-	liked: false,
+	liked: api.liked_by_current_user ?? false,
 	saved: api.saved_by_current_user ?? false,
 });
 

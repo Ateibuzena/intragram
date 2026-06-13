@@ -25,4 +25,8 @@ export interface IFeedPost {
 	 * Opcional para mantener compatibilidad con feeds que no dependen del usuario.
 	 */
 	saved_by_current_user?: boolean;
+	/**
+	 * Indica si el usuario autenticado ha dado like a este post.
+	 */
+	liked_by_current_user?: boolean;
 }

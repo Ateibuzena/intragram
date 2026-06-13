@@ -1,3 +1,4 @@
+import { renderContent } from '@/utils/renderContent';
 import type { MessageBubbleProps } from '@/types/props';
 
 export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) => {
@@ -37,7 +38,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 			)}
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
 				<div className={`max-w-sm ${isMe ? 'bg-blue-600' : 'bg-ft-card border border-ft-border'} rounded-2xl px-4 py-2.5`}>
-					<p className={`text-sm ${isMe ? 'text-white' : 'text-ft-text'}`}>{message.text}</p>
+					<div className={`text-sm ${isMe ? 'text-white' : 'text-ft-text'}`}>{renderContent(message.text ?? '')}</div>
 					{message.reactions && (
 						<div className="flex gap-1 mt-2">
 							{message.reactions.map((emoji, i) => (

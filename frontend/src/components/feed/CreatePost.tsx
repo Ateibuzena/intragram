@@ -9,23 +9,48 @@ interface CreatePostProps {
 	onPostCreated?: () => void;
 }
 
-const ATTACHMENT_BUTTONS = [
-	{ icon: '📷', label: 'Imagen' },
-	{ icon: '💻', label: 'Código' },
+const LANGUAGES = [
+	{ value: 'c', label: 'C' },
+	{ value: 'cpp', label: 'C++' },
+	{ value: 'javascript', label: 'JavaScript' },
+	{ value: 'typescript', label: 'TypeScript' },
+	{ value: 'python', label: 'Python' },
+	{ value: 'bash', label: 'Bash' },
+	{ value: 'json', label: 'JSON' },
+	{ value: 'html', label: 'HTML' },
+	{ value: 'css', label: 'CSS' },
 ];
 
 export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [postText, setPostText] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [showCodePanel, setShowCodePanel] = useState(false);
+	const [codeSnippet, setCodeSnippet] = useState('');
+	const [codeLang, setCodeLang] = useState('c');
 	const { token, user, profile, logout } = useAuth();
 	const navigate = useNavigate();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 	const avatarUrl = profile?.avatar_url ?? null;
 
+	const handleImageAttach = () => {
+		alert('Esta función se implementará en futuras actualizaciones.');
+	};
+
+	const handleToggleCodePanel = () => {
+		setShowCodePanel((v) => !v);
+		if (showCodePanel) setCodeSnippet('');
+	};
+
 	const handlePublish = async () => {
-		const content = postText.trim();
-		if (!content || !token || isSubmitting) return;
+		const textPart = postText.trim();
+		const codePart = codeSnippet.trim();
+		if (!textPart && !codePart) return;
+		if (!token || isSubmitting) return;
+
+		const content = codePart
+			? `${textPart ? textPart + '\n' : ''}\`\`\`${codeLang}\n${codePart}\n\`\`\``
+			: textPart;
 
 		try {
 			setIsSubmitting(true);
@@ -42,7 +67,6 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 				const message = await res.text().catch(() => '');
 				console.error('Error al publicar en el feed', res.status, message);
 				if (res.status === 401) {
-					// Token expirado o no válido al publicar: cerramos sesión y redirigimos a login.
 					logout();
 					navigate(ROUTES.LOGIN + '?reason=expired');
 					return;
@@ -51,11 +75,15 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 				return;
 			}
 			setPostText('');
+			setCodeSnippet('');
+			setShowCodePanel(false);
 			onPostCreated?.();
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
+
+	const hasContent = postText.trim().length > 0 || codeSnippet.trim().length > 0;
 
 	return (
 		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
@@ -70,22 +98,71 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 					placeholder="¿Qué estás aprendiendo hoy? Comparte con la comunidad 42..."
 					rows={2}
 					value={postText}
-					onChange={(e) => setPostText(e.target.value)}
+					onChange={(e: Event) => setPostText((e.target as HTMLTextAreaElement).value)}
 				/>
 			</div>
+
+			{/* Panel de código */}
+			{showCodePanel && (
+				<div className="mt-3 border border-ft-cyan/30 rounded-xl overflow-hidden">
+					<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
+						<select
+							value={codeLang}
+							onChange={(e: Event) => setCodeLang((e.target as HTMLSelectElement).value)}
+							className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
+						>
+							{LANGUAGES.map((l) => (
+								<option key={l.value} value={l.value} className="bg-ft-card text-white">
+									{l.label}
+								</option>
+							))}
+						</select>
+						<button
+							type="button"
+							onClick={handleToggleCodePanel}
+							className="text-ft-muted hover:text-white text-xs transition-colors"
+						>
+							✕ Cancelar
+						</button>
+					</div>
+					<textarea
+						className="w-full bg-black/40 text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
+						placeholder={`// Escribe tu código ${codeLang} aquí...`}
+						rows={6}
+						value={codeSnippet}
+						onChange={(e: Event) => setCodeSnippet((e.target as HTMLTextAreaElement).value)}
+						spellCheck={false}
+					/>
+				</div>
+			)}
+
 			<div className="flex items-center justify-between mt-3 pt-3 border-t border-ft-border">
 				<div className="flex space-x-1">
-					{ATTACHMENT_BUTTONS.map((btn) => (
-						<button key={btn.label} className="flex items-center space-x-1.5 text-xs text-ft-muted hover:text-ft-cyan px-2 py-1.5 rounded-lg hover:bg-ft-cyan/5 border border-transparent hover:border-ft-cyan/20 transition-all duration-150 active:scale-95">
-							<span>{btn.icon}</span>
-							<span className="hidden sm:inline">{btn.label}</span>
-						</button>
-					))}
+					<button
+						type="button"
+						onClick={handleImageAttach}
+						className="flex items-center space-x-1.5 text-xs text-ft-muted hover:text-ft-cyan px-2 py-1.5 rounded-lg hover:bg-ft-cyan/5 border border-transparent hover:border-ft-cyan/20 transition-all duration-150 active:scale-95"
+					>
+						<span>📷</span>
+						<span className="hidden sm:inline">Imagen</span>
+					</button>
+					<button
+						type="button"
+						onClick={handleToggleCodePanel}
+						className={`flex items-center space-x-1.5 text-xs px-2 py-1.5 rounded-lg border transition-all duration-150 active:scale-95 ${
+							showCodePanel
+								? 'text-ft-cyan border-ft-cyan/40 bg-ft-cyan/10'
+								: 'text-ft-muted hover:text-ft-cyan border-transparent hover:border-ft-cyan/20 hover:bg-ft-cyan/5'
+						}`}
+					>
+						<span>💻</span>
+						<span className="hidden sm:inline">Código</span>
+					</button>
 				</div>
 				<Button
 					variant="primary"
 					size="sm"
-					disabled={!postText.trim() || !token || isSubmitting}
+					disabled={!hasContent || !token || isSubmitting}
 					onClick={handlePublish}
 				>
 					Publicar

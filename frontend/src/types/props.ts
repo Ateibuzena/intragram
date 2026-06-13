@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { Conversation, FilterKey, Message, Post } from './models';
 
 export interface PostCardProps {

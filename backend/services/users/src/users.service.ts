@@ -17,6 +17,7 @@ import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { UserSavedPostEntity } from './entities/user-saved-post.entity';
+import { UserPostLikeEntity } from './entities/user-post-like.entity';
 import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
@@ -32,6 +33,8 @@ export class UsersService {
 		private readonly friendshipRepo: Repository<UserFriendshipEntity>,
 		@InjectRepository(UserSavedPostEntity)
 		private readonly savedPostRepo: Repository<UserSavedPostEntity>,
+		@InjectRepository(UserPostLikeEntity)
+		private readonly postLikeRepo: Repository<UserPostLikeEntity>,
 	) {}
 
 	/**
@@ -337,7 +340,8 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		return posts.map((post) => this.mapPostToFeedDto(post));
+		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
+		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
 	/**
@@ -350,7 +354,8 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		return posts.map((post) => this.mapPostToFeedDto(post));
+		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
+		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
 	/**
@@ -366,7 +371,8 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		return posts.map((post) => this.mapPostToFeedDto(post));
+		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
+		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
 	/**
@@ -384,10 +390,12 @@ export class UsersService {
 		});
 
 		const filtered = posts.filter((post) => post.author_id !== userId);
-		return filtered.slice(0, limit).map((post) => this.mapPostToFeedDto(post));
+		const sliced = filtered.slice(0, limit);
+		const likedIds = await this.getLikedPostIds(userId, sliced.map((p) => p.id));
+		return sliced.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
-	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false): IFeedPost {
+	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false, likedByCurrentUser = false): IFeedPost {
 		return {
 			id: post.id,
 			content: post.content,
@@ -408,7 +416,14 @@ export class UsersService {
 							: (post.author.last_login_at as unknown as string | null),
 			},
 			saved_by_current_user: savedByCurrentUser,
+			liked_by_current_user: likedByCurrentUser,
 		};
+	}
+
+	private async getLikedPostIds(userId: string, postIds: string[]): Promise<Set<string>> {
+		if (!postIds.length) return new Set();
+		const likes = await this.postLikeRepo.find({ where: { user_id: userId, post_id: In(postIds) } });
+		return new Set(likes.map((l) => l.post_id));
 	}
 
 	/**
@@ -422,9 +437,9 @@ export class UsersService {
 	}
 
 	/**
-	 * Agrega un amigo por su id interno y devuelve el perfil agregado.
+	 * Envía una solicitud de amistad (pending) o acepta una solicitud inversa existente.
 	 */
-	async addFriend(userId: string, friendId: string): Promise<UserProfileEntity> {
+	async addFriend(userId: string, friendId: string): Promise<{ status: 'pending' | 'accepted'; friend: UserProfileEntity }> {
 		if (userId === friendId) {
 			throw Object.assign(new Error('No puedes agregarte a ti mismo como amigo'), { statusCode: 400 });
 		}
@@ -448,19 +463,80 @@ export class UsersService {
 			],
 		});
 
-		if (!existing) {
-			const relation = this.friendshipRepo.create({
-				user_id: userId,
-				friend_id: friendId,
-				status: 'accepted',
-			});
-			await this.friendshipRepo.save(relation);
-		} else if (existing.status !== 'accepted') {
-			existing.status = 'accepted';
-			await this.friendshipRepo.save(existing);
+		if (existing?.status === 'accepted') {
+			return { status: 'accepted', friend };
 		}
 
-		return friend;
+		// Si el otro ya nos envió una solicitud → aceptar automáticamente
+		if (existing && existing.user_id === friendId && existing.friend_id === userId && existing.status === 'pending') {
+			existing.status = 'accepted';
+			await this.friendshipRepo.save(existing);
+			return { status: 'accepted', friend };
+		}
+
+		// Si ya enviamos una solicitud que sigue pendiente → no duplicar
+		if (existing && existing.user_id === userId && existing.status === 'pending') {
+			return { status: 'pending', friend };
+		}
+
+		const relation = this.friendshipRepo.create({ user_id: userId, friend_id: friendId, status: 'pending' });
+		await this.friendshipRepo.save(relation);
+		return { status: 'pending', friend };
+	}
+
+	/**
+	 * Devuelve los perfiles de usuarios que han enviado una solicitud de amistad al userId.
+	 */
+	async getPendingFriendRequests(userId: string): Promise<UserProfileEntity[]> {
+		const pending = await this.friendshipRepo.find({ where: { friend_id: userId, status: 'pending' } });
+		if (!pending.length) return [];
+		const requesterIds = pending.map((f) => f.user_id);
+		return this.userProfileRepo.find({ where: { id: In(requesterIds) } });
+	}
+
+	/**
+	 * Acepta una solicitud de amistad pendiente de requesterId hacia userId.
+	 */
+	async acceptFriendRequest(userId: string, requesterId: string): Promise<UserProfileEntity> {
+		const friendship = await this.friendshipRepo.findOne({
+			where: { user_id: requesterId, friend_id: userId, status: 'pending' },
+		});
+		if (!friendship) {
+			throw Object.assign(new Error('Solicitud de amistad no encontrada'), { statusCode: 404 });
+		}
+		friendship.status = 'accepted';
+		await this.friendshipRepo.save(friendship);
+
+		const requester = await this.userProfileRepo.findOne({ where: { id: requesterId } });
+		if (!requester) {
+			throw Object.assign(new Error('Usuario no encontrado'), { statusCode: 404 });
+		}
+		return requester;
+	}
+
+	/**
+	 * Alterna el like de un usuario en un post. Actualiza likes_count en el post.
+	 */
+	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
+		const post = await this.userPostRepo.findOne({ where: { id: postId } });
+		if (!post) {
+			throw Object.assign(new Error('Publicacion no encontrada'), { statusCode: 404 });
+		}
+
+		const existing = await this.postLikeRepo.findOne({ where: { user_id: userId, post_id: postId } });
+
+		if (existing) {
+			await this.postLikeRepo.remove(existing);
+			post.likes_count = Math.max(0, post.likes_count - 1);
+			await this.userPostRepo.save(post);
+			return { liked: false, likes_count: post.likes_count };
+		}
+
+		const like = this.postLikeRepo.create({ user_id: userId, post_id: postId });
+		await this.postLikeRepo.save(like);
+		post.likes_count = post.likes_count + 1;
+		await this.userPostRepo.save(post);
+		return { liked: true, likes_count: post.likes_count };
 	}
 
 	/**
@@ -493,7 +569,9 @@ export class UsersService {
 			take: limit,
 		});
 
-		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true));
+		const posts = saved.map((entry) => entry.post);
+		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
+		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true, likedIds.has(entry.post.id)));
 	}
 
 	/**

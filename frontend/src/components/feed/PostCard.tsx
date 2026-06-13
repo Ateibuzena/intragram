@@ -4,11 +4,29 @@ import { Badge } from '@/components/ui/Badge';
 import { usePost } from '@/hooks/usePost';
 import { useAuth } from '@/hooks/useAuth';
 import { buildApiUrl } from '@/utils/apiBase';
+import { renderContent } from '@/utils/renderContent';
 import type { PostCardProps } from '@/types/props';
 
 export const PostCard = ({ post }: PostCardProps) => {
 	const { token } = useAuth();
 	const { liked, likes, saved, animatingLike, animatingSave, handleLike, handleSave } = usePost(post.liked, post.likes, post.saved ?? false);
+
+	const toggleLike = async () => {
+		if (!token) {
+			handleLike();
+			return;
+		}
+		try {
+			await fetch(buildApiUrl(`/users/feed/like/${post.id}`), {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+		} catch {
+			// En caso de error de red, dejamos el toggle optimista local.
+		} finally {
+			handleLike();
+		}
+	};
 
 	const toggleFavorite = async () => {
 		if (!token) {
@@ -47,11 +65,11 @@ export const PostCard = ({ post }: PostCardProps) => {
 				</button>
 			</div>
 
-			<p className="text-sm text-ft-text leading-relaxed mb-4">{post.content}</p>
+			<div className="text-sm text-ft-text leading-relaxed mb-4">{renderContent(post.content)}</div>
 
 			<div className="flex items-center gap-3 pt-3 border-t border-ft-border">
 				<button
-					onClick={handleLike}
+					onClick={() => { void toggleLike(); }}
 					className={`post-action-btn ${liked ? 'post-action-btn--like-active' : 'post-action-btn--like-default'}`}
 				>
 					<svg className={`w-3.5 h-3.5 ${liked ? 'fill-red-400' : ''} ${animatingLike ? 'animate-heartbeat' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

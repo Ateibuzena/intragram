@@ -5,6 +5,18 @@ import { Button } from '@/components/ui/Button';
 import type { ChatWindowProps } from '@/types/props';
 import { MessageBubble } from './MessageBubble';
 
+const LANGUAGES = [
+	{ value: 'c', label: 'C' },
+	{ value: 'cpp', label: 'C++' },
+	{ value: 'javascript', label: 'JavaScript' },
+	{ value: 'typescript', label: 'TypeScript' },
+	{ value: 'python', label: 'Python' },
+	{ value: 'bash', label: 'Bash' },
+	{ value: 'json', label: 'JSON' },
+	{ value: 'html', label: 'HTML' },
+	{ value: 'css', label: 'CSS' },
+];
+
 export const ChatWindow = ({
 	selectedChat,
 	messages,
@@ -15,13 +27,48 @@ export const ChatWindow = ({
  	onStartNewConversation,
 }: ChatWindowProps) => {
 	const [messageText, setMessageText] = useState('');
+	const [showAttachOptions, setShowAttachOptions] = useState(false);
+	const [showCodePanel, setShowCodePanel] = useState(false);
+	const [codeSnippet, setCodeSnippet] = useState('');
+	const [codeLang, setCodeLang] = useState('c');
 
 	const handleSend = async () => {
 		const trimmed = messageText.trim();
 		if (!trimmed || sending) return;
-
 		await onSendMessage(trimmed);
 		setMessageText('');
+	};
+
+	const handleSendCode = async () => {
+		const code = codeSnippet.trim();
+		if (!code || sending) return;
+		await onSendMessage(`\`\`\`${codeLang}\n${code}\n\`\`\``);
+		setCodeSnippet('');
+		setShowCodePanel(false);
+		setShowAttachOptions(false);
+	};
+
+	const handleImageAttach = () => {
+		setShowAttachOptions(false);
+		alert('Esta función se implementará en futuras actualizaciones.');
+	};
+
+	const handleToggleAttach = () => {
+		setShowAttachOptions((v) => !v);
+		if (showCodePanel) {
+			setShowCodePanel(false);
+			setCodeSnippet('');
+		}
+	};
+
+	const handleOpenCode = () => {
+		setShowAttachOptions(false);
+		setShowCodePanel(true);
+	};
+
+	const handleCancelCode = () => {
+		setShowCodePanel(false);
+		setCodeSnippet('');
 	};
 
 	if (!selectedChat) {
@@ -83,27 +130,98 @@ export const ChatWindow = ({
 			</div>
 
 			<div className="chat-input-area">
+				{/* Opciones de adjunto */}
+				{showAttachOptions && !showCodePanel && (
+					<div className="flex gap-2 px-1 pb-2">
+						<button
+							type="button"
+							onClick={handleImageAttach}
+							className="flex items-center gap-1.5 text-xs text-ft-muted hover:text-ft-cyan px-3 py-1.5 rounded-lg bg-ft-hover hover:bg-ft-cyan/10 border border-ft-border hover:border-ft-cyan/30 transition-all"
+						>
+							<span>📷</span> Imagen
+						</button>
+						<button
+							type="button"
+							onClick={handleOpenCode}
+							className="flex items-center gap-1.5 text-xs text-ft-muted hover:text-ft-cyan px-3 py-1.5 rounded-lg bg-ft-hover hover:bg-ft-cyan/10 border border-ft-border hover:border-ft-cyan/30 transition-all"
+						>
+							<span>💻</span> Código
+						</button>
+					</div>
+				)}
+
+				{/* Panel de código */}
+				{showCodePanel && (
+					<div className="mb-2 border border-ft-cyan/30 rounded-xl overflow-hidden">
+						<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
+							<select
+								value={codeLang}
+								onChange={(e: Event) => setCodeLang((e.target as HTMLSelectElement).value)}
+								className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
+							>
+								{LANGUAGES.map((l) => (
+									<option key={l.value} value={l.value} className="bg-ft-card text-white">
+										{l.label}
+									</option>
+								))}
+							</select>
+							<button
+								type="button"
+								onClick={handleCancelCode}
+								className="text-ft-muted hover:text-white text-xs transition-colors"
+							>
+								✕ Cancelar
+							</button>
+						</div>
+						<textarea
+							className="w-full bg-black/40 text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
+							placeholder={`// Escribe tu código ${codeLang} aquí...`}
+							rows={5}
+							value={codeSnippet}
+							onChange={(e: Event) => setCodeSnippet((e.target as HTMLTextAreaElement).value)}
+							spellCheck={false}
+						/>
+						<div className="flex justify-end px-3 py-2 bg-ft-hover border-t border-ft-border">
+							<button
+								type="button"
+								onClick={() => { void handleSendCode(); }}
+								disabled={!codeSnippet.trim() || sending}
+								className="flex items-center gap-1.5 text-xs font-semibold text-black bg-ft-cyan hover:bg-ft-cyan-light px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								Enviar código →
+							</button>
+						</div>
+					</div>
+				)}
+
+				{/* Fila de input principal */}
 				<div className="flex items-center gap-3">
-					<button className="p-2 hover:bg-ft-hover rounded-lg transition-colors flex-shrink-0">
-						<svg className="w-5 h-5 text-ft-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<button
+						type="button"
+						onClick={handleToggleAttach}
+						className={`p-2 rounded-lg transition-colors flex-shrink-0 ${showAttachOptions || showCodePanel ? 'bg-ft-cyan/20 text-ft-cyan' : 'hover:bg-ft-hover text-ft-cyan'}`}
+					>
+						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
 						</svg>
 					</button>
 					<div className="chat-input-wrapper">
-						<input type="text" placeholder="Envía un mensaje..." value={messageText}
-							onChange={(e: any) => setMessageText(e.target.value)}
-							onKeyDown={(e: any) => {
+						<input
+							type="text"
+							placeholder="Envía un mensaje..."
+							value={messageText}
+							onChange={(e: Event) => setMessageText((e.target as HTMLInputElement).value)}
+							onKeyDown={(e: KeyboardEvent) => {
 								if (e.key === 'Enter') {
 									void handleSend();
 								}
 							}}
 							disabled={sending}
-							className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none" />
+							className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none"
+						/>
 					</div>
 					<button
-						onClick={() => {
-							void handleSend();
-						}}
+						onClick={() => { void handleSend(); }}
 						disabled={sending || !messageText.trim()}
 						className="p-2.5 bg-ft-cyan hover:bg-ft-cyan-light rounded-full transition-all hover:shadow-ft-glow-sm active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
 					>

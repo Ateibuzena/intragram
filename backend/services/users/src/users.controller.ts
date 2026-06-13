@@ -231,7 +231,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Agrega un amigo al usuario indicado.
+	 * Agrega un amigo al usuario indicado (crea solicitud pending o acepta la inversa).
 	 */
 	@Post('friends/:id')
 	async addFriend(@Param('id') id: string, @Body() dto: CreateFriendDto) {
@@ -256,6 +256,44 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al eliminar amigo',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Devuelve los perfiles de usuarios con solicitudes de amistad pendientes hacia userId.
+	 */
+	@Get('friends/pending/:id')
+	async getPendingFriendRequests(@Param('id') id: string) {
+		return this.usersService.getPendingFriendRequests(id);
+	}
+
+	/**
+	 * Acepta una solicitud de amistad pendiente de requesterId hacia id.
+	 */
+	@Patch('friends/:id/accept/:requesterId')
+	async acceptFriendRequest(@Param('id') id: string, @Param('requesterId') requesterId: string) {
+		try {
+			return await this.usersService.acceptFriendRequest(id, requesterId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al aceptar solicitud',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Alterna el like de un usuario en un post.
+	 */
+	@Post('feed/like/:id')
+	async toggleLike(@Param('id') id: string, @Body('postId') postId: string) {
+		try {
+			return await this.usersService.toggleLikePost(id, postId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al actualizar like',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}

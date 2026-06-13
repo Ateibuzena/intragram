@@ -300,14 +300,56 @@ export class UsersController {
 	}
 
 	/**
-	 * Agrega un amigo para el usuario autenticado.
+	 * Agrega un amigo para el usuario autenticado (devuelve status pending o accepted).
 	 */
 	@UseGuards(AuthGuard)
 	@Post('friends/me')
-	async addFriend(@Req() req: any, @Body() dto: CreateFriendDto): Promise<IUserProfile> {
+	async addFriend(@Req() req: any, @Body() dto: CreateFriendDto): Promise<{ status: 'pending' | 'accepted'; friend: IUserProfile }> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			return await this.usersService.addFriend(profile.id, dto);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Devuelve solicitudes de amistad pendientes entrantes del usuario autenticado.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('friends/pending')
+	async getPendingFriendRequests(@Req() req: any): Promise<IUserProfile[]> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getPendingFriendRequests(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Acepta una solicitud de amistad pendiente del usuario indicado.
+	 */
+	@UseGuards(AuthGuard)
+	@Patch('friends/me/:requesterId/accept')
+	async acceptFriendRequest(@Req() req: any, @Param('requesterId') requesterId: string): Promise<IUserProfile> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.acceptFriendRequest(profile.id, requesterId);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Alterna el like del usuario autenticado en un post.
+	 */
+	@UseGuards(AuthGuard)
+	@Post('feed/like/:postId')
+	async toggleLike(@Param('postId') postId: string, @Req() req: any): Promise<{ liked: boolean; likes_count: number }> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.toggleLikePost(profile.id, postId);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

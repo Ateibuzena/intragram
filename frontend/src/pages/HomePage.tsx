@@ -5,7 +5,10 @@ import { Feed } from '@/components/feed/Feed';
 import type { FilterKey, NavKey } from '@/types/models';
 import ChatPage from './ChatPage';
 import ProfilePage from './ProfilePage';
+import FriendsPage from './FriendsPage';
 import { useAuth } from '@/hooks/useAuth';
+
+const FULL_SCREEN_NAVS: NavKey[] = ['chat', 'friends'];
 
 const HomePage = () => {
 	const [activeNav, setActiveNav] = useState<NavKey>('home');
@@ -13,10 +16,10 @@ const HomePage = () => {
 	const [search, setSearch] = useState('');
 	const { user, profile } = useAuth();
 	const currentLogin = profile?.login || user?.username || '';
+	const hideSidebar = FULL_SCREEN_NAVS.includes(activeNav);
 
 	return (
 		<div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
-			{/* Navbar desktop */}
 			<Navbar
 				activeNav={activeNav}
 				setActiveNav={setActiveNav}
@@ -24,9 +27,8 @@ const HomePage = () => {
 				setSearch={setSearch}
 			/>
 
-			{/* Cuerpo */}
 			<div className="flex flex-1 min-h-0">
-				{activeNav !== 'chat' && (
+				{!hideSidebar && (
 					<div className="block flex-shrink-0">
 						<Sidebar activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
 					</div>
@@ -40,14 +42,13 @@ const HomePage = () => {
 								<div key={activeNav} className="animate-page-switch">
 									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
 									{activeNav === 'profile' && <ProfilePage />}
+									{activeNav === 'friends' && <FriendsPage />}
 								</div>
 							</div>
 						</div>
 					)}
 				</main>
-
 			</div>
-
 		</div>
 	);
 };

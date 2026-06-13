@@ -19,6 +19,7 @@ type UserSearchResult = {
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
 	{ key: 'home', label: 'Home' },
 	{ key: 'chat', label: 'Chat' },
+	{ key: 'friends', label: 'Friends' },
 	{ key: 'profile', label: 'Profile' },
 ];
 

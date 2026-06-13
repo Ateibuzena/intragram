@@ -42,5 +42,5 @@ export interface Conversation {
 }
 
 export type FilterKey = 'reciente' | 'amigos' | 'favoritos' | 'trending' | 'perfil';
-export type NavKey = 'home' | 'chat' | 'profile';
+export type NavKey = 'home' | 'chat' | 'profile' | 'friends';
 export type ChatTab = 'mensajes' | 'solicitudes';

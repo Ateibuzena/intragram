@@ -7,6 +7,7 @@ export interface IFeedPostAuthorSummary {
 	avatar_url: string | null;
 	correction_point: number;
 	last_login_at: string | null;
+	active: boolean;
 }
 
 export type FeedVisibility = 'public' | 'friends' | 'private';
@@ -29,4 +30,12 @@ export interface IFeedPost {
 	 * Indicates whether the authenticated user has liked this post.
 	 */
 	liked_by_current_user?: boolean;
+}
+
+export interface IPostComment {
+	id: string;
+	post_id: string;
+	content: string;
+	created_at: string;
+	author: IFeedPostAuthorSummary;
 }

@@ -115,19 +115,21 @@ Scripts destacados en `backend/package.json`:
 - OAuth 42 y gestión de sesión.
 - Validación de JWT en gateway.
 - Sincronización de perfiles de usuario.
-- Feed con varias vistas.
-- Creación de publicaciones.
+- Feed con varias vistas (reciente, amigos, trending, favoritos, perfil).
+- Creación de publicaciones con soporte de bloques de código.
+- Likes persistidos en base de datos con contador en el post.
+- Comentarios persistidos en base de datos con contador en el post.
 - Favoritos.
-- Lista de amigos.
-- Chat persistido en PostgreSQL.
+- Lista de amigos con solicitudes pendientes, aceptar y rechazar.
+- Chat persistido en PostgreSQL con soporte de snippets de código.
 - Métricas y dashboards.
 
 ## Current Gaps
 
 - Falta una suite de tests visible.
-- No hay likes/comentarios persistidos en backend.
 - El perfil editable todavía está poco desarrollado en frontend.
 - La búsqueda global todavía está poco explotada desde la interfaz.
+- No hay sistema de notificaciones (ni polling ni WebSocket).
 
 ## Related Documentation
 

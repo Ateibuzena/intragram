@@ -11,6 +11,12 @@ export interface MessageBubbleProps {
 	showTimestamp: boolean;
 }
 
+export interface PendingFriendRequest {
+	id: string;
+	login: string;
+	avatar_url?: string | null;
+}
+
 export interface ConversationListProps {
 	conversations: Conversation[];
 	loading?: boolean;
@@ -18,6 +24,10 @@ export interface ConversationListProps {
 	selectedChat: Conversation | null;
 	onSelectChat: (chat: Conversation) => void;
 	onStartNewConversation?: () => void;
+	pendingRequests?: PendingFriendRequest[];
+	pendingLoading?: boolean;
+	onAcceptRequest?: (id: string, login: string) => Promise<void>;
+	onRejectRequest?: (id: string, login: string) => Promise<void>;
 }
 
 export interface ChatWindowProps {

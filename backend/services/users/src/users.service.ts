@@ -18,7 +18,8 @@ import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 import { UserPostLikeEntity } from './entities/user-post-like.entity';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto } from '@intragram/shared/users';
+import { UserPostCommentEntity } from './entities/user-post-comment.entity';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 @Injectable()
@@ -35,6 +36,8 @@ export class UsersService {
 		private readonly savedPostRepo: Repository<UserSavedPostEntity>,
 		@InjectRepository(UserPostLikeEntity)
 		private readonly postLikeRepo: Repository<UserPostLikeEntity>,
+		@InjectRepository(UserPostCommentEntity)
+		private readonly commentRepo: Repository<UserPostCommentEntity>,
 	) {}
 
 	/**
@@ -366,7 +369,10 @@ export class UsersService {
 		if (!friendIds.length) return [];
 
 		const posts = await this.userPostRepo.find({
-			where: { author_id: In(friendIds), visibility: 'public' },
+			where: [
+				{ author_id: In(friendIds), visibility: 'public' },
+				{ author_id: In(friendIds), visibility: 'friends' },
+			],
 			order: { created_at: 'DESC' },
 			take: limit,
 			relations: ['author'],
@@ -377,22 +383,26 @@ export class UsersService {
 
 	/**
 	 * Returns the "Trending" feed for a user:
-	 * - Only public posts
-	 * - Excludes the user's own posts
-	 * - Ordered by likes (desc) and date (desc)
+	 * - Only posts from accepted friends (excluding own posts)
+	 * - Includes public and friends-visibility posts
+	 * - Ordered by likes (desc) then date (desc)
 	 */
 	async getTrendingFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
+		const friendIds = await this.getFriendIds(userId);
+		if (!friendIds.length) return [];
+
 		const posts = await this.userPostRepo.find({
-			where: { visibility: 'public' },
+			where: [
+				{ author_id: In(friendIds), visibility: 'public' },
+				{ author_id: In(friendIds), visibility: 'friends' },
+			],
 			order: { likes_count: 'DESC', created_at: 'DESC' },
-			take: limit * 2,
+			take: limit,
 			relations: ['author'],
 		});
 
-		const filtered = posts.filter((post) => post.author_id !== userId);
-		const sliced = filtered.slice(0, limit);
-		const likedIds = await this.getLikedPostIds(userId, sliced.map((p) => p.id));
-		return sliced.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
+		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
+		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
 	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false, likedByCurrentUser = false): IFeedPost {
@@ -410,6 +420,7 @@ export class UsersService {
 				display_name: post.author.display_name,
 				avatar_url: post.author.avatar_url,
 				correction_point: post.author.correction_point,
+				active: post.author.active,
 				last_login_at:
 					post.author.last_login_at instanceof Date
 							? post.author.last_login_at.toISOString()
@@ -628,5 +639,91 @@ export class UsersService {
 		}
 
 		return this.mapPostToFeedDto(full);
+	}
+
+	/**
+	 * Returns all comments for a given post, ordered oldest-first.
+	 */
+	async getPostComments(postId: string): Promise<IPostComment[]> {
+		const comments = await this.commentRepo.find({
+			where: { post_id: postId },
+			order: { created_at: 'ASC' },
+			relations: ['author'],
+		});
+		return comments.map((c) => this.mapCommentToDto(c));
+	}
+
+	/**
+	 * Adds a comment to a post and increments the post's comments_count.
+	 */
+	async addComment(postId: string, authorId: string, content: string): Promise<IPostComment> {
+		const trimmed = content.trim();
+		if (!trimmed) {
+			throw Object.assign(new Error('Comment content cannot be empty'), { statusCode: 400 });
+		}
+
+		const [post, author] = await Promise.all([
+			this.userPostRepo.findOne({ where: { id: postId } }),
+			this.userProfileRepo.findOne({ where: { id: authorId } }),
+		]);
+
+		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+		if (!author) throw Object.assign(new Error('User not found'), { statusCode: 404 });
+
+		const comment = this.commentRepo.create({ post_id: postId, author_id: authorId, content: trimmed });
+		await this.commentRepo.save(comment);
+
+		post.comments_count = post.comments_count + 1;
+		await this.userPostRepo.save(post);
+
+		comment.author = author;
+		return this.mapCommentToDto(comment);
+	}
+
+	/**
+	 * Deletes a comment by its owner and decrements the post's comments_count.
+	 */
+	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
+		const comment = await this.commentRepo.findOne({ where: { id: commentId } });
+		if (!comment) throw Object.assign(new Error('Comment not found'), { statusCode: 404 });
+		if (comment.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+
+		const postId = comment.post_id;
+		await this.commentRepo.remove(comment);
+
+		const post = await this.userPostRepo.findOne({ where: { id: postId } });
+		if (post) {
+			post.comments_count = Math.max(0, post.comments_count - 1);
+			await this.userPostRepo.save(post);
+		}
+
+		return { deleted: true };
+	}
+
+	async setPresence(userId: string, active: boolean): Promise<void> {
+		const values: Partial<UserProfileEntity> = { active };
+		if (active) values.last_login_at = new Date();
+		await this.userProfileRepo.update({ id: userId }, values);
+	}
+
+	private mapCommentToDto(comment: UserPostCommentEntity): IPostComment {
+		const author = comment.author;
+		return {
+			id: comment.id,
+			post_id: comment.post_id,
+			content: comment.content,
+			created_at: comment.created_at instanceof Date ? comment.created_at.toISOString() : (comment.created_at as unknown as string),
+			author: {
+				id: author.id,
+				login: author.login,
+				display_name: author.display_name,
+				avatar_url: author.avatar_url,
+				correction_point: author.correction_point,
+				active: author.active,
+				last_login_at: author.last_login_at instanceof Date
+					? author.last_login_at.toISOString()
+					: (author.last_login_at as unknown as string | null),
+			},
+		};
 	}
 }

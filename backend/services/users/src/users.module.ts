@@ -16,6 +16,7 @@ import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 import { UserPostLikeEntity } from './entities/user-post-like.entity';
+import { UserPostCommentEntity } from './entities/user-post-comment.entity';
 
 @Module({
 	imports: [
@@ -26,7 +27,7 @@ import { UserPostLikeEntity } from './entities/user-post-like.entity';
 			username: process.env.DB_USERNAME || 'users_user',
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
-			entities: [UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity],
+			entities: [UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity, UserPostCommentEntity],
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {
@@ -35,7 +36,7 @@ import { UserPostLikeEntity } from './entities/user-post-like.entity';
 				statement_timeout: 10000,
 			},
 		}),
-		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity]),
+		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity, UserPostCommentEntity]),
 		MetricsModule,
 	],
 	controllers: [UsersController, MetricsController],

@@ -11,7 +11,7 @@ export interface User {
 
 export interface Post {
 	id: string | number;
-	user: Pick<User, 'login' | 'level' | 'avatarUrl'>;
+	user: Pick<User, 'login' | 'level' | 'avatarUrl'> & { active?: boolean };
 	content: string;
 	time: string;
 	likes: number;
@@ -41,6 +41,20 @@ export interface Conversation {
 	unread: boolean;
 }
 
+export interface PostComment {
+	id: string;
+	post_id: string;
+	content: string;
+	created_at: string;
+	author: {
+		id: string;
+		login: string;
+		display_name: string | null;
+		avatar_url: string | null;
+		active?: boolean;
+	};
+}
+
 export type FilterKey = 'reciente' | 'amigos' | 'favoritos' | 'trending' | 'perfil';
-export type NavKey = 'home' | 'chat' | 'profile' | 'friends';
+export type NavKey = 'home' | 'chat' | 'profile';
 export type ChatTab = 'mensajes' | 'solicitudes';

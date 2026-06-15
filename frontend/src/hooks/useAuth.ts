@@ -43,8 +43,15 @@ export const useAuth = (): AuthContextType => {
 // Global session state that is injected into the React tree
 // via AuthContext.Provider in App.tsx.
 export const useAuthState = () => {
-	const [token, setToken] = useState<string | null>(null);
-	const [user, setUser] = useState<AuthUser | null>(null);
+	const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth_token'));
+	const [user, setUser] = useState<AuthUser | null>(() => {
+		try {
+			const saved = localStorage.getItem('auth_user');
+			return saved ? (JSON.parse(saved) as AuthUser) : null;
+		} catch {
+			return null;
+		}
+	});
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [loadingProfile, setLoadingProfile] = useState(false);
 	const fetchingProfileRef = useRef(false);

@@ -298,4 +298,63 @@ export class UsersController {
 			);
 		}
 	}
+
+	/**
+	 * Returns all comments for a post.
+	 */
+	@Get('feed/post/:postId/comments')
+	async getPostComments(@Param('postId') postId: string) {
+		return this.usersService.getPostComments(postId);
+	}
+
+	/**
+	 * Adds a comment to a post.
+	 */
+	@Post('feed/post/:postId/comments')
+	async addComment(
+		@Param('postId') postId: string,
+		@Body('authorId') authorId: string,
+		@Body('content') content: string,
+	) {
+		try {
+			return await this.usersService.addComment(postId, authorId, content);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error adding comment',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Deletes a comment by its owner.
+	 */
+	@Delete('feed/post/comments/:commentId/by/:userId')
+	async deleteComment(@Param('commentId') commentId: string, @Param('userId') userId: string) {
+		try {
+			return await this.usersService.deleteComment(commentId, userId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error deleting comment',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Updates the online presence status for a user.
+	 * Internal endpoint — called by the gateway's WebSocket presence gateway.
+	 */
+	@Patch('users/:id/presence')
+	@HttpCode(HttpStatus.NO_CONTENT)
+	async setPresence(@Param('id') userId: string, @Body('active') active: boolean) {
+		try {
+			await this.usersService.setPresence(userId, active);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error updating presence',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
 }

@@ -33,10 +33,6 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 	const avatarUrl = profile?.avatar_url ?? null;
 
-	const handleImageAttach = () => {
-		alert('Esta función se implementará en futuras actualizaciones.');
-	};
-
 	const handleToggleCodePanel = () => {
 		setShowCodePanel((v) => !v);
 		if (showCodePanel) setCodeSnippet('');
@@ -138,14 +134,6 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
 			<div className="flex items-center justify-between mt-3 pt-3 border-t border-ft-border">
 				<div className="flex space-x-1">
-					<button
-						type="button"
-						onClick={handleImageAttach}
-						className="flex items-center space-x-1.5 text-xs text-ft-muted hover:text-ft-cyan px-2 py-1.5 rounded-lg hover:bg-ft-cyan/5 border border-transparent hover:border-ft-cyan/20 transition-all duration-150 active:scale-95"
-					>
-						<span>📷</span>
-						<span className="hidden sm:inline">Imagen</span>
-					</button>
 					<button
 						type="button"
 						onClick={handleToggleCodePanel}

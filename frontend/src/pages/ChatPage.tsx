@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import type { Conversation, Message, User } from '@/types/models';
+import type { PendingFriendRequest } from '@/types/props';
 import { formatTime } from '@/utils/formatters';
 import { buildApiUrl } from '@/utils/apiBase';
 
@@ -35,6 +36,7 @@ interface UserProfile {
 	login: string;
 	display_name: string | null;
 	avatar_url: string | null;
+	active?: boolean;
 }
 
 const SearchIcon = () => (
@@ -122,6 +124,9 @@ const ChatPage = () => {
 	const [conversationsError, setConversationsError] = useState<string | null>(null);
 	const [messagesError, setMessagesError] = useState<string | null>(null);
 
+	const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([]);
+	const [pendingLoading, setPendingLoading] = useState(false);
+
 	const currentUserId = useMemo(() => getCurrentUserIdFromToken(token), [token]);
 
 	const conversations = useMemo(
@@ -166,6 +171,7 @@ const ChatPage = () => {
 							avatar: (profile.display_name || profile.login).charAt(0).toUpperCase(),
 							avatarUrl: profile.avatar_url,
 							level: 0,
+							online: profile.active ?? false,
 						} as User,
 					};
 				} catch {
@@ -368,6 +374,39 @@ const ChatPage = () => {
 		};
 	}, [token, selectedChatId, currentUserId]);
 
+	useEffect(() => {
+		if (!token || !selectedChatId) return;
+
+		const otherParticipantId = rawConversations
+			.find((c) => c.id === selectedChatId)
+			?.participants.find((p) => p !== currentUserId);
+
+		if (!otherParticipantId) return;
+
+		let disposed = false;
+
+		const refreshStatus = async () => {
+			try {
+				const res = await fetch(buildApiUrl(`/users/${otherParticipantId}`), {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				if (!res.ok || disposed) return;
+				const profile = await res.json() as UserProfile;
+				if (disposed) return;
+				setUsersById((prev) => {
+					if (!prev[otherParticipantId]) return prev;
+					return { ...prev, [otherParticipantId]: { ...prev[otherParticipantId], online: profile.active ?? false } };
+				});
+			} catch {
+				// ignore
+			}
+		};
+
+		void refreshStatus();
+		const interval = setInterval(() => { void refreshStatus(); }, 30_000);
+		return () => { disposed = true; clearInterval(interval); };
+	}, [token, selectedChatId, currentUserId, rawConversations]);
+
 	const handleSendMessage = async (messageText: string) => {
 		if (!selectedChatId) return;
 
@@ -407,6 +446,61 @@ const ChatPage = () => {
 			setMessagesError(error instanceof Error ? error.message : 'No se pudo enviar el mensaje');
 		} finally {
 			setSendingMessage(false);
+		}
+	};
+
+	useEffect(() => {
+		if (!token) return;
+		let cancelled = false;
+
+		const fetchPending = async () => {
+			setPendingLoading(true);
+			try {
+				const res = await fetch(buildApiUrl('/users/friends/pending'), {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				if (!res.ok || cancelled) return;
+				const data = (await res.json()) as PendingFriendRequest[];
+				if (!cancelled) setPendingRequests(data);
+			} catch {
+				// ignore
+			} finally {
+				if (!cancelled) setPendingLoading(false);
+			}
+		};
+
+		void fetchPending();
+		const interval = setInterval(() => { void fetchPending(); }, 30_000);
+		return () => { cancelled = true; clearInterval(interval); };
+	}, [token]);
+
+	const handleAcceptRequest = async (requesterId: string, _login: string): Promise<void> => {
+		if (!token) return;
+		try {
+			const res = await fetch(buildApiUrl(`/users/friends/me/${requesterId}/accept`), {
+				method: 'PATCH',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				setPendingRequests((prev) => prev.filter((r) => r.id !== requesterId));
+			}
+		} catch {
+			// ignore
+		}
+	};
+
+	const handleRejectRequest = async (requesterId: string, _login: string): Promise<void> => {
+		if (!token) return;
+		try {
+			const res = await fetch(buildApiUrl(`/users/friends/me/${requesterId}`), {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				setPendingRequests((prev) => prev.filter((r) => r.id !== requesterId));
+			}
+		} catch {
+			// ignore
 		}
 	};
 
@@ -497,6 +591,10 @@ const ChatPage = () => {
 				selectedChat={selectedChat}
 				onSelectChat={(conversation) => setSelectedChatId(String(conversation.id))}
 				onStartNewConversation={handleStartNewConversation}
+				pendingRequests={pendingRequests}
+				pendingLoading={pendingLoading}
+				onAcceptRequest={handleAcceptRequest}
+				onRejectRequest={handleRejectRequest}
 			/>
 			<ChatWindow
 				selectedChat={selectedChat}

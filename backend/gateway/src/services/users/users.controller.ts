@@ -35,7 +35,7 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, IPostComment, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
@@ -364,6 +364,51 @@ export class UsersController {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			return await this.usersService.createPost(profile.id, dto);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Returns all comments for a post.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('feed/post/:postId/comments')
+	async getPostComments(@Param('postId') postId: string): Promise<IPostComment[]> {
+		try {
+			return await this.usersService.getPostComments(postId);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Adds a comment to a post for the authenticated user.
+	 */
+	@UseGuards(AuthGuard)
+	@Post('feed/post/:postId/comments')
+	async addComment(
+		@Param('postId') postId: string,
+		@Body('content') content: string,
+		@Req() req: any,
+	): Promise<IPostComment> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.addComment(postId, profile.id, content);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Deletes a comment owned by the authenticated user.
+	 */
+	@UseGuards(AuthGuard)
+	@Delete('feed/post/:postId/comments/:commentId')
+	async deleteComment(@Param('commentId') commentId: string, @Req() req: any): Promise<{ deleted: boolean }> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.deleteComment(commentId, profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

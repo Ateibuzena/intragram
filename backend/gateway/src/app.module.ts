@@ -11,6 +11,7 @@ import { GatewayHttpModule } from './common/http/gateway-http.module';
 import { AuthModule } from './services/auth/auth.module';
 import { UsersModule } from './services/users/users.module';
 import { ChatModule } from './services/chat/chat.module';
+import { PresenceModule } from './services/presence/presence.module';
 
 @Module({
 	imports: [
@@ -19,6 +20,7 @@ import { ChatModule } from './services/chat/chat.module';
 		AuthModule,
 		UsersModule,
 		ChatModule,
+		PresenceModule,
 	],
 	controllers: [AppController],
 })

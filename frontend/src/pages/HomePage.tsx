@@ -1,17 +1,26 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { FriendsSidebar } from '@/components/layout/FriendsSidebar';
 import { Feed } from '@/components/feed/Feed';
 import type { FilterKey, NavKey } from '@/types/models';
 import ChatPage from './ChatPage';
 import ProfilePage from './ProfilePage';
-import FriendsPage from './FriendsPage';
 import { useAuth } from '@/hooks/useAuth';
 
-const FULL_SCREEN_NAVS: NavKey[] = ['chat', 'friends'];
+const VALID_NAV_KEYS: NavKey[] = ['home', 'chat', 'profile'];
+const FULL_SCREEN_NAVS: NavKey[] = ['chat'];
 
 const HomePage = () => {
-	const [activeNav, setActiveNav] = useState<NavKey>('home');
+	const [searchParams, setSearchParams] = useSearchParams();
+	const navParam = searchParams.get('nav');
+	const activeNav: NavKey = VALID_NAV_KEYS.includes(navParam as NavKey) ? (navParam as NavKey) : 'home';
+
+	const setActiveNav = (nav: NavKey) => {
+		setSearchParams(nav === 'home' ? {} : { nav }, { replace: true });
+	};
+
 	const [activeFilter, setActiveFilter] = useState<FilterKey>('reciente');
 	const [search, setSearch] = useState('');
 	const { user, profile } = useAuth();
@@ -36,13 +45,23 @@ const HomePage = () => {
 
 				<main className="flex-1 overflow-y-auto min-w-0">
 					{activeNav === 'chat' && <div className="h-full"><ChatPage /></div>}
-					{activeNav !== 'chat' && (
+					{activeNav === 'home' && (
+						<div className="py-4 md:py-6 px-3 md:px-4 flex gap-5 justify-center">
+							<div className="w-full max-w-xl min-w-0">
+								<div className="animate-page-switch">
+									<Feed activeFilter={activeFilter} currentLogin={currentLogin} />
+								</div>
+							</div>
+							<div className="hidden xl:block flex-shrink-0 w-64">
+								<FriendsSidebar />
+							</div>
+						</div>
+					)}
+					{activeNav === 'profile' && (
 						<div className="py-4 md:py-6 px-3 md:px-4">
-							<div className={activeNav === 'home' ? 'max-w-xl mx-auto' : 'w-full'}>
-								<div key={activeNav} className="animate-page-switch">
-									{activeNav === 'home' && <Feed activeFilter={activeFilter} currentLogin={currentLogin} />}
-									{activeNav === 'profile' && <ProfilePage />}
-									{activeNav === 'friends' && <FriendsPage />}
+							<div className="w-full">
+								<div className="animate-page-switch">
+									<ProfilePage />
 								</div>
 							</div>
 						</div>

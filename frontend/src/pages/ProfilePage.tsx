@@ -12,7 +12,6 @@ import {
 	ProjectsCard,
 	ProfileDetails,
 	ProfileStats,
-	ProfilePosts,
 	decodeTokenPayload,
 } from '@/components/profile';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -218,11 +217,7 @@ const ProfilePage = () => {
 					profileStatus={profileStatus}
 				/>
 
-				<h3 className="text-sm font-bold text-ft-cyan uppercase tracking-wide">Mis publicaciones</h3>
 			</section>
-
-			{/* Posts Section */}
-			<ProfilePosts username={profileLogin} />
 
 			{editOpen && profile && (
 				<Modal onClose={closeEditModal} title="Editar perfil">

@@ -83,13 +83,13 @@ Implementar funcionalidades en tiempo real usando WebSockets o tecnología simil
 - Manejar conexión/desconexión de forma correcta.
 - Difusión de mensajes eficiente.
 
-### Interacción entre Usuarios
+### Interacción entre Usuarios ✅
 Permitir que los usuarios interactúen con otros usuarios. Requisitos mínimos:
 - Sistema básico de chat (enviar/recibir mensajes entre usuarios).
 - Sistema de perfil (ver información de usuario).
 - Sistema de amistades (agregar/eliminar amigos, ver lista de amigos).
 
-### API Pública
+### API Pública ✅
 Una API pública para interactuar con la base de datos con API key segura, rate limiting, documentación y al menos 5 endpoints:
 - GET /api/{something}
 - POST /api/{something}

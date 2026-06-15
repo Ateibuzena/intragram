@@ -1,14 +1,32 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
+import { usePresence } from '@/hooks/usePresence';
+import { PresenceContext } from '@/hooks/usePresenceContext';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import TermsPage from '@/pages/TermsPage';
+import UserProfilePage from '@/pages/UserProfilePage';
+
+const PresenceManager = ({ children }: { children: React.ReactNode }) => {
+	const { connected } = usePresence();
+	return (
+		<PresenceContext.Provider value={{ connected }}>
+			{children}
+		</PresenceContext.Provider>
+	);
+};
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const auth = useAuthState();
-	return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+	return (
+		<AuthContext.Provider value={auth}>
+			<PresenceManager>
+				{children}
+			</PresenceManager>
+		</AuthContext.Provider>
+	);
 };
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -61,6 +79,15 @@ const App = () => {
 						element={
 							<ProtectedRoute>
 								<HomePage />
+							</ProtectedRoute>
+						}
+					/>
+
+					<Route
+						path={ROUTES.PROFILE}
+						element={
+							<ProtectedRoute>
+								<UserProfilePage />
 							</ProtectedRoute>
 						}
 					/>

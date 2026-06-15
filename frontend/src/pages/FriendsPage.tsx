@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +29,7 @@ const mapApiFriend = (f: ApiFriend): User => ({
 
 const FriendsPage = () => {
 	const { token } = useAuth();
+	const navigate = useNavigate();
 	const [friends, setFriends] = useState<User[]>([]);
 	const [pendingRequests, setPendingRequests] = useState<User[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -203,11 +205,17 @@ const FriendsPage = () => {
 					<ul className="divide-y divide-ft-border">
 						{pendingRequests.map((requester) => (
 							<li key={requester.id} className="flex items-center gap-3 px-5 py-3.5">
-								<Avatar login={requester.login} imageUrl={requester.avatarUrl} size="md" />
-								<div className="flex-1 min-w-0">
-									<p className="text-sm font-semibold text-white truncate">{requester.login}</p>
-									<p className="text-[10px] text-ft-muted mt-0.5">Quiere ser tu amigo</p>
-								</div>
+								<button
+									type="button"
+									onClick={() => navigate(`/profile/${requester.login}`)}
+									className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+								>
+									<Avatar login={requester.login} imageUrl={requester.avatarUrl} size="md" />
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-semibold text-white truncate">{requester.login}</p>
+										<p className="text-[10px] text-ft-muted mt-0.5">Quiere ser tu amigo</p>
+									</div>
+								</button>
 								<div className="flex gap-2 flex-shrink-0">
 									<Button
 										type="button"
@@ -286,16 +294,22 @@ const FriendsPage = () => {
 					<ul className="divide-y divide-ft-border">
 						{friends.map((friend) => (
 							<li key={friend.id ?? friend.login} className="flex items-center gap-3 px-5 py-3.5 hover:bg-ft-hover transition-colors">
-								<Avatar login={friend.login} imageUrl={friend.avatarUrl} size="md" online={friend.online} />
-								<div className="flex-1 min-w-0">
-									<p className="text-sm font-semibold text-white truncate">{friend.login}</p>
-									<div className="flex items-center gap-2 mt-0.5">
-										<Badge variant="level">CP {friend.level}</Badge>
-										<span className={`text-[10px] px-2 py-0.5 rounded-full border ${friend.online ? 'border-emerald-400/40 text-emerald-300 bg-emerald-500/10' : 'border-ft-border text-ft-muted bg-ft-hover/60'}`}>
-											{friend.online ? 'En línea' : 'Desconectado'}
-										</span>
+								<button
+									type="button"
+									onClick={() => navigate(`/profile/${friend.login}`)}
+									className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+								>
+									<Avatar login={friend.login} imageUrl={friend.avatarUrl} size="md" online={friend.online} />
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-semibold text-white truncate">{friend.login}</p>
+										<div className="flex items-center gap-2 mt-0.5">
+											<Badge variant="level">CP {friend.level}</Badge>
+											<span className={`text-[10px] px-2 py-0.5 rounded-full border ${friend.online ? 'border-emerald-400/40 text-emerald-300 bg-emerald-500/10' : 'border-ft-border text-ft-muted bg-ft-hover/60'}`}>
+												{friend.online ? 'En línea' : 'Desconectado'}
+											</span>
+										</div>
 									</div>
-								</div>
+								</button>
 								<Button
 									type="button"
 									variant="ghost"

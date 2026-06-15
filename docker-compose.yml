@@ -28,7 +28,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=15d
-      - --web.external-url=https://localhost:8443/prometheus/
+      - --web.external-url=https://3dlstf65-8443.uks1.devtunnels.ms/prometheus/
       - --web.route-prefix=/
     volumes:
       - prometheus-data:/prometheus
@@ -51,7 +51,7 @@ services:
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
-      - --web.external-url=https://localhost:8443/alertmanager/
+      - --web.external-url=https://3dlstf65-8443.uks1.devtunnels.ms/alertmanager/
       - --web.route-prefix=/
     volumes:
       - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml.template:ro
@@ -119,7 +119,7 @@ services:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
       GF_SERVER_DOMAIN: localhost
-      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
+      GF_SERVER_ROOT_URL: https://3dlstf65-8443.uks1.devtunnels.ms/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_SERVER_ENFORCE_DOMAIN: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "false"

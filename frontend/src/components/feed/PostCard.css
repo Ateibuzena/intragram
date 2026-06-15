@@ -25,7 +25,3 @@
 .post-action-btn--comment {
 	@apply text-ft-muted hover:text-ft-cyan hover:bg-ft-cyan/5 hover:border-ft-cyan/20 border-transparent;
 }
-
-.post-action-btn--share {
-	@apply text-ft-muted hover:text-white hover:bg-ft-hover hover:border-ft-border border-transparent;
-}

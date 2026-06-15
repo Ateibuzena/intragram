@@ -5,7 +5,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
 
@@ -274,6 +274,62 @@ export class UsersService {
 			});
 		} catch (error) {
 			this.handleHttpError(error, 'eliminar amigo');
+		}
+	}
+
+	/**
+	 * Returns all comments for a post.
+	 */
+	async getPostComments(postId: string): Promise<IPostComment[]> {
+		try {
+			return await this.httpClient.get<IPostComment[]>(`${this.usersBaseUrl}/feed/post/${postId}/comments`, { timeoutMs: 5000 });
+		} catch (error) {
+			this.handleHttpError(error, 'get comments');
+		}
+	}
+
+	/**
+	 * Updates the online/offline presence status for a user.
+	 * Non-critical — errors are silently ignored.
+	 */
+	async setPresence(userId: string, active: boolean): Promise<void> {
+		try {
+			await this.httpClient.patch<void, { active: boolean }>(
+				`${this.usersBaseUrl}/users/${userId}/presence`,
+				{ active },
+				{ timeoutMs: 3000, retries: 0 },
+			);
+		} catch {
+			// Presence is non-critical; ignore failures.
+		}
+	}
+
+	/**
+	 * Adds a comment to a post.
+	 */
+	async addComment(postId: string, userId: string, content: string): Promise<IPostComment> {
+		try {
+			return await this.httpClient.post<IPostComment, { authorId: string; content: string }>(
+				`${this.usersBaseUrl}/feed/post/${postId}/comments`,
+				{ authorId: userId, content },
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'add comment');
+		}
+	}
+
+	/**
+	 * Deletes a comment by its owner.
+	 */
+	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
+		try {
+			return await this.httpClient.delete<{ deleted: boolean }>(
+				`${this.usersBaseUrl}/feed/post/comments/${commentId}/by/${userId}`,
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'delete comment');
 		}
 	}
 

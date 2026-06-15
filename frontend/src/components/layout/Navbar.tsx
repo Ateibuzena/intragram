@@ -1,7 +1,6 @@
 import './Navbar.css';
 import { useEffect, useRef, useState } from 'react';
 import type { NavKey } from '@/types/models';
-import { Badge } from '@/components/ui/Badge';
 import { NavIcon } from './NavIcon';
 import { LogOutIcon } from './LogOutIcon';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,12 +18,11 @@ type UserSearchResult = {
 const NAV_ITEMS: { key: NavKey; label: string }[] = [
 	{ key: 'home', label: 'Home' },
 	{ key: 'chat', label: 'Chat' },
-	{ key: 'friends', label: 'Friends' },
 	{ key: 'profile', label: 'Profile' },
 ];
 
 interface NavbarProps {
-	activeNav: NavKey;
+	activeNav: NavKey | null;
 	setActiveNav: (nav: NavKey) => void;
 	search: string;
 	setSearch: (s: string) => void;
@@ -36,7 +34,6 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	const displayLogin = profile?.login || user?.username || '';
 	const displayName = profile?.display_name || user?.display_name || displayLogin;
 	const avatarLetter = (displayName || displayLogin || '?').charAt(0).toUpperCase();
-	const levelLabel = profile ? `CP ${profile.correction_point}` : undefined;
 
 	const [results, setResults] = useState<UserSearchResult[]>([]);
 	const [searching, setSearching] = useState(false);
@@ -87,9 +84,10 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	};
 
 	const handleResultClick = (result: UserSearchResult) => {
-		setSearch(result.login);
+		setSearch('');
 		setDropdownOpen(false);
 		setResults([]);
+		navigate(`/profile/${result.login}`);
 	};
 
 	return (
@@ -175,8 +173,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 						{displayLogin}
 					</span>
 
-					{levelLabel && <Badge variant="level">{levelLabel}</Badge>}
-				</div>
+					</div>
 
 				{/* Bloque logout */}
 				<button

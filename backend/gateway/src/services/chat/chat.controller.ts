@@ -1,20 +1,20 @@
 /**
- * Controlador de chat del gateway.
- * Protege las rutas con AuthGuard y reenvía el contexto del usuario.
- * Redirige las peticiones al chat-service y mantiene el frontend desacoplado.
- * 
+ * Chat controller of the gateway.
+ * Protects routes with AuthGuard and forwards the user context.
+ * Proxies requests to the chat-service and keeps the frontend decoupled.
+ *
  * Endpoints:
- * - GET  /chat/health                           → Health check del chat-service
- * - GET  /chat/conversations                    → Lista conversaciones del usuario
- * - POST /chat/conversations                    → Crea una nueva conversación
- * - GET  /chat/conversations/:id/messages       → Lista mensajes de una conversación
- * - POST /chat/conversations/:id/messages       → Envía un mensaje a una conversación
- * 
- * Seguridad:
- * - Protegido con AuthGuard para validar tokens JWT
- * - Reenvío de contexto de usuario mediante headers personalizados
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
+ * - GET  /chat/health                           → Health check of the chat-service
+ * - GET  /chat/conversations                    → Lists conversations of the user
+ * - POST /chat/conversations                    → Creates a new conversation
+ * - GET  /chat/conversations/:id/messages       → Lists messages of a conversation
+ * - POST /chat/conversations/:id/messages       → Sends a message to a conversation
+ *
+ * Security:
+ * - Protected with AuthGuard for JWT token validation
+ * - Forwarding of user context via custom headers
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
  */
 
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
@@ -33,8 +33,8 @@ export class ChatController {
 	}
 
 	/**
-	 * Health check del chat-service a través del gateway.
-	 * No requiere autenticación; útil para monitorización del API público.
+	 * Health check of the chat-service via the gateway.
+	 * Does not require authentication; useful for monitoring the public API.
 	 */
 	@Get('health')
 	@UseGuards(PublicRateLimitGuard)
@@ -44,7 +44,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Lista las conversaciones del usuario autenticado.
+	 * Lists the conversations of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('conversations')
@@ -53,7 +53,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Crea una nueva conversación.
+	 * Creates a new conversation.
 	 */
 	@UseGuards(AuthGuard)
 	@Post('conversations')
@@ -62,7 +62,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Devuelve el historial de mensajes de una conversación.
+	 * Returns the message history of a conversation.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('conversations/:conversationId/messages')
@@ -71,7 +71,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Envía un mensaje a una conversación.
+	 * Sends a message to a conversation.
 	 */
 	@UseGuards(AuthGuard)
 	@Post('conversations/:conversationId/messages')

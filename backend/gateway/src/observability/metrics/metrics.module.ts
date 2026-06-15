@@ -1,6 +1,6 @@
 /**
- * Módulo de métricas del gateway.
- * Expone el servicio compartido para observabilidad Prometheus.
+ * Metrics module of the gateway.
+ * Exposes the shared service for Prometheus observability.
  */
 
 import { Module } from '@nestjs/common';

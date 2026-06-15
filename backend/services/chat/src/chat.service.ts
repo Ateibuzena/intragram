@@ -1,13 +1,13 @@
 /**
- * Servicio de chat en memoria para intragram.
- * Logica de negocio para manejar conversaciones y mensajes entre usuarios.
- * 
- * Funcionalidades:
- * - Health check del servicio
- * - Listar conversaciones de un usuario
- * - Crear conversación entre dos usuarios
- * - Listar mensajes de una conversación
- * - Enviar mensaje a una conversación
+ * In-memory chat service for Intragram.
+ * Business logic for managing conversations and messages between users.
+ *
+ * Features:
+ * - Service health check
+ * - List conversations of a user
+ * - Create a conversation between two users
+ * - List messages of a conversation
+ * - Send a message to a conversation
  */
 
 import { Injectable } from '@nestjs/common';
@@ -21,7 +21,7 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 
 @Injectable()
 export class ChatService {
-	// Estado efímero de usuarios conectados (podría migrarse a otro mecanismo más adelante).
+	// Ephemeral state of connected users (could be migrated to another mechanism later).
 	private readonly connectedUsers = new Set<string>();
 
 	constructor(
@@ -32,24 +32,24 @@ export class ChatService {
 	) {}
 
 	/**
-	 * Devuelve la lista de usuarios conectados.
+	 * Returns the list of connected users.
 	 */
 	getConnectedUsers(): string[] {
 		return [...this.connectedUsers];
 	}
 
 	/**
-	 * Health check del servicio.
+	 * Service health check.
 	 */
 	getHealth(): HealthResponse {
 		return createHealthResponse('chat');
 	}
 
 	/**
-	 * Lista las conversaciones accesibles para el usuario autenticado.
+	 * Lists the conversations accessible to the authenticated user.
 	 *
-	 * Usa un QueryBuilder porque `participants` es un array de texto en PostgreSQL
-	 * y necesitamos el operador `ANY` para comprobar pertenencia.
+	 * Uses a QueryBuilder because `participants` is a text array in PostgreSQL
+	 * and we need the `ANY` operator to check membership.
 	 */
 	async getConversations(userId: string): Promise<ChatConversationEntity[]> {
 		this.assertUser(userId);
@@ -61,7 +61,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Crea o reutiliza una conversación entre dos participantes.
+	 * Creates or reuses a conversation between two participants.
 	 */
 	async createConversation(userId: string, dto: CreateConversationDto) {
 		this.assertUser(userId);
@@ -97,7 +97,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Devuelve el historial de mensajes de una conversación accesible.
+	 * Returns the message history of an accessible conversation.
 	 */
 	async getMessages(userId: string, conversationId: string): Promise<ChatMessageEntity[]> {
 		const conversation = await this.getAccessibleConversation(userId, conversationId);
@@ -108,7 +108,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Agrega un mensaje a la conversación y actualiza el resumen.
+	 * Adds a message to the conversation and updates the summary.
 	 */
 	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
 		if (!dto.message?.trim()) {
@@ -137,7 +137,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Valida que la conversación exista y que el usuario forme parte de ella.
+	 * Validates that the conversation exists and that the user is part of it.
 	 */
 	private async getAccessibleConversation(userId: string, conversationId: string) {
 		this.assertUser(userId);
@@ -155,7 +155,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Valida que el id de usuario no venga vacío.
+	 * Validates that the user id is not empty.
 	 */
 	private assertUser(userId: string) {
 		if (!userId || !userId.trim()) {
@@ -164,7 +164,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Valida que el receptor venga informado.
+	 * Validates that the recipient is provided.
 	 */
 	private assertRecipient(recipientId: string) {
 		if (!recipientId || !recipientId.trim()) {

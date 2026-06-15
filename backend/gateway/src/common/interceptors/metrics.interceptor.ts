@@ -1,6 +1,6 @@
 /**
- * Interceptor de métricas HTTP.
- * Registra duración, conteo de requests y usuarios activos sin exponer PII.
+ * HTTP metrics interceptor.
+ * Records request duration, request count and active users without exposing PII.
  */
 
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';

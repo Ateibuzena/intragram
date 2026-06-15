@@ -1,6 +1,6 @@
 /**
- * Punto de arranque del chat-service.
- * Configura validación global y arranca el servidor HTTP.
+ * Entry point of the chat-service.
+ * Configures global validation and starts the HTTP server.
  */
 
 import { ValidationPipe } from '@nestjs/common';

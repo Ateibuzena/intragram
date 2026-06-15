@@ -1,6 +1,6 @@
 /**
- * Servicio de Chat del Gateway
- * Reenvía operaciones al chat-service y normaliza sus respuestas.
+ * Chat Service of the Gateway
+ * Forwards operations to the chat-service and normalises its responses.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -19,13 +19,13 @@ import { HealthResponse } from '@intragram/shared/health';
 
 @Injectable()
 export class ChatService {
-	// URL base del microservicio de chat.
+	// Base URL of the chat microservice.
 	private readonly chatBaseUrl = SERVICE_URLS.chat;
 
 	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
 	/**
-	 * Obtiene el health del chat-service.
+	 * Gets the health of the chat-service.
 	 */
 	async getHealth(): Promise<HealthResponse> {
 		try {
@@ -36,7 +36,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Lista conversaciones visibles para el usuario autenticado.
+	 * Lists conversations visible to the authenticated user.
 	 */
 	async getConversations(userId: string): Promise<ChatConversation[]> {
 		try {
@@ -50,7 +50,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Crea una conversación en el chat-service.
+	 * Creates a conversation in the chat-service.
 	 */
 	async createConversation(userId: string, dto: CreateConversationDto): Promise<CreateConversationResponse> {
 		try {
@@ -68,7 +68,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Obtiene los mensajes de una conversación.
+	 * Gets the messages of a conversation.
 	 */
 	async getMessages(userId: string, conversationId: string): Promise<ChatMessage[]> {
 		try {
@@ -82,7 +82,7 @@ export class ChatService {
 	}
 
 	/**
-	 * Envía un mensaje a una conversación existente.
+	 * Sends a message to an existing conversation.
 	 */
 	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto): Promise<SendMessageResponse> {
 		try {
@@ -97,14 +97,14 @@ export class ChatService {
 	}
 
 	/**
-	 * Construye las cabeceras internas con el id de usuario.
+	 * Builds the internal headers with the user id.
 	 */
 	private buildUserHeaders(userId: string) {
 		return { 'x-user-id': userId };
 	}
 
 	/**
-	 * Normaliza las respuestas de error HTTP del chat-service.
+	 * Normalises HTTP error responses from the chat-service.
 	 */
 	private handleHttpError(error: unknown, action: string): never {
 		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;

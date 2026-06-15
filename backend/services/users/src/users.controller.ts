@@ -1,20 +1,20 @@
 /**
- * Controlador de usuarios del users-service.
- * Expone endpoints para gestión de perfiles y sincronización con OAuth42.
- * Maneja errores con HttpException y códigos HTTP adecuados.
- 
+ * Users controller of the users-service.
+ * Exposes endpoints for profile management and synchronisation with OAuth42.
+ * Handles errors with HttpException and appropriate HTTP codes.
+
  * Endpoints:
- * - POST /users/oauth/42/upsert → Crea o actualiza perfil desde OAuth42
- * - GET  /users/:id           → Busca perfil por ID interno
- * - GET  /users/42/:fortyTwoId → Busca perfil por ID de 42
- * - GET  /users/login/:login   → Busca perfil por login
- * - PATCH /users/:id/profile   → Actualiza campos editables del perfil
- * - GET  /health               → Health check para Docker
- * 
- * Seguridad:
- * - Validación de datos con DTOs y pipes de NestJS
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
+ * - POST /users/oauth/42/upsert → Creates or updates profile from OAuth42
+ * - GET  /users/:id           → Looks up profile by internal ID
+ * - GET  /users/42/:fortyTwoId → Looks up profile by 42 ID
+ * - GET  /users/login/:login   → Looks up profile by login
+ * - PATCH /users/:id/profile   → Updates editable profile fields
+ * - GET  /health               → Health check for Docker
+ *
+ * Security:
+ * - Data validation with DTOs and NestJS pipes
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
  */
 
 import {
@@ -40,7 +40,7 @@ export class UsersController {
 	constructor(private readonly usersService: UsersService) { }
 
 	/**
-	 * Crea o actualiza el perfil local a partir de OAuth42.
+	 * Creates or updates the local profile from OAuth42.
 	 */
 	@Post('users/oauth/42/upsert')
 	@HttpCode(HttpStatus.OK)
@@ -56,11 +56,11 @@ export class UsersController {
 	}
 
 	/**
-	 * Refresca el perfil de un usuario desde la API de 42.
-	 * 
-	 * Requiere:
-	 * - user_id: ID interno del usuario
-	 * - access_token (query param): Access token válido de OAuth42
+	 * Refreshes a user's profile from the 42 API.
+	 *
+	 * Requires:
+	 * - user_id: Internal user ID
+	 * - access_token (query param): Valid OAuth42 access token
 	 */
 	@Patch('users/:id/refresh')
 	@HttpCode(HttpStatus.OK)
@@ -86,7 +86,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca usuarios por login o display_name con limite para no sobrecargar la BBDD.
+	 * Searches users by login or display_name with a limit to avoid overloading the DB.
 	 */
 	@Get('users/search')
 	async searchUsers(
@@ -104,7 +104,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un perfil por su identificador interno.
+	 * Looks up a profile by its internal identifier.
 	 */
 	@Get('users/:id')
 	async findById(@Param('id') id: string) {
@@ -116,7 +116,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un perfil por su id de 42.
+	 * Looks up a profile by its 42 id.
 	 */
 	@Get('users/42/:fortyTwoId')
 	async findBy42Id(@Param('fortyTwoId') fortyTwoId: string) {
@@ -128,7 +128,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un perfil por su login.
+	 * Looks up a profile by its login.
 	 */
 	@Get('users/login/:login')
 	async findByLogin(@Param('login') login: string) {
@@ -140,7 +140,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Actualiza los campos editables del perfil local.
+	 * Updates the editable fields of the local profile.
 	 */
 	@Patch('users/:id/profile')
 	async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto) {
@@ -155,7 +155,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Health check del users-service.
+	 * Health check of the users-service.
 	 */
 	@Get('health')
 	async health() {
@@ -163,7 +163,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed "Reciente" personalizado del usuario.
+	 * Returns the user's personalised "Recent" feed.
 	 */
 	@Get('feed/recent/:id')
 	async getRecentFeed(@Param('id') id: string) {
@@ -171,7 +171,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve las publicaciones del propio usuario.
+	 * Returns the user's own posts.
 	 */
 	@Get('feed/user/:id')
 	async getUserFeed(@Param('id') id: string) {
@@ -179,7 +179,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Crea una nueva publicacion para el usuario indicado.
+	 * Creates a new post for the specified user.
 	 */
 	@Post('feed/user/:id')
 	async createUserPost(@Param('id') id: string, @Body() dto: CreateFeedPostDto) {
@@ -187,7 +187,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve publicaciones de amigos de un usuario.
+	 * Returns posts from a user's friends.
 	 */
 	@Get('feed/friends/:id')
 	async getFriendsFeed(@Param('id') id: string) {
@@ -195,7 +195,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed de "Tendencias" para un usuario (sin incluir sus propios posts).
+	 * Returns the "Trending" feed for a user (excluding their own posts).
 	 */
 	@Get('feed/trending/:id')
 	async getTrendingFeed(@Param('id') id: string) {
@@ -203,7 +203,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed de posts guardados (favoritos) de un usuario.
+	 * Returns the feed of saved (favourite) posts of a user.
 	 */
 	@Get('feed/favorites/:id')
 	async getFavoritesFeed(@Param('id') id: string) {
@@ -211,7 +211,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Alterna el estado de guardado de un post para un usuario.
+	 * Toggles the saved state of a post for a user.
 	 */
 	@Post('feed/favorites/:id')
 	async toggleFavorite(
@@ -223,7 +223,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve la lista de amigos aceptados de un usuario.
+	 * Returns the list of accepted friends of a user.
 	 */
 	@Get('friends/:id')
 	async getFriends(@Param('id') id: string) {
@@ -231,7 +231,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Agrega un amigo al usuario indicado (crea solicitud pending o acepta la inversa).
+	 * Adds a friend to the specified user (creates a pending request or accepts the incoming one).
 	 */
 	@Post('friends/:id')
 	async addFriend(@Param('id') id: string, @Body() dto: CreateFriendDto) {
@@ -247,7 +247,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Elimina una amistad del usuario indicado.
+	 * Removes a friendship from the specified user.
 	 */
 	@Delete('friends/:id/:friendId')
 	async removeFriend(@Param('id') id: string, @Param('friendId') friendId: string) {
@@ -262,7 +262,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve los perfiles de usuarios con solicitudes de amistad pendientes hacia userId.
+	 * Returns profiles of users with pending friend requests towards userId.
 	 */
 	@Get('friends/pending/:id')
 	async getPendingFriendRequests(@Param('id') id: string) {
@@ -270,7 +270,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Acepta una solicitud de amistad pendiente de requesterId hacia id.
+	 * Accepts a pending friend request from requesterId to id.
 	 */
 	@Patch('friends/:id/accept/:requesterId')
 	async acceptFriendRequest(@Param('id') id: string, @Param('requesterId') requesterId: string) {
@@ -285,7 +285,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Alterna el like de un usuario en un post.
+	 * Toggles a user's like on a post.
 	 */
 	@Post('feed/like/:id')
 	async toggleLike(@Param('id') id: string, @Body('postId') postId: string) {

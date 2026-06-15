@@ -1,6 +1,6 @@
 /**
- * Servicio de logging del gateway.
- * Mantiene un contrato mínimo y evita registrar datos sensibles.
+ * Logging service of the gateway.
+ * Maintains a minimal contract and avoids logging sensitive data.
  */
 
 import { Injectable, LoggerService } from '@nestjs/common';

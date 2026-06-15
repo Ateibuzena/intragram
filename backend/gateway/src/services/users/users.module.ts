@@ -1,10 +1,10 @@
 /**
- * Módulo de Usuarios del Gateway
- * Configura la integración del gateway con el microservicio de usuarios
- * Define la integración HTTP para comunicación con el servicio Users
- * Importa UsersController y UsersService
- * Protege las rutas con AuthGuard y reenvía el contexto del usuario.
- * Redirige las peticiones al users-service y mantiene el frontend desacoplado.
+ * Users Module of the Gateway
+ * Configures the gateway's integration with the users microservice
+ * Defines the HTTP integration for communication with the Users service
+ * Imports UsersController and UsersService
+ * Protects routes with AuthGuard and forwards the user context.
+ * Proxies requests to the users-service and keeps the frontend decoupled.
  */
 
 import { Module } from '@nestjs/common';

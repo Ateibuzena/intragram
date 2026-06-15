@@ -1,6 +1,6 @@
 /**
- * Módulo principal del auth-service.
- * Configura TypeORM, controladores y servicios de autenticación.
+ * Main module of the auth-service.
+ * Configures TypeORM, controllers, and authentication services.
  */
 
 import { Module } from '@nestjs/common';

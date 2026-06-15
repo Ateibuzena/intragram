@@ -1,6 +1,6 @@
 /**
- * Punto de arranque del gateway.
- * Configura validación global, métricas e interceptores de CORS.
+ * Entry point of the gateway.
+ * Configures global validation, metrics, and CORS interceptors.
  */
 
 import { NestFactory } from '@nestjs/core';

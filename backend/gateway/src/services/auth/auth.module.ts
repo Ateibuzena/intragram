@@ -1,8 +1,8 @@
 /**
- * Módulo de Autenticación del Gateway
- * Configura la integración del gateway con el microservicio de autenticación
- * Define la integración HTTP para comunicación con el servicio Auth
- * Importa AuthController y AuthService
+ * Authentication Module of the Gateway
+ * Configures the gateway's integration with the authentication microservice
+ * Defines the HTTP integration for communication with the Auth service
+ * Imports AuthController and AuthService
  */
 
 import { Module } from '@nestjs/common';
@@ -14,6 +14,6 @@ import { AuthService } from './auth.service';
 	imports: [HttpModule],
 	controllers: [AuthController],
 	providers: [AuthService],
-	exports: [AuthService], // Exportar para usar en guards de otros módulos
+	exports: [AuthService], // Export for use in guards of other modules
 })
 export class AuthModule {}

@@ -1,6 +1,6 @@
 /**
- * Servicio de Usuarios del Gateway
- * Reenvía operaciones al users-service y normaliza sus respuestas.
+ * Users Service of the Gateway
+ * Forwards operations to the users-service and normalises its responses.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -11,13 +11,13 @@ import { GatewayHttpClientService } from '../../common/http/gateway-http.client'
 
 @Injectable()
 export class UsersService {
-	// URL base del microservicio de usuarios.
+	// Base URL of the users microservice.
 	private readonly usersBaseUrl = SERVICE_URLS.users;
 
 	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
 	/**
-	 * Reenvía el upsert OAuth42 al users-service.
+	 * Forwards the OAuth42 upsert to the users-service.
 	 */
 	async upsertOAuth42User(dto: UpsertOAuth42UserDto): Promise<IUserProfile> {
 		try {
@@ -32,7 +32,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por id interno.
+	 * Looks up a user by internal id.
 	 */
 	async findById(id: string): Promise<IUserProfile> {
 		try {
@@ -43,7 +43,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por id de 42.
+	 * Looks up a user by 42 id.
 	 */
 	async findBy42Id(fortyTwoId: number): Promise<IUserProfile> {
 		try {
@@ -54,7 +54,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por login.
+	 * Looks up a user by login.
 	 */
 	async findByLogin(login: string): Promise<IUserProfile> {
 		try {
@@ -65,7 +65,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca usuarios por texto libre (login/display_name) con limite.
+	 * Searches users by free text (login/display_name) with a limit.
 	 */
 	async searchUsers(query: string, limit = 20): Promise<IUserProfile[]> {
 		try {
@@ -79,7 +79,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Actualiza el perfil editable del usuario.
+	 * Updates the editable profile of the user.
 	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<IUserProfile> {
 		try {
@@ -94,7 +94,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Refresca el perfil de un usuario desde la API de 42.
+	 * Refreshes a user's profile from the 42 API.
 	 */
 	async refreshProfileFromOAuth42(userId: string, oauth42AccessToken: string): Promise<IUserProfile> {
 		try {
@@ -112,7 +112,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed "Reciente" personalizado del usuario.
+	 * Returns the user's personalised "Recent" feed.
 	 */
 	async getRecentFeed(userId: string): Promise<IFeedPost[]> {
 		try {
@@ -123,7 +123,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed personal del usuario autenticado.
+	 * Returns the personal feed of the authenticated user.
 	 */
 	async getMyFeed(userId: string): Promise<IFeedPost[]> {
 		try {
@@ -134,7 +134,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed de amigos del usuario autenticado.
+	 * Returns the friends feed of the authenticated user.
 	 */
 	async getFriendsFeed(userId: string): Promise<IFeedPost[]> {
 		try {
@@ -145,7 +145,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed de "Tendencias" del usuario autenticado (sin incluir sus propios posts).
+	 * Returns the "Trending" feed of the authenticated user (excluding their own posts).
 	 */
 	async getTrendingFeed(userId: string): Promise<IFeedPost[]> {
 		try {
@@ -156,7 +156,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed de posts guardados (favoritos) del usuario autenticado.
+	 * Returns the saved (favourite) posts feed of the authenticated user.
 	 */
 	async getFavoritesFeed(userId: string): Promise<IFeedPost[]> {
 		try {
@@ -167,7 +167,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Alterna el estado de guardado de un post para el usuario autenticado.
+	 * Toggles the saved state of a post for the authenticated user.
 	 */
 	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
 		try {
@@ -183,7 +183,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Crea una nueva publicacion para el usuario autenticado.
+	 * Creates a new post for the authenticated user.
 	 */
 	async createPost(userId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
 		try {
@@ -198,7 +198,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve la lista de amigos del usuario autenticado.
+	 * Returns the list of friends of the authenticated user.
 	 */
 	async getFriends(userId: string): Promise<IUserProfile[]> {
 		try {
@@ -209,7 +209,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Agrega un amigo para el usuario autenticado (solicitud pending o aceptación automática).
+	 * Adds a friend for the authenticated user (pending request or automatic acceptance).
 	 */
 	async addFriend(userId: string, dto: CreateFriendDto): Promise<{ status: 'pending' | 'accepted'; friend: IUserProfile }> {
 		try {
@@ -224,7 +224,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve solicitudes de amistad pendientes entrantes del usuario.
+	 * Returns incoming pending friend requests for the user.
 	 */
 	async getPendingFriendRequests(userId: string): Promise<IUserProfile[]> {
 		try {
@@ -235,7 +235,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Acepta una solicitud de amistad pendiente.
+	 * Accepts a pending friend request.
 	 */
 	async acceptFriendRequest(userId: string, requesterId: string): Promise<IUserProfile> {
 		try {
@@ -250,7 +250,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Alterna el like del usuario autenticado en un post.
+	 * Toggles the like of the authenticated user on a post.
 	 */
 	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
 		try {
@@ -265,7 +265,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Elimina una amistad del usuario autenticado.
+	 * Removes a friendship from the authenticated user.
 	 */
 	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
 		try {
@@ -278,7 +278,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Normaliza las respuestas de error HTTP del users-service.
+	 * Normalises HTTP error responses from the users-service.
 	 */
 	private handleHttpError(error: unknown, action: string): never {
 		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;

@@ -1,21 +1,21 @@
 /**
- * Controlador de usuarios del gateway.
- * Expone rutas para sincronizar perfiles desde OAuth42 y consultar perfiles.
- * Protege las rutas de consulta con AuthGuard para asegurar que solo usuarios autenticados puedan acceder.
+ * Users controller of the gateway.
+ * Exposes routes for synchronising profiles from OAuth42 and querying profiles.
+ * Protects query routes with AuthGuard to ensure only authenticated users can access them.
  *
  * Endpoints:
- * - POST   /users/oauth/42/upsert        → Crea o actualiza perfil a partir de OAuth42
- * - PATCH  /users/:id/refresh-profile    → Refresca perfil desde API de 42 (requiere access_token)
- * - GET    /users/:id                    → Busca perfil por ID interno
- * - GET    /users/42/:fortyTwoId         → Busca perfil por ID de 42
- * - GET    /users/login/:login           → Busca perfil por login normalizado
- * - PATCH  /users/:id/profile            → Actualiza campos editables del perfil (solo propio)
- * 
- * Seguridad:
- * - Validación de datos con DTOs y pipes de NestJS
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
- */ 
+ * - POST   /users/oauth/42/upsert        → Creates or updates profile from OAuth42
+ * - PATCH  /users/:id/refresh-profile    → Refreshes profile from 42 API (requires access_token)
+ * - GET    /users/:id                    → Looks up profile by internal ID
+ * - GET    /users/42/:fortyTwoId         → Looks up profile by 42 ID
+ * - GET    /users/login/:login           → Looks up profile by normalised login
+ * - PATCH  /users/:id/profile            → Updates editable profile fields (own profile only)
+ *
+ * Security:
+ * - Data validation with DTOs and NestJS pipes
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
+ */
 
 import {
 	Body,
@@ -62,7 +62,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Crea o actualiza el usuario local a partir del perfil OAuth42 recibido.
+	 * Creates or updates the local user from the received OAuth42 profile.
 	 */
 	@Post('oauth/42/upsert')
 	@UseGuards(PublicRateLimitGuard)
@@ -79,7 +79,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un usuario por su id de 42.
+	 * Looks up a user by their 42 id.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('42/:fortyTwoId')
@@ -92,7 +92,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un usuario por su login normalizado.
+	 * Looks up a user by their normalised login.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('login/:login')
@@ -105,7 +105,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca usuarios por login/display_name con límite de resultados.
+	 * Searches users by login/display_name with a result limit.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('search')
@@ -121,7 +121,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Actualiza solo los campos editables del propio perfil del usuario autenticado.
+	 * Updates only the editable fields of the authenticated user's own profile.
 	 */
 	@UseGuards(AuthGuard)
 	@Patch(':id/profile')
@@ -142,14 +142,14 @@ export class UsersController {
 	}
 
 	/**
-	 * Refresca el perfil de un usuario desde la API de 42.
-	 * 
-	 * Soporta dos formas:
-	 * - PATCH /users/me/refresh-profile (usa el usuario autenticado)
-	 * - PATCH /users/:id/refresh-profile (usa el ID especificado, solo el propietario)
-	 * 
+	 * Refreshes a user's profile from the 42 API.
+	 *
+	 * Supports two forms:
+	 * - PATCH /users/me/refresh-profile (uses the authenticated user)
+	 * - PATCH /users/:id/refresh-profile (uses the specified ID, owner only)
+	 *
 	 * Query params:
-	 * - access_token: Access token válido de OAuth42
+	 * - access_token: Valid OAuth42 access token
 	 */
 	@UseGuards(AuthGuard)
 	@Patch(':id/refresh-profile')
@@ -158,7 +158,7 @@ export class UsersController {
 		@Query('access_token') accessToken: string,
 		@Req() req: any,
 	): Promise<IUserProfile> {
-		// Solo permitir refrescar el propio perfil o si se usa "me"
+		// Only allow refreshing the own profile or when "me" is used
 		const authenticatedProfileId = await this.resolveAuthenticatedProfileId(req);
 		if (id !== 'me' && authenticatedProfileId !== id) {
 			throw new ForbiddenException('You can only refresh your own profile');
@@ -187,7 +187,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed "Reciente" del usuario autenticado.
+	 * Returns the "Recent" feed of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed')
@@ -201,7 +201,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed del usuario autenticado ("Mi perfil").
+	 * Returns the authenticated user's own feed ("My profile").
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed/me')
@@ -215,7 +215,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve publicaciones de amigos del usuario autenticado.
+	 * Returns posts from the authenticated user's friends.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed/friends')
@@ -229,7 +229,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed de "Tendencias" del usuario autenticado.
+	 * Returns the "Trending" feed of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed/trending')
@@ -243,7 +243,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve el feed de posts guardados (favoritos) del usuario autenticado.
+	 * Returns the saved (favourite) posts feed of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('feed/favorites')
@@ -257,7 +257,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Alterna el estado de favorito de un post del usuario autenticado.
+	 * Toggles the favourite state of a post for the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Post('feed/favorites/:postId')
@@ -272,7 +272,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve la lista de amigos aceptados del usuario autenticado.
+	 * Returns the list of accepted friends of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('friends/me')
@@ -286,7 +286,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Elimina un amigo del usuario autenticado.
+	 * Removes a friend from the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Delete('friends/me/:friendId')
@@ -300,7 +300,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Agrega un amigo para el usuario autenticado (devuelve status pending o accepted).
+	 * Adds a friend for the authenticated user (returns status pending or accepted).
 	 */
 	@UseGuards(AuthGuard)
 	@Post('friends/me')
@@ -314,7 +314,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Devuelve solicitudes de amistad pendientes entrantes del usuario autenticado.
+	 * Returns incoming pending friend requests for the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Get('friends/pending')
@@ -328,7 +328,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Acepta una solicitud de amistad pendiente del usuario indicado.
+	 * Accepts a pending friend request from the specified user.
 	 */
 	@UseGuards(AuthGuard)
 	@Patch('friends/me/:requesterId/accept')
@@ -342,7 +342,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Alterna el like del usuario autenticado en un post.
+	 * Toggles the like of the authenticated user on a post.
 	 */
 	@UseGuards(AuthGuard)
 	@Post('feed/like/:postId')
@@ -356,7 +356,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Crea una nueva publicacion en el feed del usuario autenticado.
+	 * Creates a new post in the feed of the authenticated user.
 	 */
 	@UseGuards(AuthGuard)
 	@Post('feed')
@@ -370,7 +370,7 @@ export class UsersController {
 	}
 
 	/**
-	 * Busca un usuario por su identificador interno.
+	 * Looks up a user by their internal identifier.
 	 */
 	@UseGuards(AuthGuard)
 	@Get(':id')

@@ -1,6 +1,6 @@
 /**
- * Controlador raíz del gateway.
- * Expone endpoints globales de salud, agregación de salud y métricas.
+ * Root controller of the gateway.
+ * Exposes global health, health aggregation, and metrics endpoints.
  */
 
 import { Controller, Get, Res } from '@nestjs/common';

@@ -59,8 +59,8 @@ const ProfilePage = () => {
 	const profileLogin = profile?.login ?? fallbackLogin;
 	const displayName = profile?.display_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profileLogin;
 	const profileInitial = displayName.charAt(0).toUpperCase();
-	// chat_user_id es el ID de perfil del usuario autenticado almacenado en el JWT.
-	// Si no está presente, no se puede verificar ownership y no se permite editar.
+	// chat_user_id is the authenticated user's profile ID stored in the JWT.
+	// If not present, ownership cannot be verified and editing is not allowed.
 	const canonicalProfileId = tokenPayload?.chat_user_id ?? null;
 	const canEditProfile = Boolean(
 		profile && token && canonicalProfileId && profile.id === canonicalProfileId,
@@ -172,7 +172,7 @@ const ProfilePage = () => {
 				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
 					{/* Left column: Profile Picture + Common Core Progress + Titles */}
 					<div className="flex flex-col gap-3 xl:h-[34rem]">
-						{/* Profile Header — crece para igualar la altura de Skills y Projects */}
+						{/* Profile Header — grows to match the height of Skills and Projects */}
 						<div className="flex-1 min-h-0">
 							<ProfileHeader
 								profile={profile}

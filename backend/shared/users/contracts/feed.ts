@@ -21,12 +21,12 @@ export interface IFeedPost {
 	updated_at: string;
 	author: IFeedPostAuthorSummary;
 	/**
-	 * Indica si el usuario autenticado ha guardado este post como favorito.
-	 * Opcional para mantener compatibilidad con feeds que no dependen del usuario.
+	 * Indicates whether the authenticated user has saved this post as a favourite.
+	 * Optional to maintain compatibility with feeds that do not depend on the user.
 	 */
 	saved_by_current_user?: boolean;
 	/**
-	 * Indica si el usuario autenticado ha dado like a este post.
+	 * Indicates whether the authenticated user has liked this post.
 	 */
 	liked_by_current_user?: boolean;
 }

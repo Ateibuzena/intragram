@@ -1,6 +1,6 @@
 /**
- * Entidad de publicación del feed de Intragram.
- * Relacionada con el perfil de usuario del users-service.
+ * Feed post entity of Intragram.
+ * Related to the user profile of the users-service.
  */
 
 import {

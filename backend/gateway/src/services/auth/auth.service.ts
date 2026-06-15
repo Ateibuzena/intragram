@@ -1,6 +1,6 @@
 /**
- * Servicio de autenticación del gateway.
- * Reenvía operaciones al auth-service y normaliza sus respuestas.
+ * Authentication service of the gateway.
+ * Forwards operations to the auth-service and normalises its responses.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -16,7 +16,7 @@ export class AuthService {
 	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
 	/**
-	 * Reenvía el registro al auth-service.
+	 * Forwards the registration to the auth-service.
 	 */
 	async register(registerDto: RegisterDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -37,7 +37,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Reenvía el login al auth-service.
+	 * Forwards the login to the auth-service.
 	 */
 	async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -58,7 +58,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Reenvía la renovación de tokens al auth-service.
+	 * Forwards the token renewal to the auth-service.
 	 */
 	async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -79,7 +79,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Reenvía el logout al auth-service.
+	 * Forwards the logout to the auth-service.
 	 */
 	async logout(refreshToken: string): Promise<{ message: string }> {
 		try {
@@ -94,7 +94,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Valida un access token para uso interno del gateway.
+	 * Validates an access token for internal gateway use.
 	 */
 	async validateToken(accessToken: string): Promise<TokenValidationResult> {
 		try {
@@ -109,7 +109,7 @@ export class AuthService {
 	}
 	
 	/**
-	 * Obtiene la URL de autorización OAuth 42.
+	 * Gets the OAuth 42 authorisation URL.
 	 */
 	async getOAuth42AuthUrl(): Promise<{ url: string }> {
 		try {
@@ -120,7 +120,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Procesa el callback OAuth de 42.
+	 * Processes the OAuth callback from 42.
 	 */
 	async handleOAuth42Callback(code: string, ip?: string, userAgent?: string): Promise<AuthResponse> {
 		try {
@@ -139,12 +139,12 @@ export class AuthService {
 
 
 	/**
-	 * Normaliza errores HTTP del auth-service.
+	 * Normalises HTTP errors from the auth-service.
 	 */
 	private handleHttpError(error: unknown, action: string): never {
 		const axiosError = error as AxiosError<{ statusCode?: number; message?: string }>;
 
-		// Si el microservicio respondió con un error, preserva su status y mensaje.
+		// If the microservice responded with an error, preserve its status and message.
 		if (axiosError.response?.data) {
 			const { statusCode, message } = axiosError.response.data;
 			throw Object.assign(new Error(message || `Error al ${action}`), {
@@ -152,7 +152,7 @@ export class AuthService {
 			});
 		}
 
-		// Error de conexión.
+		// Connection error.
 		throw Object.assign(
 			new Error(`Error de conexión al ${action} en auth-service: ${axiosError.message}`),
 			{ statusCode: 503 },

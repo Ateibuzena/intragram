@@ -1,6 +1,6 @@
 /**
- * Entidad de refresh token del auth-service.
- * Guarda sesiones rotables y revocables con trazabilidad.
+ * Refresh token entity of the auth-service.
+ * Stores rotatable and revocable sessions with traceability.
  */
 
 import {
@@ -20,8 +20,8 @@ export class RefreshTokenEntity {
 	id!: string;
 
 	/**
-	 * Hash SHA-256 del refresh token.
-	 * El token original solo se envía una vez al cliente.
+	 * SHA-256 hash of the refresh token.
+	 * The original token is only sent to the client once.
 	 */
 	@Column({ type: 'varchar', length: 255 })
 	@Index('IDX_REFRESH_TOKEN_HASH')
@@ -42,13 +42,13 @@ export class RefreshTokenEntity {
 	is_revoked!: boolean;
 
 	/**
-	 * User-Agent del cliente que creó la sesión.
+	 * User-Agent of the client that created the session.
 	 */
 	@Column({ type: 'varchar', length: 500, nullable: true })
 	user_agent!: string | null;
 
 	/**
-	 * IP del cliente que creó la sesión.
+	 * IP of the client that created the session.
 	 */
 	@Column({ type: 'varchar', length: 45, nullable: true })
 	ip_address!: string | null;

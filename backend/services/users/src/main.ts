@@ -1,6 +1,6 @@
 /**
- * Punto de arranque del users-service.
- * Configura validación global y levanta el servidor HTTP.
+ * Entry point of the users-service.
+ * Configures global validation and starts the HTTP server.
  */
 
 import { NestFactory } from '@nestjs/core';

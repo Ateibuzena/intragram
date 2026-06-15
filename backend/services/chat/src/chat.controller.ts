@@ -1,21 +1,21 @@
 /**
- * Controlador HTTP del chat-service.
- * Expone los endpoints para gestionar conversaciones y mensajes.
- * Delegar la lógica a ChatService, que se comunica con el chat-service interno.
- * Protege las rutas con AuthGuard y reenvía el contexto del usuario.
- * 
+ * HTTP controller of the chat-service.
+ * Exposes endpoints for managing conversations and messages.
+ * Delegates logic to ChatService, which communicates with the internal chat-service.
+ * Protects routes with AuthGuard and forwards the user context.
+ *
  * Endpoints:
- * - GET  /chat/health                             → Health check del chat-service
- * - GET  /chat/conversations                    → Lista conversaciones del usuario
- * - POST /chat/conversations                    → Crea una nueva conversación
- * - GET  /chat/conversations/:id/messages       → Lista mensajes de una conversación
- * - POST /chat/conversations/:id/messages       → Envía un mensaje a una conversación
- * 
- * Seguridad:
- * - Protegido con AuthGuard para validar tokens JWT
- * - Reenvío de contexto de usuario mediante headers personalizados
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
+ * - GET  /chat/health                             → Health check of the chat-service
+ * - GET  /chat/conversations                    → Lists conversations of the user
+ * - POST /chat/conversations                    → Creates a new conversation
+ * - GET  /chat/conversations/:id/messages       → Lists messages of a conversation
+ * - POST /chat/conversations/:id/messages       → Sends a message to a conversation
+ *
+ * Security:
+ * - Protected with AuthGuard for JWT token validation
+ * - Forwarding of user context via custom headers
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
  */
 
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
@@ -27,7 +27,7 @@ export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
 
 	/**
-	 * Health check del chat-service.
+	 * Health check of the chat-service.
 	 */
 	@Get('health')
 	getHealth() {
@@ -35,7 +35,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Lista las conversaciones visibles para el usuario.
+	 * Lists the conversations visible to the user.
 	 */
 	@Get('conversations')
 	getConversations(@Headers('x-user-id') userId: string) {
@@ -43,7 +43,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Crea una conversación entre dos usuarios.
+	 * Creates a conversation between two users.
 	 */
 	@Post('conversations')
 	createConversation(@Headers('x-user-id') userId: string, @Body() dto: CreateConversationDto) {
@@ -51,7 +51,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Devuelve los mensajes de una conversación.
+	 * Returns the messages of a conversation.
 	 */
 	@Get('conversations/:conversationId/messages')
 	getMessages(@Headers('x-user-id') userId: string, @Param('conversationId') conversationId: string) {
@@ -59,7 +59,7 @@ export class ChatController {
 	}
 
 	/**
-	 * Envía un mensaje a una conversación existente.
+	 * Sends a message to an existing conversation.
 	 */
 	@Post('conversations/:conversationId/messages')
 	sendMessage(

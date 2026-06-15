@@ -1,6 +1,6 @@
-// Hook y contexto de sesión de usuario en el frontend.
-// Se encarga de leer/guardar el token de la URL/localStorage
-// y exponer un estado simple de "estoy autenticado" a la app.
+// User session hook and context for the frontend.
+// Responsible for reading/saving the token from the URL/localStorage
+// and exposing a simple "I am authenticated" state to the app.
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
@@ -40,8 +40,8 @@ export const useAuth = (): AuthContextType => {
 	return context;
 };
 
-// Estado global de sesión que se inyecta en el árbol de React
-// mediante AuthContext.Provider en App.tsx.
+// Global session state that is injected into the React tree
+// via AuthContext.Provider in App.tsx.
 export const useAuthState = () => {
 	const [token, setToken] = useState<string | null>(null);
 	const [user, setUser] = useState<AuthUser | null>(null);
@@ -65,7 +65,7 @@ export const useAuthState = () => {
 					setUser(parsed);
 					localStorage.setItem('auth_user', JSON.stringify(parsed));
 				} catch {
-					// Si el parámetro user viene corrupto, simplemente lo ignoramos.
+					// If the user parameter is corrupted, we simply ignore it.
 				}
 			}
 			params.delete('token');
@@ -104,7 +104,7 @@ export const useAuthState = () => {
 				const data: UserProfile = await res.json();
 				setProfile(data);
 			} catch {
-				// Silenciamos errores de perfil para no romper la app principal.
+				// We silence profile errors to avoid breaking the main app.
 			} finally {
 				fetchingProfileRef.current = false;
 				setLoadingProfile(false);

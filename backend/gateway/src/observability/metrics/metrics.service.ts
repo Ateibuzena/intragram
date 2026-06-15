@@ -1,6 +1,6 @@
 /**
- * Servicio de métricas del gateway.
- * Registra contadores y latencias para Prometheus.
+ * Metrics service of the gateway.
+ * Records counters and latencies for Prometheus.
  */
 
 import { Injectable } from '@nestjs/common';

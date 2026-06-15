@@ -1,6 +1,6 @@
 /**
- * Módulo principal del chat-service.
- * Expone el controlador HTTP y el servicio en memoria.
+ * Main module of the chat-service.
+ * Exposes the HTTP controller and the in-memory service.
  */
 
 import { Module } from '@nestjs/common';

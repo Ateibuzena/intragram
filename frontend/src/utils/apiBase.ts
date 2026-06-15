@@ -1,5 +1,5 @@
-// Utilidad centralizada para construir la URL base de la API
-// Mantiene la lógica de configuración de forma consistente en todo el frontend.
+// Centralized utility for building the API base URL.
+// Keeps configuration logic consistent throughout the frontend.
 
 const normalizeBaseUrl = (baseUrl?: string): string => {
 	const candidate = baseUrl?.trim();

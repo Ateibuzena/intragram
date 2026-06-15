@@ -1,6 +1,6 @@
 /**
- * Entidad de usuario del auth-service.
- * Modela credenciales, estado y auditoría de sesión.
+ * User entity of the auth-service.
+ * Models credentials, status, and session auditing.
  */
 
 import {
@@ -26,8 +26,8 @@ export class UserEntity {
 	email!: string;
 
 	/**
-	 * Password hasheado con bcrypt.
-	 * Nunca se devuelve en respuestas.
+	 * Password hashed with bcrypt.
+	 * Never returned in responses.
 	 */
 	@Column({ type: 'varchar', length: 255, select: false })
 	password!: string;
@@ -46,14 +46,14 @@ export class UserEntity {
 	last_login!: Date | null;
 
 	/**
-	 * Contador de intentos fallidos de login.
-	 * Se usa para bloqueo temporal de cuenta.
+	 * Failed login attempt counter.
+	 * Used for temporary account lockout.
 	 */
 	@Column({ type: 'int', default: 0 })
 	failed_login_attempts!: number;
 
 	/**
-	 * Fecha hasta la cual la cuenta está bloqueada.
+	 * Date until which the account is locked.
 	 */
 	@Column({ type: 'timestamp', nullable: true })
 	locked_until!: Date | null;

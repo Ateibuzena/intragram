@@ -2,7 +2,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index } from 'typeor
 import { ChatConversationEntity } from './chat-conversation.entity';
 
 /**
- * Mensaje individual dentro de una conversación de chat.
+ * Individual message within a chat conversation.
  */
 @Entity({ name: 'chat_messages' })
 export class ChatMessageEntity {
@@ -18,7 +18,7 @@ export class ChatMessageEntity {
 	@Column('uuid')
 	conversationId!: string;
 
-	// Identificador del usuario emisor (referencia lógica al user-service)
+	// Identifier of the sending user (logical reference to the user-service)
 	@Column('uuid')
 	senderId!: string;
 

@@ -69,7 +69,7 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 					console.error('Error al cargar el feed', res.status, message);
 					setItems([]);
 					if (res.status === 401) {
-						// Token expirado o no válido: forzamos cierre de sesión y redirección a login.
+						// Expired or invalid token: force logout and redirect to login.
 						logout();
 						navigate(ROUTES.LOGIN + '?reason=expired');
 						return;

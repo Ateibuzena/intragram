@@ -1,41 +1,41 @@
 /**
- * Servicio de Autenticación
- * Lógica de negocio para registro, login, tokens y seguridad
- * 
+ * Authentication Service
+ * Business logic for registration, login, tokens and security
+ *
  * ═══════════════════════════════════════════════════
- *  MEDIDAS DE CIBERSEGURIDAD IMPLEMENTADAS
+ *  IMPLEMENTED CYBERSECURITY MEASURES
  * ═══════════════════════════════════════════════════
- * 
- * 1. HASHING DE CONTRASEÑAS
- *    - bcrypt con 12 salt rounds (resistente a brute force)
- *    - Nunca se almacena ni devuelve la contraseña en texto plano
- * 
- * 2. TOKENS JWT
- *    - Access token: corta duración (15 min)
- *    - Refresh token: larga duración (7 días), hasheado en BBDD
- *    - Rotación de refresh tokens en cada uso
- * 
- * 3. PROTECCIÓN CONTRA BRUTE FORCE
- *    - Contador de intentos fallidos por usuario
- *    - Bloqueo temporal de cuenta tras 5 intentos fallidos (15 min)
- *    - Mensajes de error genéricos (no revelan si el usuario existe)
- * 
- * 4. PREVENCIÓN DE INYECCIÓN SQL
- *    - TypeORM con queries parametrizadas
- *    - Validación estricta de DTOs con class-validator
- * 
- * 5. SANITIZACIÓN DE DATOS
- *    - Emails normalizados a lowercase
- *    - Usernames normalizados a lowercase
- *    - Whitelist de propiedades en DTOs
- * 
- * 6. REVOCACIÓN DE SESIONES
- *    - Logout invalida el refresh token
- *    - Posibilidad de revocar todas las sesiones de un usuario
- * 
- * 7. AUDITORÍA
- *    - Registro de IP y User-Agent en cada sesión
- *    - Fecha de último login
+ *
+ * 1. PASSWORD HASHING
+ *    - bcrypt with 12 salt rounds (resistant to brute force)
+ *    - Password is never stored or returned in plain text
+ *
+ * 2. JWT TOKENS
+ *    - Access token: short duration (15 min)
+ *    - Refresh token: long duration (7 days), hashed in the DB
+ *    - Refresh token rotation on each use
+ *
+ * 3. BRUTE FORCE PROTECTION
+ *    - Failed attempt counter per user
+ *    - Temporary account lockout after 5 failed attempts (15 min)
+ *    - Generic error messages (do not reveal whether the user exists)
+ *
+ * 4. SQL INJECTION PREVENTION
+ *    - TypeORM with parameterized queries
+ *    - Strict DTO validation with class-validator
+ *
+ * 5. DATA SANITIZATION
+ *    - Emails normalised to lowercase
+ *    - Usernames normalised to lowercase
+ *    - Property whitelist in DTOs
+ *
+ * 6. SESSION REVOCATION
+ *    - Logout invalidates the refresh token
+ *    - Ability to revoke all sessions of a user
+ *
+ * 7. AUDIT
+ *    - IP and User-Agent recorded for each session
+ *    - Last login date
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
@@ -50,14 +50,14 @@ import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/sh
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import axios from 'axios';
 
-// ─── Constantes de seguridad ───────────────────────
+// ─── Security constants ─────────────────────────────
 const BCRYPT_SALT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 15;
 
-// Mensajes de error genéricos (no revelan información del sistema)
+// Generic error messages (do not reveal system information)
 const INVALID_CREDENTIALS_MSG = 'Credenciales inválidas';
 const ACCOUNT_LOCKED_MSG = 'Cuenta bloqueada temporalmente. Inténtalo más tarde';
 const USER_EXISTS_MSG = 'El nombre de usuario o email ya está en uso';
@@ -74,7 +74,7 @@ export class AuthService implements OnModuleInit {
 		@InjectRepository(RefreshTokenEntity)
 		private readonly refreshTokenRepo: Repository<RefreshTokenEntity>,
 	) {
-		// JWT secret desde variable de entorno (obligatorio en producción)
+		// JWT secret from environment variable (required in production)
 		this.jwtSecret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 		if (process.env.NODE_ENV === 'production' && this.jwtSecret === 'dev-secret-change-in-production') {
@@ -83,19 +83,19 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Log de arranque útil para validar configuración sensible en runtime.
+	 * Startup log useful for validating sensitive configuration at runtime.
 	 */
 	async onModuleInit() {}
 
 	// ═══════════════════════════════════════════════
-	//  REGISTRO
+	//  REGISTRATION
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Registrar un nuevo usuario
-	 * - Normaliza email y username a lowercase
-	 * - Hashea la contraseña con bcrypt
-	 * - Genera tokens de acceso
+	 * Register a new user
+	 * - Normalises email and username to lowercase
+	 * - Hashes the password with bcrypt
+	 * - Generates access tokens
 	 */
 	async register(
 		registerDto: RegisterDto,
@@ -104,11 +104,11 @@ export class AuthService implements OnModuleInit {
 	): Promise<AuthResponse> {
 		const { username, email, password, display_name } = registerDto;
 
-		// Normaliza datos de entrada para comparar y persistir con consistencia.
+		// Normalise input data for consistent comparison and persistence.
 		const normalizedUsername = username.toLowerCase().trim();
 		const normalizedEmail = email.toLowerCase().trim();
 
-		// Verifica unicidad por username o email antes de crear.
+		// Verify uniqueness by username or email before creating.
 		const existingUser = await this.userRepo.findOne({
 			where: [
 				{ username: normalizedUsername },
@@ -120,10 +120,10 @@ export class AuthService implements OnModuleInit {
 			throw new ConflictError(USER_EXISTS_MSG);
 		}
 
-		// Hashear contraseña
+		// Hash password
 		const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
-		// Crear usuario
+		// Create user
 		const user = this.userRepo.create({
 			username: normalizedUsername,
 			email: normalizedEmail,
@@ -135,7 +135,7 @@ export class AuthService implements OnModuleInit {
 
 		const savedUser = await this.userRepo.save(user);
 
-		// Generar tokens
+		// Generate tokens
 		return this.generateAuthResponse(savedUser, ip, userAgent);
 	}
 
@@ -144,11 +144,11 @@ export class AuthService implements OnModuleInit {
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Autenticar usuario
-	 * - Acepta login por username o email
-	 * - Verifica bloqueo de cuenta
-	 * - Valida contraseña con bcrypt
-	 * - Genera nuevos tokens
+	 * Authenticate user
+	 * - Accepts login by username or email
+	 * - Verifies account lockout
+	 * - Validates password with bcrypt
+	 * - Generates new tokens
 	 */
 	async login(
 		loginDto: LoginDto,
@@ -158,10 +158,10 @@ export class AuthService implements OnModuleInit {
 		const { identifier, password } = loginDto;
 		const normalizedIdentifier = identifier.toLowerCase().trim();
 
-		// Determinar si es email o username
+		// Determine whether it is an email or a username
 		const isEmail = normalizedIdentifier.includes('@');
 
-		// Buscar usuario con password (select: false by default)
+		// Find user with password (select: false by default)
 		const user = await this.userRepo
 			.createQueryBuilder('user')
 			.addSelect('user.password')
@@ -171,33 +171,33 @@ export class AuthService implements OnModuleInit {
 			)
 			.getOne();
 
-		// Usuario no encontrado - devolver error genérico
+		// User not found - return generic error
 		if (!user) {
-			// Timing attack mitigation: siempre hashear algo
+			// Timing attack mitigation: always hash something
 			await bcrypt.hash('dummy-password', BCRYPT_SALT_ROUNDS);
 			throw new UnauthorizedError(INVALID_CREDENTIALS_MSG);
 		}
 
-		// Verificar si la cuenta está activa
+		// Verify that the account is active
 		if (!user.is_active) {
 			throw new UnauthorizedError(INVALID_CREDENTIALS_MSG);
 		}
 
-		// Verificar bloqueo de cuenta
+		// Verify account lockout
 		if (user.locked_until && user.locked_until > new Date()) {
 			throw new ForbiddenError(ACCOUNT_LOCKED_MSG);
 		}
 
-		// Verificar contraseña
+		// Verify password
 		const isPasswordValid = await bcrypt.compare(password, user.password);
 
 		if (!isPasswordValid) {
-			// Incrementar intentos fallidos
+			// Increment failed attempts
 			await this.handleFailedLogin(user);
 			throw new UnauthorizedError(INVALID_CREDENTIALS_MSG);
 		}
 
-		// Login exitoso: resetear intentos fallidos
+		// Successful login: reset failed attempts
 		await this.handleSuccessfulLogin(user);
 
 		return this.generateAuthResponse(user, ip, userAgent);
@@ -208,17 +208,17 @@ export class AuthService implements OnModuleInit {
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Renovar access token usando refresh token
-	 * - Verifica que el token existe y no está revocado
-	 * - Verifica que no ha expirado
-	 * - Revoca el token actual y genera uno nuevo (rotación)
+	 * Renew access token using refresh token
+	 * - Verifies that the token exists and is not revoked
+	 * - Verifies that it has not expired
+	 * - Revokes the current token and generates a new one (rotation)
 	 */
 	async refreshToken(
 		refreshToken: string,
 		ip?: string,
 		userAgent?: string,
 	): Promise<AuthResponse> {
-		// Hashear el token recibido para comparar con la BBDD
+		// Hash the received token for comparison with the DB
 		const tokenHash = this.hashToken(refreshToken);
 
 		const storedToken = await this.refreshTokenRepo.findOne({
@@ -230,20 +230,20 @@ export class AuthService implements OnModuleInit {
 			throw new UnauthorizedError('Refresh token inválido');
 		}
 
-		// Verificar expiración
+		// Verify expiration
 		if (storedToken.expires_at < new Date()) {
-			// Revocar token expirado
+			// Revoke expired token
 			await this.refreshTokenRepo.update(storedToken.id, { is_revoked: true });
 			throw new UnauthorizedError('Refresh token expirado');
 		}
 
-		// Verificar que el usuario sigue activo
+		// Verify that the user is still active
 		if (!storedToken.user.is_active) {
 			await this.refreshTokenRepo.update(storedToken.id, { is_revoked: true });
 			throw new UnauthorizedError('Usuario desactivado');
 		}
 
-		// Revocar el token actual (rotación de tokens)
+		// Revoke the current token (token rotation)
 		await this.refreshTokenRepo.update(storedToken.id, { is_revoked: true });
 
 		return this.generateAuthResponse(storedToken.user, ip, userAgent);
@@ -254,7 +254,7 @@ export class AuthService implements OnModuleInit {
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Cerrar sesión - revoca el refresh token
+	 * Log out - revokes the refresh token
 	 */
 	async logout(refreshToken: string): Promise<{ message: string }> {
 		const tokenHash = this.hashToken(refreshToken);
@@ -264,13 +264,13 @@ export class AuthService implements OnModuleInit {
 			{ is_revoked: true },
 		);
 
-		// No revelar si el token existía o no
+		// Do not reveal whether the token existed or not
 		return { message: 'Sesión cerrada correctamente' };
 	}
 
 	/**
-	 * Cerrar todas las sesiones de un usuario
-	 * Útil cuando se sospecha de acceso no autorizado
+	 * Close all sessions of a user
+	 * Useful when unauthorised access is suspected
 	 */
 	async logoutAll(userId: string): Promise<{ message: string }> {
 		await this.refreshTokenRepo.update(
@@ -282,18 +282,18 @@ export class AuthService implements OnModuleInit {
 	}
 
 	// ═══════════════════════════════════════════════
-	//  VALIDACIÓN DE TOKEN
+	//  TOKEN VALIDATION
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Validar un access token JWT
-	 * Devuelve el payload decodificado o un error
+	 * Validate a JWT access token
+	 * Returns the decoded payload or an error
 	 */
 	async validateToken(token: string): Promise<TokenPayload> {
 		try {
 			const payload = jwt.verify(token, this.jwtSecret) as TokenPayload;
 
-			// Verificar que el usuario sigue existiendo y activo
+			// Verify that the user still exists and is active
 			const user = await this.userRepo.findOne({
 				where: { id: payload.sub, is_active: true },
 			});
@@ -323,11 +323,11 @@ export class AuthService implements OnModuleInit {
 	}
 
 	// ═══════════════════════════════════════════════
-	//  MÉTODOS PRIVADOS
+	//  PRIVATE METHODS
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Generar respuesta de autenticación con access + refresh tokens
+	 * Generate authentication response with access + refresh tokens
 	 */
 	private async generateAuthResponse(
 		user: UserEntity,
@@ -336,7 +336,7 @@ export class AuthService implements OnModuleInit {
 	): Promise<AuthResponse> {
 		const chatUserId = await this.resolveChatUserId(user);
 
-		// Generar access token JWT
+		// Generate JWT access token
 		const payload: TokenPayload = {
 			sub: user.id,
 			chat_user_id: chatUserId ?? user.id,
@@ -348,15 +348,15 @@ export class AuthService implements OnModuleInit {
 			expiresIn: ACCESS_TOKEN_EXPIRY,
 		});
 
-		// Generar refresh token (random + hashear para BBDD)
+		// Generate refresh token (random + hash for DB)
 		const refreshToken = crypto.randomBytes(64).toString('hex');
 		const tokenHash = this.hashToken(refreshToken);
 
-		// Calcular fecha de expiración
+		// Calculate expiration date
 		const expiresAt = new Date();
 		expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-		// Guardar refresh token en BBDD
+		// Save refresh token in DB
 		const refreshTokenEntity = this.refreshTokenRepo.create({
 			token_hash: tokenHash,
 			user_id: user.id,
@@ -372,7 +372,7 @@ export class AuthService implements OnModuleInit {
 			access_token: accessToken,
 			refresh_token: refreshToken,
 			token_type: 'Bearer',
-			expires_in: 900, // 15 minutos en segundos
+			expires_in: 900, // 15 minutes in seconds
 			user: {
 				id: user.id,
 				username: user.username,
@@ -383,8 +383,8 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Manejar login fallido
-	 * Incrementa el contador y bloquea la cuenta si excede el límite
+	 * Handle failed login
+	 * Increments the counter and locks the account if the limit is exceeded
 	 */
 	private async handleFailedLogin(user: UserEntity): Promise<void> {
 		const attempts = user.failed_login_attempts + 1;
@@ -393,7 +393,7 @@ export class AuthService implements OnModuleInit {
 			failed_login_attempts: attempts,
 		};
 
-		// Bloquear cuenta si excede el máximo de intentos
+		// Lock account if the maximum number of attempts is exceeded
 		if (attempts >= MAX_FAILED_ATTEMPTS) {
 			const lockUntil = new Date();
 			lockUntil.setMinutes(lockUntil.getMinutes() + LOCKOUT_DURATION_MINUTES);
@@ -404,8 +404,8 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Manejar login exitoso
-	 * Resetea el contador de intentos fallidos
+	 * Handle successful login
+	 * Resets the failed attempt counter
 	 */
 	private async handleSuccessfulLogin(user: UserEntity): Promise<void> {
 		await this.userRepo.update(user.id, {
@@ -416,15 +416,15 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Hashear token con SHA-256 para almacenamiento seguro
+	 * Hash token with SHA-256 for secure storage
 	 */
 	private hashToken(token: string): string {
 		return crypto.createHash('sha256').update(token).digest('hex');
 	}
 
 	/**
-	 * Resuelve el id de perfil del users-service para usarlo como identidad de chat.
-	 * Si no está guardado en auth, intenta recuperarlo por login y persiste el mapeo.
+	 * Resolves the profile id from the users-service to use as the chat identity.
+	 * If not stored in auth, attempts to retrieve it by login and persists the mapping.
 	 */
 	private async resolveChatUserId(user: UserEntity): Promise<string | null> {
 		if (user.user_profile_id) {
@@ -444,16 +444,16 @@ export class AuthService implements OnModuleInit {
 				return profileId;
 			}
 		} catch {
-			// Mantener compatibilidad: si users-service falla, seguimos con user.id.
+			// Maintain compatibility: if users-service fails, we continue with user.id.
 		}
 
 		return null;
 	}
 
 	/**
-	 * Elimina refresh tokens expirados o revocados.
+	 * Deletes expired or revoked refresh tokens.
 	 *
-	 * Esta rutina es de mantenimiento y se puede ejecutar desde un cron job.
+	 * This is a maintenance routine that can be run from a cron job.
 	 */
 	async cleanupExpiredTokens(): Promise<number> {
 		const result = await this.refreshTokenRepo
@@ -471,9 +471,9 @@ export class AuthService implements OnModuleInit {
 	// ═══════════════════════════════════════════════
 
 	/**
-	 * Construye la URL de autorización de 42 para iniciar el flujo OAuth.
+	 * Builds the 42 authorisation URL to start the OAuth flow.
 	 *
-	 * No hace I/O; solo arma la URL con las variables de entorno.
+	 * Does no I/O; only assembles the URL from environment variables.
 	 */
 	getOAuth42AuthUrl(): string {
 		const clientId = process.env.OAUTH_42_CLIENT_ID;
@@ -487,13 +487,13 @@ export class AuthService implements OnModuleInit {
 	}
 
 	/**
-	 * Procesa el callback de OAuth 42 y transforma el login externo en sesión propia.
+	 * Processes the OAuth 42 callback and transforms the external login into an own session.
 	 *
-	 * Flujo:
-	 * 1. Intercambia el code por un access token de 42.
-	 * 2. Consulta el perfil remoto del usuario.
-	 * 3. Sincroniza el perfil local en users-service.
-	 * 4. Emite nuestros propios tokens JWT.
+	 * Flow:
+	 * 1. Exchanges the code for a 42 access token.
+	 * 2. Queries the remote user profile.
+	 * 3. Syncs the local profile in users-service.
+	 * 4. Issues our own JWT tokens.
 	 */
 	async handleOAuth42Callback(
 		code: string,
@@ -501,7 +501,7 @@ export class AuthService implements OnModuleInit {
 		userAgent?: string,
 	): Promise<AuthResponse> {
 		try {
-			// Paso 1: intercambiar el code por access token de 42.
+			// Step 1: exchange the code for a 42 access token.
 			const tokenResponse = await axios.post('https://api.intra.42.fr/oauth/token', {
 				grant_type: 'authorization_code',
 				client_id: process.env.OAUTH_42_CLIENT_ID,
@@ -512,21 +512,21 @@ export class AuthService implements OnModuleInit {
 
 			const { access_token } = tokenResponse.data;
 
-			// Paso 2: obtener el perfil del usuario autenticado en 42.
+			// Step 2: fetch the profile of the authenticated user on 42.
 			const userResponse = await axios.get('https://api.intra.42.fr/v2/me', {
 				headers: { Authorization: `Bearer ${access_token}` },
 			});
 
 			const user42 = userResponse.data as any;
 
-			// Paso 2b: extraer stats de perfil para persistir.
+			// Step 2b: extract profile stats for persistence.
 			let skills: any[] = [];
 			let levels: any[] = [];
 			let dashesUsers: any[] = [];
 			let titles: any[] = [];
 			let projectsUsers: any[] = [];
 
-			// Solo usamos datos del cursus principal (id 21) para el ProfilePage.
+			// We only use data from the main cursus (id 21) for the ProfilePage.
 			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
 				const cursus21 = user42.cursus_users.find(
 					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
@@ -575,8 +575,8 @@ export class AuthService implements OnModuleInit {
 				dashesUsers = user42.dashes_users;
 			}
 
-			// Paso 3: mapear solo los campos permitidos por UpsertOAuth42UserDto
-			// y sincronizar el perfil local en users-service.
+			// Step 3: map only the fields allowed by UpsertOAuth42UserDto
+			// and sync the local profile in users-service.
 			const upsertPayload = {
 				id: user42.id,
 				login: user42.login,
@@ -626,12 +626,12 @@ export class AuthService implements OnModuleInit {
 
 			const profile = upsertResponse.data;
 
-			// Normalizar identificadores para el usuario interno del auth-service.
+			// Normalise identifiers for the internal user of the auth-service.
 			const normalizedUsername = (profile.login || user42.login || '').toLowerCase().trim();
 			const normalizedEmail = (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase().trim();
 			const displayName = profile.display_name || user42.usual_full_name || user42.login;
 
-			// Paso 4: buscar o crear el usuario interno en la BBDD del auth-service.
+			// Step 4: find or create the internal user in the auth-service DB.
 			let authUser = await this.userRepo.findOne({
 				where: [
 					{ username: normalizedUsername },
@@ -640,8 +640,8 @@ export class AuthService implements OnModuleInit {
 			});
 
 			if (!authUser) {
-				// Usuario nuevo autenticado solo vía OAuth42: creamos credenciales internas
-				// con una contraseña aleatoria (no usada directamente por el usuario).
+				// New user authenticated only via OAuth42: we create internal credentials
+				// with a random password (not used directly by the user).
 				const randomPassword = crypto.randomBytes(32).toString('hex');
 				const hashedPassword = await bcrypt.hash(randomPassword, BCRYPT_SALT_ROUNDS);
 
@@ -655,7 +655,7 @@ export class AuthService implements OnModuleInit {
 					failed_login_attempts: 0,
 				});
 			} else {
-				// Usuario existente: sincronizar algunos campos básicos.
+				// Existing user: sync some basic fields.
 				authUser.display_name = displayName;
 				authUser.user_profile_id = profile.id;
 				authUser.is_active = true;
@@ -664,7 +664,7 @@ export class AuthService implements OnModuleInit {
 			authUser.last_login = new Date();
 			const savedAuthUser = await this.userRepo.save(authUser);
 
-			// Paso 5: generar tokens propios del sistema.
+			// Step 5: generate the system's own tokens.
 			return this.generateAuthResponse(savedAuthUser, ip, userAgent);
 		} catch (error: any) {
 			throw new UnauthorizedError('Error al autenticar con 42');
@@ -674,7 +674,7 @@ export class AuthService implements OnModuleInit {
 }
 
 // ═══════════════════════════════════════════════
-//  Errores tipados para el controlador
+//  Typed errors for the controller
 // ═══════════════════════════════════════════════
 
 export class ConflictError extends Error {

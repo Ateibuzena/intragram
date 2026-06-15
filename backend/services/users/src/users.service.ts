@@ -1,12 +1,12 @@
 /**
- * Servicio de usuarios del backend de Intragram.
- * Maneja la lógica de negocio relacionada con los perfiles de usuario.
- * 
- * Funcionalidades:
- * - Sincronización de perfil desde OAuth42
- * - Búsqueda de usuarios por id, login o id de 42
- * - Actualización de campos editables del perfil
- * - Health check para monitoreo y Docker
+ * Users service of the Intragram backend.
+ * Handles business logic related to user profiles.
+ *
+ * Features:
+ * - Profile synchronisation from OAuth42
+ * - User lookup by id, login, or 42 id
+ * - Update of editable profile fields
+ * - Health check for monitoring and Docker
  */
 
 import { Injectable } from '@nestjs/common';
@@ -23,7 +23,7 @@ import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 @Injectable()
 export class UsersService {
-	// Repositorio TypeORM del perfil local de usuario.
+	// TypeORM repository for the local user profile.
 	constructor(
 		@InjectRepository(UserProfileEntity)
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
@@ -38,7 +38,7 @@ export class UsersService {
 	) {}
 
 	/**
-	 * Devuelve los ids de amigos aceptados (tanto "yo → amigo" como "amigo → yo").
+	 * Returns the ids of accepted friends (both "me → friend" and "friend → me").
 	 */
 	private async getFriendIds(userId: string): Promise<string[]> {
 		const friendships = await this.friendshipRepo.find({
@@ -49,13 +49,13 @@ export class UsersService {
 	}
 
 	/**
-	 * Crea o actualiza el perfil local a partir del payload OAuth42.
+	 * Creates or updates the local profile from the OAuth42 payload.
 	 */
 	async upsertFromOAuth42(profile: UpsertOAuth42UserDto): Promise<UserProfileEntity> {
 		const login = profile.login.toLowerCase().trim();
 		const email = profile.email?.toLowerCase().trim() || null;
 
-		// Busca coincidencias por id de 42, login o email para reutilizar el perfil existente.
+		// Find matches by 42 id, login, or email to reuse an existing profile.
 		const existing = await this.userProfileRepo.findOne({
 			where: [{ forty_two_id: profile.id }, { login }, ...(email ? [{ email }] : [])],
 		});
@@ -71,7 +71,7 @@ export class UsersService {
 		const displayName = profile.displayname || profile.usual_full_name || login;
 
 		if (existing) {
-			// Actualiza solo los campos sincronizados desde 42.
+			// Update only the fields synchronised from 42.
 			const importedDisplayName = profile.displayname || profile.usual_full_name || login;
 			existing.forty_two_id = profile.id;
 			existing.login = login;
@@ -101,7 +101,7 @@ export class UsersService {
 			return this.userProfileRepo.save(existing);
 		}
 
-		// Crea un perfil nuevo si no existe ningún registro equivalente.
+		// Create a new profile if no equivalent record exists.
 		const created = this.userProfileRepo.create({
 			forty_two_id: profile.id,
 			login,
@@ -133,23 +133,23 @@ export class UsersService {
 	}
 
 	/**
-	 * Refresca el perfil de un usuario desde la API de 42 usando su access token.
-	 * 
-	 * Proceso:
-	 * 1. Consulta el perfil actual desde https://api.intra.42.fr/v2/me
-	 * 2. Extrae la información relevante
-	 * 3. Sincroniza el perfil local usando upsertFromOAuth42
-	 * 
-	 * @param userId - ID interno del usuario (para validación)
-	 * @param oauth42AccessToken - Access token válido de OAuth42
-	 * @returns El perfil actualizado
+	 * Refreshes a user's profile from the 42 API using their access token.
+	 *
+	 * Process:
+	 * 1. Queries the current profile from https://api.intra.42.fr/v2/me
+	 * 2. Extracts the relevant information
+	 * 3. Syncs the local profile using upsertFromOAuth42
+	 *
+	 * @param userId - Internal user ID (for validation)
+	 * @param oauth42AccessToken - Valid OAuth42 access token
+	 * @returns The updated profile
 	 */
 	async refreshFromOAuth42Token(userId: string, oauth42AccessToken: string): Promise<UserProfileEntity> {
-		// Validar que el usuario existe
+		// Validate that the user exists
 		const user = await this.findById(userId);
 
 		try {
-			// Consultar perfil actual desde API de 42
+			// Query current profile from the 42 API
 			const response = await axios.get('https://api.intra.42.fr/v2/me', {
 				headers: { Authorization: `Bearer ${oauth42AccessToken}` },
 				timeout: 5000,
@@ -157,14 +157,14 @@ export class UsersService {
 
 			const user42 = response.data as any;
 
-			// Extraer stats de perfil similar a handleOAuth42Callback en auth.service
+			// Extract profile stats similar to handleOAuth42Callback in auth.service
 			let skills: any[] = [];
 			let levels: any[] = [];
 			let titles: any[] = [];
 			let projectsUsers: any[] = [];
 			let dashesUsers: any[] = [];
 
-			// Solo usamos datos del cursus principal (id 21)
+			// We only use data from the main cursus (id 21)
 			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
 				const cursus21 = user42.cursus_users.find(
 					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
@@ -212,7 +212,7 @@ export class UsersService {
 				dashesUsers = user42.dashes_users;
 			}
 
-			// Mapear datos a UpsertOAuth42UserDto
+			// Map data to UpsertOAuth42UserDto
 			const upsertPayload: UpsertOAuth42UserDto = {
 				id: user42.id,
 				login: user42.login,
@@ -239,7 +239,7 @@ export class UsersService {
 				dashes_users: dashesUsers,
 			};
 
-			// Sincronizar perfil
+			// Sync profile
 			return this.upsertFromOAuth42(upsertPayload);
 		} catch (error: any) {
 			const statusCode = error.response?.status || 500;
@@ -249,7 +249,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por id interno.
+	 * Looks up a user by internal id.
 	 */
 	async findById(id: string): Promise<UserProfileEntity> {
 		const user = await this.userProfileRepo.findOne({ where: { id } });
@@ -260,7 +260,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por id de 42.
+	 * Looks up a user by 42 id.
 	 */
 	async findBy42Id(fortyTwoId: number): Promise<UserProfileEntity> {
 		const user = await this.userProfileRepo.findOne({ where: { forty_two_id: fortyTwoId } });
@@ -271,7 +271,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca un usuario por login normalizado.
+	 * Looks up a user by normalised login.
 	 */
 	async findByLogin(login: string): Promise<UserProfileEntity> {
 		const normalized = login.toLowerCase().trim();
@@ -283,7 +283,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Busca usuarios por login/display_name y limita resultados para evitar sobrecarga.
+	 * Searches users by login/display_name and limits results to avoid overload.
 	 */
 	async searchUsers(query: string, limit = 20): Promise<UserProfileEntity[]> {
 		const normalizedLimit = Math.min(Math.max(limit || 20, 1), 20);
@@ -303,7 +303,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Actualiza los campos editables del perfil local.
+	 * Updates the editable fields of the local profile.
 	 */
 	async updateProfile(id: string, dto: UpdateUserProfileDto): Promise<UserProfileEntity> {
 		const user = await this.findById(id);
@@ -319,16 +319,16 @@ export class UsersService {
 	}
 
 	/**
-	 * Verifica conectividad básica con la base de datos.
+	 * Verifies basic connectivity with the database.
 	 */
 	async getHealth(): Promise<HealthResponse> {
 		return createHealthResponse('users');
 	}
 
 	/**
-	 * Devuelve el feed "Reciente" personal del usuario:
-	 * - Publicaciones propias
-	 * - Publicaciones de amigos aceptados (gente que sigues y te sigue)
+	 * Returns the user's personal "Recent" feed:
+	 * - Own posts
+	 * - Posts from accepted friends (people you follow and who follow you)
 	 */
 	async getRecentFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const friendIds = await this.getFriendIds(userId);
@@ -345,7 +345,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve las publicaciones del propio usuario autenticado.
+	 * Returns the posts of the authenticated user themselves.
 	 */
 	async getUserFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const posts = await this.userPostRepo.find({
@@ -359,7 +359,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve publicaciones de amigos aceptados del usuario.
+	 * Returns posts from the user's accepted friends.
 	 */
 	async getFriendsFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const friendIds = await this.getFriendIds(userId);
@@ -376,10 +376,10 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed de "Tendencias" para un usuario:
-	 * - Solo publicaciones públicas
-	 * - Excluye las del propio usuario
-	 * - Ordenado por likes (desc) y fecha (desc)
+	 * Returns the "Trending" feed for a user:
+	 * - Only public posts
+	 * - Excludes the user's own posts
+	 * - Ordered by likes (desc) and date (desc)
 	 */
 	async getTrendingFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const posts = await this.userPostRepo.find({
@@ -427,7 +427,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve la lista de amigos aceptados de un usuario.
+	 * Returns the list of accepted friends of a user.
 	 */
 	async getFriends(userId: string): Promise<UserProfileEntity[]> {
 		const friendIds = await this.getFriendIds(userId);
@@ -437,7 +437,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Envía una solicitud de amistad (pending) o acepta una solicitud inversa existente.
+	 * Sends a friend request (pending) or accepts an existing incoming request.
 	 */
 	async addFriend(userId: string, friendId: string): Promise<{ status: 'pending' | 'accepted'; friend: UserProfileEntity }> {
 		if (userId === friendId) {
@@ -467,14 +467,14 @@ export class UsersService {
 			return { status: 'accepted', friend };
 		}
 
-		// Si el otro ya nos envió una solicitud → aceptar automáticamente
+		// If the other party already sent us a request → accept automatically
 		if (existing && existing.user_id === friendId && existing.friend_id === userId && existing.status === 'pending') {
 			existing.status = 'accepted';
 			await this.friendshipRepo.save(existing);
 			return { status: 'accepted', friend };
 		}
 
-		// Si ya enviamos una solicitud que sigue pendiente → no duplicar
+		// If we already sent a request that is still pending → do not duplicate
 		if (existing && existing.user_id === userId && existing.status === 'pending') {
 			return { status: 'pending', friend };
 		}
@@ -485,7 +485,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve los perfiles de usuarios que han enviado una solicitud de amistad al userId.
+	 * Returns the profiles of users who have sent a friend request to userId.
 	 */
 	async getPendingFriendRequests(userId: string): Promise<UserProfileEntity[]> {
 		const pending = await this.friendshipRepo.find({ where: { friend_id: userId, status: 'pending' } });
@@ -495,7 +495,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Acepta una solicitud de amistad pendiente de requesterId hacia userId.
+	 * Accepts a pending friend request from requesterId to userId.
 	 */
 	async acceptFriendRequest(userId: string, requesterId: string): Promise<UserProfileEntity> {
 		const friendship = await this.friendshipRepo.findOne({
@@ -515,7 +515,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Alterna el like de un usuario en un post. Actualiza likes_count en el post.
+	 * Toggles a user's like on a post. Updates likes_count on the post.
 	 */
 	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
 		const post = await this.userPostRepo.findOne({ where: { id: postId } });
@@ -540,7 +540,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Elimina una amistad entre dos usuarios.
+	 * Removes a friendship between two users.
 	 */
 	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
 		const existing = await this.friendshipRepo.findOne({
@@ -559,7 +559,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Devuelve el feed de posts guardados (favoritos) por el usuario.
+	 * Returns the feed of posts saved (favourited) by the user.
 	 */
 	async getFavoritesFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const saved = await this.savedPostRepo.find({
@@ -575,8 +575,8 @@ export class UsersService {
 	}
 
 	/**
-	 * Alterna el estado de guardado de un post para un usuario.
-	 * Devuelve true si queda guardado, false si se deshace el guardado.
+	 * Toggles the saved state of a post for a user.
+	 * Returns true if it ends up saved, false if the save is undone.
 	 */
 	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
 		const existing = await this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } });
@@ -596,7 +596,7 @@ export class UsersService {
 	}
 
 	/**
-	 * Crea una nueva publicación en el feed para el usuario indicado.
+	 * Creates a new post in the feed for the specified user.
 	 */
 	async createPost(authorId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
 		const author = await this.userProfileRepo.findOne({ where: { id: authorId } });

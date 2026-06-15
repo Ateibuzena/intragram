@@ -1,6 +1,6 @@
 /**
- * Punto de arranque del auth-service.
- * Configura validación global y middleware mínimo para el servicio interno.
+ * Entry point of the auth-service.
+ * Configures global validation and minimal middleware for the internal service.
  */
 
 import { NestFactory } from '@nestjs/core';

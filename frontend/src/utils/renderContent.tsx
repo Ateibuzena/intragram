@@ -1,6 +1,6 @@
 /**
- * Renderiza texto plano con bloques de código Markdown (```lang\ncode```) como
- * elementos <pre><code> estilizados. El resto del texto se muestra tal cual.
+ * Renders plain text with Markdown code blocks (```lang\ncode```) as
+ * styled <pre><code> elements. The rest of the text is displayed as-is.
  */
 
 export function renderContent(content: string): JSX.Element {

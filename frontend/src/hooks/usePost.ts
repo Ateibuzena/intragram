@@ -1,5 +1,5 @@
-// Hook de utilidad para manejar el estado de interacción con un post
-// (likes, guardado y pequeñas animaciones asociadas) en el frontend.
+// Utility hook for managing post interaction state
+// (likes, saving, and small associated animations) in the frontend.
 import { useState } from 'react';
 
 export const usePost = (initialLiked: boolean, initialLikes: number, initialSaved = false) => {

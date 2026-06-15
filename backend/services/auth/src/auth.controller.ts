@@ -1,19 +1,19 @@
 /**
- * Controlador del Microservicio de Autenticación
- * Expone endpoints HTTP para comunicación con el API Gateway
- * 
+ * Authentication Microservice Controller
+ * Exposes HTTP endpoints for communication with the API Gateway
+ *
  * Endpoints:
- * - POST /auth/register  → Registro de nuevos usuarios
- * - POST /auth/login     → Inicio de sesión
- * - POST /auth/refresh   → Renovar access token
- * - POST /auth/logout    → Cerrar sesión (revocar refresh token)
- * - POST /auth/validate  → Validar access token (uso interno del gateway)
- * - GET  /health         → Health check para Docker
- * 
- * Seguridad:
- * - Captura IP y User-Agent para auditoría
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
+ * - POST /auth/register  → Register new users
+ * - POST /auth/login     → Log in
+ * - POST /auth/refresh   → Renew access token
+ * - POST /auth/logout    → Log out (revoke refresh token)
+ * - POST /auth/validate  → Validate access token (internal gateway use)
+ * - GET  /health         → Health check for Docker
+ *
+ * Security:
+ * - Captures IP and User-Agent for auditing
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
  */
 
 import {
@@ -37,7 +37,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/register
-	 * Registrar un nuevo usuario
+	 * Register a new user
 	 */
 	@Post('auth/register')
 	@HttpCode(HttpStatus.CREATED)
@@ -55,7 +55,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/login
-	 * Iniciar sesión
+	 * Log in
 	 */
 	@Post('auth/login')
 	@HttpCode(HttpStatus.OK)
@@ -73,7 +73,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/refresh
-	 * Renovar access token usando refresh token
+	 * Renew access token using refresh token
 	 */
 	@Post('auth/refresh')
 	@HttpCode(HttpStatus.OK)
@@ -95,7 +95,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/logout
-	 * Cerrar sesión (revocar refresh token)
+	 * Log out (revoke refresh token)
 	 */
 	@Post('auth/logout')
 	@HttpCode(HttpStatus.OK)
@@ -109,8 +109,8 @@ export class AuthController {
 
 	/**
 	 * POST /auth/validate
-	 * Validar un access token (uso interno del gateway)
-	 * El gateway envía el token para verificar antes de permitir acceso
+	 * Validate an access token (internal gateway use)
+	 * The gateway sends the token for verification before allowing access
 	 */
 	@Post('auth/validate')
 	@HttpCode(HttpStatus.OK)
@@ -128,7 +128,7 @@ export class AuthController {
 
 	/**
 	 * GET /auth/42
-	 * Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
+	 * Starts the OAuth flow with 42 and returns the authorisation URL.
 	 */
 	@Get('auth/42')
 	oauth42Login(): { url: string } {
@@ -141,7 +141,7 @@ export class AuthController {
 
 	/**
 	 * GET /auth/42/callback
-	 * Callback de OAuth 42
+	 * OAuth 42 callback
 	 */
 	@Get('auth/42/callback')
 	@HttpCode(HttpStatus.OK)
@@ -167,7 +167,7 @@ export class AuthController {
 
 	/**
 	 * GET /health
-	 * Health check para Docker y monitoreo
+	 * Health check for Docker and monitoring
 	 */
 	@Get('health')
 	async health(): Promise<{ status: string }> {
@@ -175,8 +175,8 @@ export class AuthController {
 	}
 
 	/**
-	 * Mapeo centralizado de errores del servicio a HTTP exceptions
-	 * No revela detalles internos al cliente
+	 * Centralised mapping of service errors to HTTP exceptions
+	 * Does not reveal internal details to the client
 	 */
 	private handleError(error: unknown): never {
 		if (error instanceof ConflictError) {
@@ -198,7 +198,7 @@ export class AuthController {
 			);
 		}
 
-		// Error inesperado: log interno y respuesta genérica al cliente.
+		// Unexpected error: internal log and generic response to the client.
 		console.error('Error interno no manejado:', error);
 		throw new HttpException(
 			{ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error interno del servidor' },

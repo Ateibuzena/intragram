@@ -1,6 +1,6 @@
 /**
- * Módulo de logging del gateway.
- * Centraliza la configuración de logs estructurados.
+ * Logging module of the gateway.
+ * Centralises the configuration of structured logs.
  */
 
 import { Module } from '@nestjs/common';

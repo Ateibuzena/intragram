@@ -1,6 +1,6 @@
 /**
- * Módulo raíz del gateway.
- * Compone observabilidad, autenticación y proxy hacia los microservicios.
+ * Root module of the gateway.
+ * Composes observability, authentication, and proxy towards the microservices.
  */
 
 import { Module } from '@nestjs/common';

@@ -1,6 +1,6 @@
 /**
- * Entidad de perfil de usuario del users-service.
- * Guarda la identidad sincronizada desde OAuth42 y el perfil editable local.
+ * User profile entity of the users-service.
+ * Stores the identity synchronised from OAuth42 and the locally editable profile.
  */
 
 import {

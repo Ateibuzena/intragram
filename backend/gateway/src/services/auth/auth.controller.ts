@@ -1,20 +1,20 @@
 /**
- * Controlador de autenticación del gateway.
- * Redirige las peticiones al auth-service y mantiene el frontend desacoplado.
+ * Authentication controller of the gateway.
+ * Proxies requests to the auth-service and keeps the frontend decoupled.
  *
  * Endpoints:
- * - POST /auth/register → Registra un nuevo usuario
- * - POST /auth/login    → Inicia sesión y obtiene tokens
- * - POST /auth/refresh  → Renueva el access token usando el refresh token
- * - POST /auth/logout   → Cierra sesión (revoca refresh token)
- * - POST /auth/validate → Valida un access token (uso interno del gateway)
- * - GET  /auth/42       → Inicia el flujo OAuth con 42 y devuelve la URL de autorización.
- * - GET  /auth/42/callback → Callback de OAuth 42
+ * - POST /auth/register → Registers a new user
+ * - POST /auth/login    → Logs in and obtains tokens
+ * - POST /auth/refresh  → Renews the access token using the refresh token
+ * - POST /auth/logout   → Logs out (revokes refresh token)
+ * - POST /auth/validate → Validates an access token (internal gateway use)
+ * - GET  /auth/42       → Starts the OAuth flow with 42 and returns the authorisation URL.
+ * - GET  /auth/42/callback → OAuth 42 callback
  *
- * Seguridad:
- * - Validación de datos con DTOs y pipes de NestJS
- * - Manejo de errores que no revela información interna
- * - Códigos HTTP correctos para cada tipo de error
+ * Security:
+ * - Data validation with DTOs and NestJS pipes
+ * - Error handling that does not reveal internal information
+ * - Correct HTTP codes for each error type
  */
 
 import {
@@ -44,7 +44,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/register
-	 * Envía el registro al auth-service.
+	 * Sends the registration to the auth-service.
 	 */
 	@Post('register')
 	@UseGuards(PublicRateLimitGuard)
@@ -67,7 +67,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/login
-	 * Envía el login al auth-service.
+	 * Sends the login to the auth-service.
 	 */
 	@Post('login')
 	@UseGuards(PublicRateLimitGuard)
@@ -90,7 +90,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/refresh
-	 * Renueva el access token en el auth-service.
+	 * Renews the access token in the auth-service.
 	 */
 	@Post('refresh')
 	@UseGuards(PublicRateLimitGuard)
@@ -113,7 +113,7 @@ export class AuthController {
 
 	/**
 	 * POST /auth/logout
-	 * Cierra la sesión actual.
+	 * Closes the current session.
 	 */
 	@Post('logout')
 	@UseGuards(PublicRateLimitGuard)
@@ -132,7 +132,7 @@ export class AuthController {
 
 	/**
 	 * GET /auth/42/login
-	 * Redirige al login OAuth de 42.
+	 * Redirects to the 42 OAuth login.
 	 */
 	@Get('42/login')
 	@UseGuards(PublicRateLimitGuard)
@@ -151,7 +151,7 @@ export class AuthController {
 
 	/**
 	 * GET /auth/42
-	 * Redirige al login OAuth de 42.
+	 * Redirects to the 42 OAuth login.
 	 */
 	@Get('42')
 	@UseGuards(PublicRateLimitGuard)
@@ -166,7 +166,7 @@ export class AuthController {
 	}
 	/**
 	 * GET /auth/42/callback
-	 * Procesa el callback OAuth y redirige al frontend con la sesión.
+	 * Processes the OAuth callback and redirects to the frontend with the session.
 	 */
 	@Get('42/callback')
 	@UseGuards(PublicRateLimitGuard)

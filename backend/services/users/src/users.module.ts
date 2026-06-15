@@ -1,6 +1,6 @@
 /**
- * Módulo principal del users-service.
- * Configura TypeORM y expone el controlador y servicio de usuarios.
+ * Main module of the users-service.
+ * Configures TypeORM and exposes the users controller and service.
  */
 
 import { Module } from '@nestjs/common';

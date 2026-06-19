@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -44,6 +45,7 @@ const extractErrorMessage = async (response: Response) => {
 
 const ProfilePage = () => {
 	const { token } = useAuth();
+	const { connected } = usePresenceStatus();
 	const { profile, setProfile, loading, error, fallbackLogin, refreshProfile } = useProfileData();
 	const [editOpen, setEditOpen] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -180,6 +182,7 @@ const ProfilePage = () => {
 								profileInitial={profileInitial}
 								loading={loading}
 								error={error}
+								online={connected}
 								canEditProfile={canEditProfile}
 								onEditProfile={openEditModal}
 							/>

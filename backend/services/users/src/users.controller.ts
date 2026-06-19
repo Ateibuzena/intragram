@@ -225,6 +225,16 @@ export class UsersController {
 	/**
 	 * Returns the list of accepted friends of a user.
 	 */
+	@Get('friends/suggestions/:id')
+	async getSuggestions(@Param('id') id: string) {
+		return this.usersService.getSuggestions(id);
+	}
+
+	@Get('directory/:id')
+	async getDirectory(@Param('id') id: string) {
+		return this.usersService.getDirectory(id);
+	}
+
 	@Get('friends/:id')
 	async getFriends(@Param('id') id: string) {
 		return this.usersService.getFriends(id);

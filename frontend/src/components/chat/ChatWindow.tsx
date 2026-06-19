@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ChatWindow.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import type { ChatWindowProps } from '@/types/props';
 import { MessageBubble } from './MessageBubble';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
 const LANGUAGES = [
 	{ value: 'c', label: 'C' },
@@ -26,7 +28,14 @@ export const ChatWindow = ({
 	onSendMessage,
  	onStartNewConversation,
 }: ChatWindowProps) => {
+	const { presenceMap } = usePresenceStatus();
+	const navigate = useNavigate();
+	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [messageText, setMessageText] = useState('');
+
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+	}, [messages]);
 	const [showCodePanel, setShowCodePanel] = useState(false);
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
@@ -82,13 +91,34 @@ export const ChatWindow = ({
 		<div className="chat-window">
 			<div className="chat-header">
 				<div className="flex items-center gap-3">
-					<Avatar login={selectedChat.user.login} imageUrl={selectedChat.user.avatarUrl} size="md" online={selectedChat.user.online} />
-					<div>
-						<p className="text-sm font-semibold text-white">{selectedChat.user.displayName || selectedChat.user.login}</p>
-						<p className="text-xs text-ft-muted">
-							{selectedChat.user.online ? 'En línea' : (selectedChat.user.lastSeen ? `Visto ${selectedChat.user.lastSeen}` : 'Fuera de línea')}
-						</p>
-					</div>
+					{(() => {
+						const isOnline = selectedChat.user.id
+							? (presenceMap[String(selectedChat.user.id)] ?? selectedChat.user.online)
+							: selectedChat.user.online;
+						return (
+							<>
+								<button
+									type="button"
+									onClick={() => navigate(`/profile/${selectedChat.user.login}`)}
+									className="hover:opacity-80 transition-opacity flex-shrink-0"
+								>
+									<Avatar login={selectedChat.user.login} imageUrl={selectedChat.user.avatarUrl} size="md" online={isOnline} />
+								</button>
+								<div>
+									<button
+										type="button"
+										onClick={() => navigate(`/profile/${selectedChat.user.login}`)}
+										className="text-sm font-semibold text-white hover:text-ft-cyan transition-colors"
+									>
+										{selectedChat.user.displayName || selectedChat.user.login}
+									</button>
+									<p className="text-xs text-ft-muted">
+										{isOnline ? 'En línea' : (selectedChat.user.lastSeen ? `Visto ${selectedChat.user.lastSeen}` : 'Fuera de línea')}
+									</p>
+								</div>
+							</>
+						);
+					})()}
 				</div>
 			</div>
 
@@ -102,6 +132,7 @@ export const ChatWindow = ({
 					<MessageBubble key={msg.id} message={msg}
 						showTimestamp={idx === 0 || messages[idx - 1].timestamp !== msg.timestamp} />
 				))}
+				<div ref={messagesEndRef} />
 			</div>
 
 			<div className="chat-input-area">

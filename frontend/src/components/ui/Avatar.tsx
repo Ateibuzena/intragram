@@ -19,6 +19,6 @@ export const Avatar = ({ login, imageUrl = null, size = 'md', online }: AvatarPr
 				login[0]
 			)}
 		</div>
-		{online && <span className="avatar-online" />}
+		{online !== undefined && <span className={online ? 'avatar-online' : 'avatar-offline'} />}
 	</div>
 );

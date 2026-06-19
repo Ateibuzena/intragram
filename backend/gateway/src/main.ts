@@ -21,8 +21,13 @@ async function bootstrap() {
 	const metricsService = app.get(MetricsService);
 	app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
 
+	const rawCorsOrigin = process.env.CORS_ORIGIN ?? 'https://localhost:8443';
+	const corsOrigin = (() => {
+		try { return new URL(rawCorsOrigin).origin; } catch { return rawCorsOrigin; }
+	})();
+
 	app.enableCors({
-		origin: [process.env.CORS_ORIGIN ?? 'https://3dlstf65-8443.uks1.devtunnels.ms'],
+		origin: corsOrigin,
 		credentials: true,
 	});
 

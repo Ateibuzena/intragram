@@ -4,6 +4,7 @@ import type { NavKey } from '@/types/models';
 import { NavIcon } from './NavIcon';
 import { LogOutIcon } from './LogOutIcon';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -30,6 +31,7 @@ interface NavbarProps {
 
 export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarProps) => {
 	const { user, profile, token, logout } = useAuth();
+	const { connected } = usePresenceStatus();
 	const navigate = useNavigate();
 	const displayLogin = profile?.login || user?.username || '';
 	const displayName = profile?.display_name || user?.display_name || displayLogin;
@@ -161,12 +163,15 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 			<div className="flex items-center justify-end space-x-3 flex-shrink-0">
 			{/* Avatar del usuario */}
 				<div className="flex items-center space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-3 py-1.5">
-					<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black overflow-hidden flex-shrink-0">
-						{profile?.avatar_url ? (
-							<img src={profile.avatar_url} alt={displayLogin} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-						) : (
-							avatarLetter
-						)}
+					<div className="relative flex-shrink-0">
+						<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black overflow-hidden">
+							{profile?.avatar_url ? (
+								<img src={profile.avatar_url} alt={displayLogin} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+							) : (
+								avatarLetter
+							)}
+						</div>
+						<span className={connected ? 'avatar-online' : 'avatar-offline'} />
 					</div>
 
 					<span className="text-xs font-medium text-ft-text hidden lg:inline">

@@ -9,6 +9,17 @@ import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IP
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
 
+export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+export interface IDirectoryEntry {
+	id: string;
+	login: string;
+	display_name: string | null;
+	avatar_url: string | null;
+	campus: string | null;
+	active: boolean;
+	relation: IDirectoryRelation;
+}
+
 @Injectable()
 export class UsersService {
 	// Base URL of the users microservice.
@@ -194,6 +205,28 @@ export class UsersService {
 			);
 		} catch (error) {
 			this.handleHttpError(error, 'crear publicacion');
+		}
+	}
+
+	/**
+	 * Returns friend suggestions for the authenticated user (campus → country → worldwide).
+	 */
+	async getSuggestions(userId: string): Promise<IUserProfile[]> {
+		try {
+			return await this.httpClient.get<IUserProfile[]>(`${this.usersBaseUrl}/friends/suggestions/${userId}`, { timeoutMs: 5000 });
+		} catch (error) {
+			this.handleHttpError(error, 'obtener sugerencias de amistad');
+		}
+	}
+
+	/**
+	 * Returns all users in the platform (except self) with their relation status, ordered by campus proximity.
+	 */
+	async getDirectory(userId: string): Promise<IDirectoryEntry[]> {
+		try {
+			return await this.httpClient.get<IDirectoryEntry[]>(`${this.usersBaseUrl}/directory/${userId}`, { timeoutMs: 5000 });
+		} catch (error) {
+			this.handleHttpError(error, 'obtener directorio de usuarios');
 		}
 	}
 

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ConversationList.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Input } from '@/components/ui/Input';
 import type { ConversationListProps } from '@/types/props';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
 type ChatTab = 'mensajes' | 'solicitudes';
 
@@ -24,6 +26,8 @@ export const ConversationList = ({
 	onAcceptRequest,
 	onRejectRequest,
 }: ConversationListProps) => {
+	const { presenceMap } = usePresenceStatus();
+	const navigate = useNavigate();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeTab, setActiveTab] = useState<ChatTab>('mensajes');
 	const [processingId, setProcessingId] = useState<string | null>(null);
@@ -108,7 +112,12 @@ export const ConversationList = ({
 								className={`conv-item ${selectedChat?.id === conv.id ? 'conv-item--selected' : ''}`}
 							>
 								<div className="relative flex-shrink-0">
-									<Avatar login={conv.user.login} imageUrl={conv.user.avatarUrl} size="lg" online={conv.user.online} />
+									<Avatar
+									login={conv.user.login}
+									imageUrl={conv.user.avatarUrl}
+									size="lg"
+									online={conv.user.id ? (presenceMap[String(conv.user.id)] ?? conv.user.online) : conv.user.online}
+								/>
 									{conv.unread && <span className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border-2 border-ft-card rounded-full" />}
 								</div>
 								<div className="flex-1 min-w-0 text-left">
@@ -140,11 +149,21 @@ export const ConversationList = ({
 					)}
 					{!pendingLoading && pendingRequests.map((req) => (
 						<div key={req.id} className="flex items-center gap-3 px-4 py-3.5 border-b border-ft-border">
-							<Avatar login={req.login} imageUrl={req.avatar_url ?? null} size="md" />
-							<div className="flex-1 min-w-0">
+							<button
+								type="button"
+								onClick={() => navigate(`/profile/${req.login}`)}
+								className="hover:opacity-80 transition-opacity flex-shrink-0"
+							>
+								<Avatar login={req.login} imageUrl={req.avatar_url ?? null} size="md" />
+							</button>
+							<button
+								type="button"
+								onClick={() => navigate(`/profile/${req.login}`)}
+								className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+							>
 								<p className="text-sm font-semibold text-white truncate">{req.login}</p>
 								<p className="text-[10px] text-ft-muted mt-0.5">Quiere ser tu amigo</p>
-							</div>
+							</button>
 							<div className="flex gap-1.5 flex-shrink-0">
 								<button
 									type="button"

@@ -11,7 +11,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import axios from 'axios';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
@@ -21,6 +21,18 @@ import { UserPostLikeEntity } from './entities/user-post-like.entity';
 import { UserPostCommentEntity } from './entities/user-post-comment.entity';
 import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
+
+export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+
+export interface IDirectoryEntry {
+	id: string;
+	login: string;
+	display_name: string | null;
+	avatar_url: string | null;
+	campus: string | null;
+	active: boolean;
+	relation: IDirectoryRelation;
+}
 
 @Injectable()
 export class UsersService {
@@ -445,6 +457,136 @@ export class UsersService {
 		if (!friendIds.length) return [];
 
 		return this.userProfileRepo.find({ where: { id: In(friendIds) } });
+	}
+
+	private static readonly CAMPUS_COUNTRY: Record<string, string> = {
+		// France
+		'42 Paris': 'France', 'Paris': 'France',
+		'42 Angouleme': 'France', '42 Lyon': 'France', '42 Mulhouse': 'France',
+		'42 Nice': 'France', '42 Perpignan': 'France', '42 Le Havre': 'France',
+		'42 Bordeaux': 'France', '42 Nantes': 'France',
+		// Spain
+		'42 Barcelona': 'Spain', 'Barcelona': 'Spain',
+		'42 Madrid': 'Spain', 'Madrid': 'Spain',
+		'42 Malaga': 'Spain', '42 Urduliz': 'Spain', '42 Seville': 'Spain',
+		'42 Murcia': 'Spain', '42 Alicante': 'Spain',
+		// USA
+		'42 Silicon Valley': 'USA', '42 Fremont': 'USA',
+		'42 Los Angeles': 'USA', '42 Lausanne': 'Switzerland',
+		// South Korea
+		'42 Seoul': 'South Korea', 'Seoul': 'South Korea',
+		'42 Gyeongsan': 'South Korea',
+		// Belgium
+		'42 Antwerp': 'Belgium', '42 Brussels': 'Belgium',
+		// Netherlands
+		'42 Amsterdam': 'Netherlands',
+		// Germany
+		'42 Heilbronn': 'Germany', '42 Wolfsburg': 'Germany',
+		'42 Berlin': 'Germany',
+		// UK
+		'42 London': 'UK',
+		// Portugal
+		'42 Lisbon': 'Portugal', '42 Porto': 'Portugal',
+		// Romania
+		'42 Bucharest': 'Romania',
+		// Finland
+		'42 Helsinki': 'Finland',
+		// Czech Republic
+		'42 Prague': 'Czech Republic',
+		// Turkey
+		'42 Istanbul': 'Turkey', '42 Kocaeli': 'Turkey',
+		// Morocco
+		'42 Benguerir': 'Morocco',
+		// Brazil
+		'42 São Paulo': 'Brazil', '42 Belo Horizonte': 'Brazil',
+		// Japan
+		'42 Tokyo': 'Japan',
+		// Argentina
+		'42 Buenos Aires': 'Argentina',
+		// Australia
+		'42 Adelaide': 'Australia',
+		// Thailand
+		'42 Bangkok': 'Thailand',
+		// UAE
+		'42 Abu Dhabi': 'UAE',
+	};
+
+	private static campusToCountry(campus: string | null): string | null {
+		if (!campus) return null;
+		return UsersService.CAMPUS_COUNTRY[campus] ?? null;
+	}
+
+	async getSuggestions(userId: string, limit = 20): Promise<UserProfileEntity[]> {
+		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
+		if (!me) return [];
+
+		const relationships = await this.friendshipRepo.find({
+			where: [{ user_id: userId }, { friend_id: userId }],
+		});
+		const excludeIds = new Set<string>([userId]);
+		relationships.forEach((f) => { excludeIds.add(f.user_id); excludeIds.add(f.friend_id); });
+
+		const candidates = await this.userProfileRepo.find({
+			where: { id: Not(In([...excludeIds])) },
+			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'active'],
+			take: 300,
+		});
+
+		const myCountry = UsersService.campusToCountry(me.campus);
+		const scored = candidates.map((u) => {
+			const userCountry = UsersService.campusToCountry(u.campus);
+			let score = 0;
+			if (me.campus && u.campus && me.campus === u.campus) score = 2;
+			else if (myCountry && userCountry && myCountry === userCountry) score = 1;
+			return { u, score };
+		});
+		scored.sort((a, b) => b.score - a.score);
+		return scored.slice(0, limit).map((s) => s.u);
+	}
+
+	async getDirectory(userId: string, limit = 50): Promise<IDirectoryEntry[]> {
+		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
+		if (!me) return [];
+
+		const relationships = await this.friendshipRepo.find({
+			where: [{ user_id: userId }, { friend_id: userId }],
+		});
+
+		const relationMap = new Map<string, IDirectoryRelation>();
+		for (const f of relationships) {
+			const otherId = f.user_id === userId ? f.friend_id : f.user_id;
+			if (f.status === 'accepted') {
+				relationMap.set(otherId, 'friends');
+			} else if (f.status === 'pending') {
+				relationMap.set(otherId, f.user_id === userId ? 'pending_sent' : 'pending_received');
+			}
+		}
+
+		const candidates = await this.userProfileRepo.find({
+			where: { id: Not(userId) },
+			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'active'],
+			take: 300,
+		});
+
+		const myCountry = UsersService.campusToCountry(me.campus);
+		const scored = candidates.map((u) => {
+			const userCountry = UsersService.campusToCountry(u.campus);
+			let score = 0;
+			if (me.campus && u.campus && me.campus === u.campus) score = 2;
+			else if (myCountry && userCountry && myCountry === userCountry) score = 1;
+			return { u, score, relation: (relationMap.get(u.id) ?? 'none') as IDirectoryRelation };
+		});
+		scored.sort((a, b) => b.score - a.score);
+
+		return scored.slice(0, limit).map(({ u, relation }) => ({
+			id: u.id,
+			login: u.login,
+			display_name: u.display_name,
+			avatar_url: u.avatar_url,
+			campus: u.campus,
+			active: u.active,
+			relation,
+		}));
 	}
 
 	/**

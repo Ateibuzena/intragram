@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { ROUTES } from '@/constants/routes';
 
 interface CreatePostProps {
@@ -29,6 +30,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
 	const { token, user, profile, logout } = useAuth();
+	const { connected } = usePresenceStatus();
 	const navigate = useNavigate();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 	const avatarUrl = profile?.avatar_url ?? null;
@@ -84,10 +86,13 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	return (
 		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
 			<div className="flex items-start space-x-3">
-				<div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black flex-shrink-0 overflow-hidden">
-					{avatarUrl
-						? <img src={avatarUrl} alt={initial} className="w-full h-full object-cover" />
-						: initial}
+				<div className="relative flex-shrink-0">
+					<div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black overflow-hidden">
+						{avatarUrl
+							? <img src={avatarUrl} alt={initial} className="w-full h-full object-cover" />
+							: initial}
+					</div>
+					<span className={connected ? 'avatar-online' : 'avatar-offline'} />
 				</div>
 				<textarea
 					className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none resize-none mt-1 leading-relaxed"

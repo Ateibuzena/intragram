@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { buildApiUrl } from '@/utils/apiBase';
 import { Navbar } from '@/components/layout/Navbar';
 import { ROUTES } from '@/constants/routes';
@@ -16,12 +17,14 @@ import {
 import type { UserProfileEntityDto } from '@/components/profile';
 import type { NavKey } from '@/types/models';
 
+type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
 type FriendItem = { id: string; login: string };
-type FriendAction = 'idle' | 'adding' | 'removing';
 
 const UserProfilePage = () => {
 	const { login } = useParams<{ login: string }>();
 	const { token, profile: myProfile } = useAuth();
+	const { presenceMap } = usePresenceStatus();
 	const navigate = useNavigate();
 
 	const [profile, setProfile] = useState<UserProfileEntityDto | null>(null);
@@ -29,10 +32,9 @@ const UserProfilePage = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState('');
 
-	const [isFriend, setIsFriend] = useState(false);
+	const [relation, setRelation] = useState<Relation>('none');
 	const [friendshipLoading, setFriendshipLoading] = useState(false);
 	const [friendAction, setFriendAction] = useState<FriendAction>('idle');
-	const [friendMessage, setFriendMessage] = useState<string | null>(null);
 
 	const isOwnProfile = !!myProfile?.login && myProfile.login === login;
 
@@ -73,7 +75,7 @@ const UserProfilePage = () => {
 				});
 				if (!res.ok || cancelled) return;
 				const friends = (await res.json()) as FriendItem[];
-				if (!cancelled) setIsFriend(friends.some((f) => f.id === profile.id));
+				if (!cancelled) setRelation(friends.some((f) => f.id === profile.id) ? 'friends' : 'none');
 			} catch {
 				// ignore
 			} finally {
@@ -88,7 +90,6 @@ const UserProfilePage = () => {
 	const handleAddFriend = async () => {
 		if (!token || !profile || friendAction !== 'idle') return;
 		setFriendAction('adding');
-		setFriendMessage(null);
 		try {
 			const res = await fetch(buildApiUrl('/users/friends/me'), {
 				method: 'POST',
@@ -97,14 +98,26 @@ const UserProfilePage = () => {
 			});
 			if (!res.ok) throw new Error();
 			const data = (await res.json()) as { status?: string };
-			if (data.status === 'accepted') {
-				setIsFriend(true);
-				setFriendMessage('¡Ahora sois amigos!');
-			} else {
-				setFriendMessage('Solicitud enviada.');
-			}
+			setRelation(data.status === 'accepted' ? 'friends' : 'pending_sent');
 		} catch {
-			setFriendMessage('No se pudo enviar la solicitud.');
+			// ignore — button stays in current state
+		} finally {
+			setFriendAction('idle');
+		}
+	};
+
+	const handleAcceptFriend = async () => {
+		if (!token || !profile || friendAction !== 'idle') return;
+		setFriendAction('accepting');
+		try {
+			const res = await fetch(buildApiUrl(`/users/friends/me/${profile.id}/accept`), {
+				method: 'PATCH',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (!res.ok) throw new Error();
+			setRelation('friends');
+		} catch {
+			// ignore
 		} finally {
 			setFriendAction('idle');
 		}
@@ -113,17 +126,15 @@ const UserProfilePage = () => {
 	const handleRemoveFriend = async () => {
 		if (!token || !profile || friendAction !== 'idle') return;
 		setFriendAction('removing');
-		setFriendMessage(null);
 		try {
 			const res = await fetch(buildApiUrl(`/users/friends/me/${profile.id}`), {
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (!res.ok) throw new Error();
-			setIsFriend(false);
-			setFriendMessage('Amigo eliminado.');
+			setRelation('none');
 		} catch {
-			setFriendMessage('No se pudo eliminar el amigo.');
+			// ignore
 		} finally {
 			setFriendAction('idle');
 		}
@@ -183,12 +194,13 @@ const UserProfilePage = () => {
 										profileInitial={profileInitial}
 										loading={loading}
 										error={error}
+										online={presenceMap[profile?.id ?? ''] ?? false}
 										canEditProfile={false}
 										showFriendButton={!isOwnProfile && !friendshipLoading}
-										isFriend={isFriend}
+										relation={relation}
 										friendAction={friendAction}
-										friendMessage={friendMessage ?? undefined}
 										onAddFriend={() => void handleAddFriend()}
+										onAcceptFriend={() => void handleAcceptFriend()}
 										onRemoveFriend={() => void handleRemoveFriend()}
 									/>
 								</div>

@@ -1,15 +1,16 @@
-import { WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { UsersService } from '../users/users.service';
 
 @WebSocketGateway({
 	cors: {
-		origin: process.env.CORS_ORIGIN ?? '*',
+		origin: true,
 		credentials: true,
 	},
 })
 export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect {
+	@WebSocketServer() private readonly server: Server;
 	private readonly socketUserMap = new Map<string, string>();
 
 	constructor(
@@ -32,8 +33,18 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 			}
 
 			const userId = validation.payload.chat_user_id;
+			const wasAlreadyOnline = [...this.socketUserMap.values()].includes(userId);
 			this.socketUserMap.set(socket.id, userId);
 			await this.usersService.setPresence(userId, true);
+
+			// Send the current snapshot of online users to the newly connected client
+			const onlineUserIds = [...new Set(this.socketUserMap.values())];
+			socket.emit('online:users', onlineUserIds);
+
+			// Broadcast status change only on first connection (not on extra tabs)
+			if (!wasAlreadyOnline) {
+				socket.broadcast.emit('user:status', { userId, active: true });
+			}
 		} catch {
 			socket.disconnect(true);
 		}
@@ -48,6 +59,7 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 		const isStillOnline = [...this.socketUserMap.values()].includes(userId);
 		if (!isStillOnline) {
 			await this.usersService.setPresence(userId, false);
+			this.server.emit('user:status', { userId, active: false });
 		}
 	}
 }

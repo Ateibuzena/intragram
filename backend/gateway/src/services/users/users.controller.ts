@@ -34,7 +34,7 @@ import {
 	Req,
 	UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService, IDirectoryEntry } from './users.service';
 import { IUserProfile, IPostComment, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
@@ -266,6 +266,34 @@ export class UsersController {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			const saved = await this.usersService.toggleFavoritePost(profile.id, postId);
 			return { saved };
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Returns friend suggestions for the authenticated user (ordered by campus → country → worldwide).
+	 */
+	@UseGuards(AuthGuard)
+	@Get('friends/suggestions')
+	async getSuggestions(@Req() req: any): Promise<IUserProfile[]> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getSuggestions(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Returns all users in the platform except self, ordered by campus proximity.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('directory')
+	async getDirectory(@Req() req: any): Promise<IDirectoryEntry[]> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getDirectory(profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

@@ -6,12 +6,14 @@ export const usePresence = () => {
 	const { token } = useAuth();
 	const socketRef = useRef<Socket | null>(null);
 	const [connected, setConnected] = useState(false);
+	const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
 
 	useEffect(() => {
 		if (!token) {
 			socketRef.current?.disconnect();
 			socketRef.current = null;
 			setConnected(false);
+			setPresenceMap({});
 			return;
 		}
 
@@ -23,12 +25,24 @@ export const usePresence = () => {
 			reconnection: true,
 			reconnectionDelay: 5000,
 			reconnectionAttempts: 10,
-			transports: ['websocket', 'polling'],
+			transports: ['polling', 'websocket'],
 		});
 
 		socket.on('connect', () => setConnected(true));
 		socket.on('disconnect', () => setConnected(false));
 		socket.on('connect_error', () => setConnected(false));
+
+		// Initial snapshot: set all received IDs as online, rest as offline
+		socket.on('online:users', (userIds: string[]) => {
+			const next: Record<string, boolean> = {};
+			userIds.forEach((id) => { next[id] = true; });
+			setPresenceMap(next);
+		});
+
+		// Real-time delta: one user changed status
+		socket.on('user:status', ({ userId, active }: { userId: string; active: boolean }) => {
+			setPresenceMap((prev) => ({ ...prev, [userId]: active }));
+		});
 
 		socketRef.current = socket;
 
@@ -36,8 +50,9 @@ export const usePresence = () => {
 			socket.disconnect();
 			socketRef.current = null;
 			setConnected(false);
+			setPresenceMap({});
 		};
 	}, [token]);
 
-	return { connected };
+	return { connected, presenceMap };
 };

@@ -28,7 +28,7 @@ const HomePage = () => {
 	const hideSidebar = FULL_SCREEN_NAVS.includes(activeNav);
 
 	return (
-		<div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
+		<div className="h-screen bg-ft-bg text-ft-text flex flex-col overflow-hidden">
 			<Navbar
 				activeNav={activeNav}
 				setActiveNav={setActiveNav}
@@ -52,7 +52,7 @@ const HomePage = () => {
 									<Feed activeFilter={activeFilter} currentLogin={currentLogin} />
 								</div>
 							</div>
-							<div className="hidden xl:block flex-shrink-0 w-64">
+							<div className="hidden xl:block flex-shrink-0 w-80">
 								<FriendsSidebar />
 							</div>
 						</div>

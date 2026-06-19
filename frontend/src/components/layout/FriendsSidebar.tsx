@@ -1,91 +1,180 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
-type FriendItem = {
+type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+
+type DirectoryEntry = {
 	id: string;
 	login: string;
+	display_name?: string | null;
 	avatar_url?: string | null;
+	campus?: string | null;
 	active?: boolean;
+	relation: Relation;
 };
 
 export const FriendsSidebar = () => {
 	const { token } = useAuth();
 	const navigate = useNavigate();
-	const [friends, setFriends] = useState<FriendItem[]>([]);
-	const [loading, setLoading] = useState(false);
+	const { presenceMap } = usePresenceStatus();
 
-	useEffect(() => {
+	const [entries, setEntries] = useState<DirectoryEntry[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [relOverrides, setRelOverrides] = useState<Record<string, Relation>>({});
+	const [processing, setProcessing] = useState<Set<string>>(new Set());
+
+	const fetchDirectory = useCallback(async () => {
 		if (!token) return;
-		let cancelled = false;
-
-		const fetchFriends = async () => {
-			try {
-				const res = await fetch(buildApiUrl('/users/friends/me'), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				if (!res.ok || cancelled) return;
-				const data: FriendItem[] = await res.json();
-				if (!cancelled) {
-					const sorted = [...data].sort((a, b) => {
-						if (a.active && !b.active) return -1;
-						if (!a.active && b.active) return 1;
-						return 0;
-					});
-					setFriends(sorted);
-					setLoading(false);
-				}
-			} catch {
-				if (!cancelled) setLoading(false);
-			}
-		};
-
-		void fetchFriends();
-		const interval = setInterval(() => { void fetchFriends(); }, 30_000);
-
-		return () => {
-			cancelled = true;
-			clearInterval(interval);
-		};
+		try {
+			const res = await fetch(buildApiUrl('/users/directory'), {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (!res.ok) return;
+			const data: DirectoryEntry[] = await res.json();
+			setEntries(data);
+		} catch {
+			// ignore
+		} finally {
+			setLoading(false);
+		}
 	}, [token]);
 
-	const onlineCount = friends.filter((f) => f.active).length;
+	useEffect(() => { void fetchDirectory(); }, [fetchDirectory]);
+
+	const setProcessingId = (id: string, active: boolean) =>
+		setProcessing((prev) => { const next = new Set(prev); active ? next.add(id) : next.delete(id); return next; });
+
+	const handleAdd = async (id: string, login: string) => {
+		if (processing.has(id)) return;
+		setProcessingId(id, true);
+		try {
+			const res = await fetch(buildApiUrl('/users/friends/me'), {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ friend_login: login }),
+			});
+			if (res.ok) {
+				const data = await res.json() as { status: 'pending' | 'accepted' };
+				setRelOverrides((prev) => ({ ...prev, [id]: data.status === 'accepted' ? 'friends' : 'pending_sent' }));
+			}
+		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+	};
+
+	const handleAccept = async (id: string) => {
+		if (processing.has(id)) return;
+		setProcessingId(id, true);
+		try {
+			const res = await fetch(buildApiUrl(`/users/friends/me/${id}/accept`), {
+				method: 'PATCH',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) setRelOverrides((prev) => ({ ...prev, [id]: 'friends' }));
+		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+	};
+
+	const handleRemove = async (id: string) => {
+		if (processing.has(id)) return;
+		setProcessingId(id, true);
+		try {
+			const res = await fetch(buildApiUrl(`/users/friends/me/${id}`), {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) setRelOverrides((prev) => ({ ...prev, [id]: 'none' }));
+		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+	};
 
 	return (
 		<aside className="sticky top-4 bg-ft-card border border-ft-border rounded-2xl overflow-hidden">
-			<div className="px-4 py-3 border-b border-ft-border flex items-center justify-between">
-				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Amigos</h2>
-				{onlineCount > 0 && (
-					<span className="text-[10px] font-bold text-emerald-400">{onlineCount} en línea</span>
-				)}
+			<div className="px-4 py-3 border-b border-ft-border">
+				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Comunidad</h2>
 			</div>
 
 			{loading && (
 				<div className="px-4 py-6 text-center text-xs text-ft-muted">Cargando...</div>
 			)}
 
-			{!loading && friends.length === 0 && (
+			{!loading && entries.length === 0 && (
 				<div className="px-4 py-6 text-center">
-					<p className="text-xs text-ft-muted">No tienes amigos aún.</p>
+					<p className="text-xs text-ft-muted">No hay usuarios disponibles.</p>
 				</div>
 			)}
 
-			{friends.length > 0 && (
+			{entries.length > 0 && (
 				<ul className="divide-y divide-ft-border max-h-[calc(100vh-12rem)] overflow-y-auto">
-					{friends.map((friend) => (
-						<li key={friend.id}>
-							<button
-								type="button"
-								onClick={() => navigate(`/profile/${friend.login}`)}
-								className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-ft-hover transition-colors text-left"
-							>
-								<Avatar login={friend.login} imageUrl={friend.avatar_url ?? null} size="sm" online={friend.active} />
-								<span className="text-xs font-medium text-ft-text truncate">{friend.login}</span>
-							</button>
-						</li>
-					))}
+					{entries.map((entry) => {
+						const rel = relOverrides[entry.id] ?? entry.relation;
+						const busy = processing.has(entry.id);
+						const isOnline = presenceMap[entry.id] ?? false;
+
+						return (
+							<li key={entry.id} className="flex items-center gap-2.5 px-4 py-2.5">
+								<button
+									type="button"
+									onClick={() => navigate(`/profile/${entry.login}`)}
+									className="flex-shrink-0 hover:opacity-80 transition-opacity"
+								>
+									<Avatar login={entry.login} imageUrl={entry.avatar_url ?? null} size="sm" online={isOnline} />
+								</button>
+
+								<div className="flex-1 min-w-0">
+									<button
+										type="button"
+										onClick={() => navigate(`/profile/${entry.login}`)}
+										className="text-xs font-medium text-ft-text truncate block text-left hover:text-ft-cyan transition-colors w-full"
+									>
+										{entry.login}
+									</button>
+									{entry.campus && (
+										<p className="text-[10px] text-ft-muted truncate">{entry.campus}</p>
+									)}
+								</div>
+
+								{rel === 'none' && (
+									<button
+										type="button"
+										disabled={busy}
+										onClick={() => void handleAdd(entry.id, entry.login)}
+										className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg border bg-ft-cyan/10 text-ft-cyan border-ft-cyan/30 hover:bg-ft-cyan/20 disabled:opacity-50 transition-colors"
+									>
+										{busy ? '...' : 'Agregar'}
+									</button>
+								)}
+
+								{rel === 'pending_sent' && (
+									<span className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg border border-ft-border text-ft-muted">
+										Enviada
+									</span>
+								)}
+
+								{rel === 'pending_received' && (
+									<button
+										type="button"
+										disabled={busy}
+										onClick={() => void handleAccept(entry.id)}
+										className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
+									>
+										{busy ? '...' : 'Aceptar'}
+									</button>
+								)}
+
+								{rel === 'friends' && (
+									<button
+										type="button"
+										disabled={busy}
+										onClick={() => void handleRemove(entry.id)}
+										className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg border border-ft-border text-ft-muted hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+									>
+										{busy ? '...' : 'Eliminar'}
+									</button>
+								)}
+							</li>
+						);
+					})}
 				</ul>
 			)}
 		</aside>

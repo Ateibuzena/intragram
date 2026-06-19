@@ -7,12 +7,14 @@ import { usePost } from '@/hooks/usePost';
 import { useAuth } from '@/hooks/useAuth';
 import { buildApiUrl } from '@/utils/apiBase';
 import { renderContent } from '@/utils/renderContent';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import type { PostCardProps } from '@/types/props';
 import type { PostComment } from '@/types/models';
 
 export const PostCard = ({ post }: PostCardProps) => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
+	const { presenceMap } = usePresenceStatus();
 	const { liked, likes, saved, animatingLike, animatingSave, handleLike, handleSave } = usePost(post.liked, post.likes, post.saved ?? false);
 
 	const [showComments, setShowComments] = useState(false);
@@ -187,7 +189,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 								onClick={() => navigate(`/profile/${comment.author.login}`)}
 								className="flex-shrink-0 hover:opacity-80 transition-opacity"
 							>
-								<Avatar login={comment.author.login} imageUrl={comment.author.avatar_url} size="sm" online={comment.author.active} />
+								<Avatar login={comment.author.login} imageUrl={comment.author.avatar_url} size="sm" online={presenceMap[comment.author.id] ?? comment.author.active} />
 							</button>
 							<div className="flex-1 min-w-0">
 								<div className="bg-ft-hover rounded-xl px-3 py-2">

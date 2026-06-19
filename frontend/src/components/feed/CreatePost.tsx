@@ -5,22 +5,11 @@ import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { ROUTES } from '@/constants/routes';
+import { LANGUAGES } from '@/constants/languages';
 
 interface CreatePostProps {
 	onPostCreated?: () => void;
 }
-
-const LANGUAGES = [
-	{ value: 'c', label: 'C' },
-	{ value: 'cpp', label: 'C++' },
-	{ value: 'javascript', label: 'JavaScript' },
-	{ value: 'typescript', label: 'TypeScript' },
-	{ value: 'python', label: 'Python' },
-	{ value: 'bash', label: 'Bash' },
-	{ value: 'json', label: 'JSON' },
-	{ value: 'html', label: 'HTML' },
-	{ value: 'css', label: 'CSS' },
-];
 
 export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [postText, setPostText] = useState('');

@@ -20,8 +20,8 @@ export const PostCard = ({ post }: PostCardProps) => {
 	const [showComments, setShowComments] = useState(false);
 	const [comments, setComments] = useState<PostComment[]>([]);
 	const [commentsLoaded, setCommentsLoaded] = useState(false);
-	const [commentsCount, setCommentsCount] = useState(post.comments);
 	const [newComment, setNewComment] = useState('');
+	const commentsCount = commentsLoaded ? comments.length : post.comments;
 	const [submitting, setSubmitting] = useState(false);
 
 	const toggleLike = async () => {
@@ -93,7 +93,6 @@ export const PostCard = ({ post }: PostCardProps) => {
 			if (res.ok) {
 				const comment = (await res.json()) as PostComment;
 				setComments((prev) => [...prev, comment]);
-				setCommentsCount((c) => c + 1);
 				setNewComment('');
 			}
 		} catch {
@@ -112,7 +111,6 @@ export const PostCard = ({ post }: PostCardProps) => {
 			});
 			if (res.ok) {
 				setComments((prev: PostComment[]) => prev.filter((c: PostComment) => c.id !== commentId));
-				setCommentsCount((c) => Math.max(0, c - 1));
 			}
 		} catch {
 			// Silently ignore network errors.

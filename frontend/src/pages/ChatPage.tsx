@@ -8,6 +8,7 @@ import type { Conversation, Message, User } from '@/types/models';
 import type { PendingFriendRequest } from '@/types/props';
 import { formatTime } from '@/utils/formatters';
 import { buildApiUrl } from '@/utils/apiBase';
+import { decodeTokenPayload } from '@/components/profile/profileUtils';
 
 interface BackendConversation {
 	id: string;
@@ -44,22 +45,6 @@ const SearchIcon = () => (
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 	</svg>
 );
-
-const getCurrentUserIdFromToken = (token: string | null): string | null => {
-	if (!token) return null;
-
-	try {
-		const [, payloadSegment] = token.split('.');
-		if (!payloadSegment) return null;
-
-		const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
-		const decoded = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='));
-		const payload = JSON.parse(decoded) as { sub?: string; chat_user_id?: string };
-		return payload.chat_user_id ?? payload.sub ?? null;
-	} catch {
-		return null;
-	}
-};
 
 const fallbackLogin = (userId: string): string => userId.slice(0, 8);
 
@@ -127,7 +112,10 @@ const ChatPage = () => {
 	const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([]);
 	const [pendingLoading, setPendingLoading] = useState(false);
 
-	const currentUserId = useMemo(() => getCurrentUserIdFromToken(token), [token]);
+	const currentUserId = useMemo(() => {
+		const payload = decodeTokenPayload(token);
+		return payload?.chat_user_id ?? payload?.sub ?? null;
+	}, [token]);
 
 	const conversations = useMemo(
 		() => rawConversations.map((conversation) => mapConversationToUI(conversation, currentUserId, usersById)),

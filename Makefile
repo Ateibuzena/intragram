@@ -37,7 +37,7 @@ clean:
 fclean: down clean
 	@echo "⚠️ Deep cleaning Docker system..."
 	@echo "📦 Removing project volumes..."
-	-@docker volume rm frontend-node-modules gateway-node-modules auth-service-node-modules users-service-node-modules chat-service-node-modules auth-db-data users-db-data chat-db-data grafana-data prometheus-data alertmanager-data 2>/dev/null || echo "❎ No project volumes to remove."
+	-@docker volume rm frontend-node-modules gateway-node-modules auth-service-node-modules users-service-node-modules chat-service-node-modules auth-db-data users-db-data chat-db-data grafana-data prometheus-data 2>/dev/null || echo "❎ No project volumes to remove."
 	@echo "🧹 Full cleanup completed successfully!"
 
 

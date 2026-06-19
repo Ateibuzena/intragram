@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   # ==============================
-  # MONITOREO (OPCIONAL)
+  # MONITOREO
   # ==============================
   prometheus:
     container_name: prometheus
@@ -41,64 +41,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  alertmanager:
-    container_name: alertmanager
-    build:
-      context: ./backend/observability/prometheus
-      dockerfile: alertmanager/Dockerfile
-    env_file:
-      - ./.env
-    command:
-      - --config.file=/etc/alertmanager/alertmanager.yml
-      - --storage.path=/alertmanager
-      - --web.external-url=https://localhost:8443/alertmanager/
-      - --web.route-prefix=/
-    volumes:
-      - ./backend/observability/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml.template:ro
-      - ./backend/observability/prometheus/templates:/etc/alertmanager/templates:ro
-      - alertmanager-data:/alertmanager
-    networks:
-      - backend-net
-    restart: unless-stopped
-
-  postgres-exporter-auth:
-    container_name: postgres-exporter-auth
-    image: prometheuscommunity/postgres-exporter:v0.19.1
-    environment:
-      - DATA_SOURCE_NAME=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
-    networks:
-      - service-net
-    restart: unless-stopped
-
-  postgres-exporter-users:
-    container_name: postgres-exporter-users
-    image: prometheuscommunity/postgres-exporter:v0.19.1
-    environment:
-      - DATA_SOURCE_NAME=postgresql://${USERS_DB_USER}:${USERS_DB_PASSWORD}@users-db:5432/${USERS_DB_NAME}
-    networks:
-      - service-net
-    restart: unless-stopped
-
-  postgres-exporter-chat:
-    container_name: postgres-exporter-chat
-    image: prometheuscommunity/postgres-exporter:v0.19.1
-    environment:
-      - DATA_SOURCE_NAME=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASSWORD}@chat-db:5432/${CHAT_DB_NAME}
-    networks:
-      - service-net
-    restart: unless-stopped
-
-  nginx-exporter:
-    container_name: nginx-exporter
-    image: nginx/nginx-prometheus-exporter:1.3.0
-    command:
-      - --nginx.scrape-uri=http://nginx:8080/stub_status
-    networks:
-      - backend-net
-    depends_on:
-      - nginx
-    restart: unless-stopped
-
   node-exporter:
     container_name: node-exporter
     image: prom/node-exporter:v1.5.0
@@ -111,8 +53,6 @@ services:
     build:
       context: ./backend/observability/grafana
       dockerfile: Dockerfile
-    env_file:
-      - ./.env
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
@@ -352,7 +292,6 @@ services:
     depends_on:
       - frontend
       - gateway
-      - alertmanager
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -396,5 +335,3 @@ volumes:
     name: grafana-data
   prometheus-data:
     name: prometheus-data
-  alertmanager-data:
-    name: alertmanager-data

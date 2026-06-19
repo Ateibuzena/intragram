@@ -85,8 +85,8 @@ Cada servicio usa TypeORM con `synchronize` activado fuera de producción.
 
 ## Observability
 
-- La observabilidad completa está documentada en [METRICS](services/METRICS.md).
-- Incluye Prometheus, Grafana, Alertmanager, exporters, dashboards y validación operativa.
+- La observabilidad completa está documentada en [METRICS-SERVICE](services/METRICS-SERVICE.md).
+- Incluye Prometheus, Grafana, node-exporter, dashboards y validación operativa.
 
 ## Configuration
 

@@ -34,7 +34,7 @@ groups:
 
       - alert: ExporterDown
         expr: |
-          up{job=~"node_exporter|nginx_exporter|postgres_exporter_.*"} == 0
+          up{job="node_exporter"} == 0
         for: 5m
         labels:
           severity: warning

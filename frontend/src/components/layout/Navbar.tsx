@@ -13,6 +13,7 @@ type UserSearchResult = {
 	id: string;
 	login: string;
 	display_name: string | null;
+	avatar_url?: string | null;
 	correction_point: number;
 };
 
@@ -130,8 +131,11 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 									className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-ft-hover transition-colors text-left"
 									onClick={() => handleResultClick(result)}
 								>
-									<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0">
-										{result.login.charAt(0).toUpperCase()}
+									<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0 overflow-hidden">
+										{result.avatar_url
+											? <img src={result.avatar_url} alt={result.login} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+											: result.login.charAt(0).toUpperCase()
+										}
 									</div>
 									<div className="flex-1 min-w-0">
 										<p className="text-xs font-semibold text-white truncate">{result.login}</p>

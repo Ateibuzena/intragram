@@ -366,6 +366,17 @@ export class UsersService {
 		}
 	}
 
+	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
+		try {
+			return await this.httpClient.delete<{ deleted: boolean }>(
+				`${this.usersBaseUrl}/feed/post/${postId}/by/${userId}`,
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'delete post');
+		}
+	}
+
 	/**
 	 * Normalises HTTP error responses from the users-service.
 	 */

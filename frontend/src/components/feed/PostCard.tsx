@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PostCard.css';
 import { Avatar } from '@/components/ui/Avatar';
@@ -11,7 +11,7 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import type { PostCardProps } from '@/types/props';
 import type { PostComment } from '@/types/models';
 
-export const PostCard = ({ post }: PostCardProps) => {
+export const PostCard = ({ post, onDelete }: PostCardProps) => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
@@ -23,6 +23,18 @@ export const PostCard = ({ post }: PostCardProps) => {
 	const [newComment, setNewComment] = useState('');
 	const commentsCount = commentsLoaded ? comments.length : post.comments;
 	const [submitting, setSubmitting] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
+	const isAuthor = !!profile?.login && profile.login === post.user.login;
+
+	useEffect(() => {
+		if (!menuOpen) return;
+		const handleClickOutside = (e: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+		};
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [menuOpen]);
 
 	const toggleLike = async () => {
 		if (!token) {
@@ -102,6 +114,20 @@ export const PostCard = ({ post }: PostCardProps) => {
 		}
 	};
 
+	const handleDeletePost = async () => {
+		if (!token) return;
+		setMenuOpen(false);
+		try {
+			const res = await fetch(buildApiUrl(`/users/feed/post/${post.id}`), {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) onDelete?.(post.id);
+		} catch {
+			// ignore
+		}
+	};
+
 	const deleteComment = async (commentId: string) => {
 		if (!token) return;
 		try {
@@ -134,11 +160,32 @@ export const PostCard = ({ post }: PostCardProps) => {
 						<p className="text-xs text-ft-muted">{post.time}</p>
 					</div>
 				</button>
-				<button className="text-ft-muted hover:text-white transition-colors p-1 flex-shrink-0">
-					<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-						<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-					</svg>
-				</button>
+				{isAuthor && (
+					<div className="relative flex-shrink-0" ref={menuRef}>
+						<button
+							onClick={() => setMenuOpen((v) => !v)}
+							className="text-ft-muted hover:text-white transition-colors p-1"
+						>
+							<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+								<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+							</svg>
+						</button>
+						{menuOpen && (
+							<div className="absolute right-0 top-7 z-10 bg-ft-card border border-ft-border rounded-xl shadow-lg overflow-hidden w-44">
+								<button
+									type="button"
+									onClick={() => void handleDeletePost()}
+									className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-red-400 hover:bg-red-500/10 transition-colors text-left"
+								>
+									<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+									</svg>
+									Eliminar publicación
+								</button>
+							</div>
+						)}
+					</div>
+				)}
 			</div>
 
 			<div className="text-sm text-ft-text leading-relaxed mb-4">{renderContent(post.content)}</div>

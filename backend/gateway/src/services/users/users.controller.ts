@@ -442,6 +442,17 @@ export class UsersController {
 		}
 	}
 
+	@UseGuards(AuthGuard)
+	@Delete('feed/post/:postId')
+	async deletePost(@Param('postId') postId: string, @Req() req: any): Promise<{ deleted: boolean }> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.deletePost(postId, profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	/**
 	 * Looks up a user by their internal identifier.
 	 */

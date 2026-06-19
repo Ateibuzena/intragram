@@ -842,6 +842,18 @@ export class UsersService {
 		return { deleted: true };
 	}
 
+	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
+		const post = await this.userPostRepo.findOne({ where: { id: postId } });
+		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+		if (post.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+
+		await this.commentRepo.delete({ post_id: postId });
+		await this.postLikeRepo.delete({ post_id: postId });
+		await this.userPostRepo.remove(post);
+
+		return { deleted: true };
+	}
+
 	async setPresence(userId: string, active: boolean): Promise<void> {
 		const values: Partial<UserProfileEntity> = { active };
 		if (active) values.last_login_at = new Date();

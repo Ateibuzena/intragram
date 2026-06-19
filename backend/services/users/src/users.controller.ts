@@ -351,6 +351,18 @@ export class UsersController {
 		}
 	}
 
+	@Delete('feed/post/:postId/by/:userId')
+	async deletePost(@Param('postId') postId: string, @Param('userId') userId: string) {
+		try {
+			return await this.usersService.deletePost(postId, userId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error deleting post',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
 	/**
 	 * Updates the online presence status for a user.
 	 * Internal endpoint — called by the gateway's WebSocket presence gateway.

@@ -103,7 +103,10 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 				? Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)
 				: posts.map((post, i) => (
 					<div key={post.id} className={`animate-fade-in-up-delay-${Math.min(i + 1, 3)}`}>
-						<PostCard post={post} />
+						<PostCard
+							post={post}
+							onDelete={(id) => setItems((prev) => prev.filter((p) => p.id !== id))}
+						/>
 					</div>
 				))
 			}

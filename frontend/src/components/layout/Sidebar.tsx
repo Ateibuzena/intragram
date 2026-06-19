@@ -1,6 +1,7 @@
 import './Sidebar.css';
 import { FILTERS } from '@/constants/mockData';
 import type { SidebarProps } from '@/types/props';
+import { FilterIcon } from './FilterIcon';
 
 export const Sidebar = ({ activeFilter, setActiveFilter }: SidebarProps) => {
 	return (
@@ -24,7 +25,7 @@ export const Sidebar = ({ activeFilter, setActiveFilter }: SidebarProps) => {
 							{activeFilter === f.key && (
 								<span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-ft-cyan rounded-r-full" />
 							)}
-							<span className="text-base flex-shrink-0 w-5 text-center">{f.icon}</span>
+							<FilterIcon filterKey={f.key} />
 							<span className="sidebar-item-label">{f.label}</span>
 						</button>
 					</div>

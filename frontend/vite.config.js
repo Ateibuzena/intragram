@@ -13,10 +13,10 @@ export default defineConfig({
         host: '0.0.0.0',
         port: 80,
         strictPort: true,
-        origin: 'https://3dlstf65-8443.uks1.devtunnels.ms/',
+        origin: 'https://localhost:8443/',
         proxy: {
             '/api': {
-                target: 'https://3dlstf65-8443.uks1.devtunnels.ms/',
+                target: 'https://localhost:8443/',
                 changeOrigin: true,
                 ws: true,
                 secure: false,
@@ -24,7 +24,7 @@ export default defineConfig({
         },
         hmr: {
             protocol: 'wss',
-            host: '3dlstf65-8443.uks1.devtunnels.ms',
+            host: 'localhost:8443',
             clientPort: 443,
         },
     },

@@ -10,7 +10,6 @@ import ProfilePage from './ProfilePage';
 import { useAuth } from '@/hooks/useAuth';
 
 const VALID_NAV_KEYS: NavKey[] = ['home', 'chat', 'profile'];
-const FULL_SCREEN_NAVS: NavKey[] = ['chat'];
 
 const HomePage = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -25,7 +24,7 @@ const HomePage = () => {
 	const [search, setSearch] = useState('');
 	const { user, profile } = useAuth();
 	const currentLogin = profile?.login || user?.username || '';
-	const hideSidebar = FULL_SCREEN_NAVS.includes(activeNav);
+	const hideSidebar = activeNav !== 'home';
 
 	return (
 		<div className="h-screen bg-ft-bg text-ft-text flex flex-col overflow-hidden">

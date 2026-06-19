@@ -312,6 +312,18 @@ export class UsersController {
 	/**
 	 * Returns all comments for a post.
 	 */
+	@Get('feed/post/:postId')
+	async getPostById(@Param('postId') postId: string, @Query('userId') userId: string) {
+		try {
+			return await this.usersService.getPostById(postId, userId);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error fetching post',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
 	@Get('feed/post/:postId/comments')
 	async getPostComments(@Param('postId') postId: string) {
 		return this.usersService.getPostComments(postId);

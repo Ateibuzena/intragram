@@ -366,6 +366,17 @@ export class UsersService {
 		}
 	}
 
+	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
+		try {
+			return await this.httpClient.get<IFeedPost>(
+				`${this.usersBaseUrl}/feed/post/${postId}?userId=${encodeURIComponent(userId)}`,
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'get post');
+		}
+	}
+
 	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
 		try {
 			return await this.httpClient.delete<{ deleted: boolean }>(

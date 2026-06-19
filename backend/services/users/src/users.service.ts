@@ -417,6 +417,18 @@ export class UsersService {
 		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
 	}
 
+	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
+		const post = await this.userPostRepo.findOne({ where: { id: postId }, relations: ['author'] });
+		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+
+		const [savedResult, likedIds] = await Promise.all([
+			this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } }),
+			this.getLikedPostIds(userId, [postId]),
+		]);
+
+		return this.mapPostToFeedDto(post, !!savedResult, likedIds.has(postId));
+	}
+
 	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false, likedByCurrentUser = false): IFeedPost {
 		return {
 			id: post.id,

@@ -401,6 +401,17 @@ export class UsersController {
 	 * Returns all comments for a post.
 	 */
 	@UseGuards(AuthGuard)
+	@Get('feed/post/:postId')
+	async getPostById(@Param('postId') postId: string, @Req() req: any): Promise<IFeedPost> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getPostById(postId, profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@UseGuards(AuthGuard)
 	@Get('feed/post/:postId/comments')
 	async getPostComments(@Param('postId') postId: string): Promise<IPostComment[]> {
 		try {

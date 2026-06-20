@@ -3,11 +3,11 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import {
 	useProfileData,
 	ProfileHeader,
-	CommonCoreProgress,
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
 	ProfileStats,
+	buildProfileInsights,
 	decodeTokenPayload,
 } from '@/components/profile';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -48,70 +48,34 @@ const ProfilePage = () => {
 		await patchProfile({ avatar_url: url });
 	};
 
-	const campus = profile?.campus ?? 'N/A';
-	const role = profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student';
-	const profileStatus = profile?.active ? 'Activo' : 'Inactivo';
-	const pool = [profile?.pool_month, profile?.pool_year].filter(Boolean).join(' ') || 'N/A';
-	const cursusLevel = profile?.levels?.[0]?.level ?? 0;
-	const cursusGrade = profile?.levels?.[0]?.grade ?? 'N/A';
-	const level = Math.max(0, Math.round(cursusLevel * 100) / 100);
-	const levelInteger = Math.floor(cursusLevel);
-	const levelProgress = cursusLevel - levelInteger;
-	const progressPercentage = levelProgress * 100;
+	const insights = buildProfileInsights(profile);
 
 	return (
 		<div className="w-full px-3 md:px-6 lg:px-8">
-			<section className="mb-4 space-y-3">
-				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
-					{/* Left column: Profile Picture + Common Core Progress + Titles */}
-					<div className="flex flex-col gap-3 xl:h-[34rem]">
-						{/* Profile Header — grows to match the height of Skills and Projects */}
-						<div className="flex-1 min-h-0">
-							<ProfileHeader
-								profile={profile}
-								displayName={displayName}
-								profileLogin={profileLogin}
-								profileInitial={profileInitial}
-								loading={loading}
-								error={error}
-								online={connected}
-								canEditProfile={canEditProfile}
-								onSaveDisplayName={handleSaveDisplayName}
-								onSaveAvatarUrl={handleSaveAvatarUrl}
-							/>
-						</div>
-
-						{/* Common Core Progress */}
-						<div className="flex-shrink-0">
-							<CommonCoreProgress
-								cursusLevel={cursusLevel}
-								cursusGrade={cursusGrade}
-								levelInteger={levelInteger}
-								level={level}
-								progressPercentage={progressPercentage}
-							/>
-						</div>
-					</div>
-
-					{/* Skills Radar Chart */}
-					<SkillsRadar skills={profile?.skills} />
-
-					{/* Projects */}
-					<ProjectsCard profile={profile} />
-				</div>
-
-				{/* Profile Details */}
-				<ProfileDetails profile={profile} campus={campus} />
-
-				{/* Stats Cards */}
-				<ProfileStats
+			<section className="mb-6 space-y-5">
+				<ProfileHeader
 					profile={profile}
-					campus={campus}
-					pool={pool}
-					role={role}
-					profileStatus={profileStatus}
+					displayName={displayName}
+					profileLogin={profileLogin}
+					profileInitial={profileInitial}
+					loading={loading}
+					error={error}
+					online={connected}
+					insights={insights}
+					canEditProfile={canEditProfile}
+					onSaveDisplayName={handleSaveDisplayName}
+					onSaveAvatarUrl={handleSaveAvatarUrl}
+					className="min-h-[36rem]"
 				/>
 
+				<ProfileStats insights={insights} />
+
+				<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
+					<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
+					<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />
+				</div>
+
+				<ProfileDetails profile={profile} campus={insights.campus} />
 			</section>
 		</div>
 	);

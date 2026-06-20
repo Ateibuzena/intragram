@@ -7,11 +7,11 @@ import { Navbar } from '@/components/layout/Navbar';
 import { ROUTES } from '@/constants/routes';
 import {
 	ProfileHeader,
-	CommonCoreProgress,
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
 	ProfileStats,
+	buildProfileInsights,
 } from '@/components/profile';
 import type { UserProfileEntityDto } from '@/components/profile';
 import type { NavKey } from '@/types/models';
@@ -150,16 +150,7 @@ const UserProfilePage = () => {
 	const profileLogin = profile?.login ?? login ?? '';
 	const profileInitial = displayName.charAt(0).toUpperCase();
 
-	const campus = profile?.campus ?? 'N/A';
-	const role = profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student';
-	const profileStatus = profile?.active ? 'Activo' : 'Inactivo';
-	const pool = [profile?.pool_month, profile?.pool_year].filter(Boolean).join(' ') || 'N/A';
-	const cursusLevel = profile?.levels?.[0]?.level ?? 0;
-	const cursusGrade = profile?.levels?.[0]?.grade ?? 'N/A';
-	const level = Math.max(0, Math.round(cursusLevel * 100) / 100);
-	const levelInteger = Math.floor(cursusLevel);
-	const levelProgress = cursusLevel - levelInteger;
-	const progressPercentage = levelProgress * 100;
+	const insights = buildProfileInsights(profile);
 
 	return (
 		<div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
@@ -182,48 +173,31 @@ const UserProfilePage = () => {
 						Volver
 					</button>
 
-					<section className="mb-4 space-y-3">
-						<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
-							<div className="flex flex-col gap-3 xl:h-[34rem]">
-								<div className="flex-1 min-h-0">
-									<ProfileHeader
-										profile={profile}
-										displayName={displayName}
-										profileLogin={profileLogin}
-										profileInitial={profileInitial}
-										loading={loading}
-										error={error}
-										online={presenceMap[profile?.id ?? ''] ?? false}
-										canEditProfile={false}
-										showFriendButton={!isOwnProfile && !friendshipLoading}
-										relation={relation}
-										friendAction={friendAction}
-										onAddFriend={() => void handleAddFriend()}
-										onAcceptFriend={() => void handleAcceptFriend()}
-										onRemoveFriend={() => void handleRemoveFriend()}
-									/>
-								</div>
-								<div className="flex-shrink-0">
-									<CommonCoreProgress
-										cursusLevel={cursusLevel}
-										cursusGrade={cursusGrade}
-										levelInteger={levelInteger}
-										level={level}
-										progressPercentage={progressPercentage}
-									/>
-								</div>
-							</div>
-							<SkillsRadar skills={profile?.skills} />
-							<ProjectsCard profile={profile} />
-						</div>
-						<ProfileDetails profile={profile} campus={campus} />
-						<ProfileStats
+					<section className="mb-6 space-y-5">
+						<ProfileHeader
 							profile={profile}
-							campus={campus}
-							pool={pool}
-							role={role}
-							profileStatus={profileStatus}
+							displayName={displayName}
+							profileLogin={profileLogin}
+							profileInitial={profileInitial}
+							loading={loading}
+							error={error}
+							online={presenceMap[profile?.id ?? ''] ?? false}
+							insights={insights}
+							canEditProfile={false}
+							showFriendButton={!isOwnProfile && !friendshipLoading}
+							relation={relation}
+							friendAction={friendAction}
+							onAddFriend={() => void handleAddFriend()}
+							onAcceptFriend={() => void handleAcceptFriend()}
+							onRemoveFriend={() => void handleRemoveFriend()}
+							className="min-h-[36rem]"
 						/>
+						<ProfileStats insights={insights} />
+						<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
+							<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
+							<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />
+						</div>
+						<ProfileDetails profile={profile} campus={insights.campus} />
 					</section>
 				</div>
 			</main>

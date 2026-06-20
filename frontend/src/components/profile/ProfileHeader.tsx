@@ -1,6 +1,6 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/Button';
-import { UserProfileEntityDto } from './profileTypes';
+import { ProfileInsights, UserProfileEntityDto } from './profileTypes';
 
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
@@ -13,6 +13,7 @@ interface ProfileHeaderProps {
 	loading: boolean;
 	error: string | null;
 	online?: boolean;
+	insights?: ProfileInsights;
 	canEditProfile?: boolean;
 	onSaveDisplayName?: (name: string) => Promise<void>;
 	onSaveAvatarUrl?: (url: string) => Promise<void>;
@@ -22,6 +23,7 @@ interface ProfileHeaderProps {
 	onAddFriend?: () => void;
 	onRemoveFriend?: () => void;
 	onAcceptFriend?: () => void;
+	className?: string;
 }
 
 const PencilIcon = ({ className }: { className?: string }) => (
@@ -29,12 +31,6 @@ const PencilIcon = ({ className }: { className?: string }) => (
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
 	</svg>
 );
-
-const cleanTitle = (name: string, login: string) =>
-	name
-		.replace(/%login/gi, login ? `@${login}` : 'esta persona')
-		.replace(/\s+/g, ' ')
-		.trim();
 
 export const ProfileHeader = ({
 	profile,
@@ -44,6 +40,7 @@ export const ProfileHeader = ({
 	loading,
 	error,
 	online,
+	insights,
 	canEditProfile,
 	onSaveDisplayName,
 	onSaveAvatarUrl,
@@ -53,6 +50,7 @@ export const ProfileHeader = ({
 	onAddFriend,
 	onRemoveFriend,
 	onAcceptFriend,
+	className = '',
 }: ProfileHeaderProps) => {
 	const [editingName, setEditingName] = useState(false);
 	const [nameInput, setNameInput] = useState('');
@@ -64,14 +62,9 @@ export const ProfileHeader = ({
 	const [avatarError, setAvatarError] = useState<string | null>(null);
 
 	const nameInputRef = useRef<HTMLInputElement>(null);
-	const titles = profile?.titles
-		?.map((title) => ({
-			id: title.id,
-			name: cleanTitle(title.name || '', profileLogin),
-			selected: Boolean(title.selected),
-		}))
-		.filter((title) => title.name) ?? [];
-	const selectedTitle = titles.find((title) => title.selected) ?? titles[0] ?? null;
+	const titles = insights?.titles ?? [];
+	const selectedTitle = insights?.selectedTitle ?? null;
+	const progressPercentage = Math.max(0, Math.min(100, Math.round(insights?.progressPercentage ?? 0)));
 
 	const startEditName = () => {
 		if (!canEditProfile) return;
@@ -168,7 +161,7 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6 h-full flex flex-col items-center justify-center overflow-visible">
+		<div className={`relative h-full overflow-visible ${className}`}>
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
@@ -251,92 +244,167 @@ export const ProfileHeader = ({
 			)}
 
 			{/* ── Normal content ── */}
-			<div className="flex flex-col items-center w-full">
-				<div className="relative group/avatar">
-					<div className="w-40 h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden">
-						{profile?.avatar_url ? (
-							<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-						) : (
-							<span>{profileInitial}</span>
+			<div className="relative flex min-h-[36rem] w-full items-center justify-center overflow-visible px-4 py-14 md:min-h-[34rem] md:px-10 md:py-16">
+				{insights && (
+					<div
+						className="pointer-events-none absolute inset-x-0 top-3 z-0 mx-auto w-full max-w-6xl px-3 md:top-6 md:px-8"
+						aria-hidden="true"
+					>
+						<svg viewBox="0 0 900 430" className="h-auto w-full overflow-visible">
+							<path
+								d="M 72 390 A 378 378 0 0 1 828 390"
+								fill="none"
+								pathLength={100}
+								stroke="currentColor"
+								strokeLinecap="round"
+								strokeWidth="30"
+								className="text-ft-border/70"
+							/>
+							<path
+								d="M 72 390 A 378 378 0 0 1 828 390"
+								fill="none"
+								pathLength={100}
+								stroke="currentColor"
+								strokeDasharray={`${progressPercentage} 100`}
+								strokeLinecap="round"
+								strokeWidth="30"
+								className="text-ft-cyan drop-shadow-[0_0_34px_rgba(0,212,255,0.52)]"
+							/>
+						</svg>
+					</div>
+				)}
+
+				<div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 pt-24 md:flex-row md:justify-center md:pt-28">
+					<div className="relative group/avatar shrink-0">
+						<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
+							{profile?.avatar_url ? (
+								<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+							) : (
+								<span>{profileInitial}</span>
+							)}
+						</div>
+
+						{canEditProfile && (
+							<button
+								type="button"
+								onClick={startEditAvatar}
+								className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+							>
+								<PencilIcon className="w-8 h-8 text-white drop-shadow" />
+							</button>
+						)}
+
+						{online !== undefined && (
+							<span
+								className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
+									online ? 'bg-green-400' : 'bg-ft-muted'
+								}`}
+								title={online ? 'Online' : 'Offline'}
+							/>
 						)}
 					</div>
 
-					{canEditProfile && (
-						<button
-							type="button"
-							onClick={startEditAvatar}
-							className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
-						>
-							<PencilIcon className="w-8 h-8 text-white drop-shadow" />
-						</button>
-					)}
-
-					{online !== undefined && (
-						<span className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${online ? 'bg-green-400' : 'bg-red-500'}`} />
-					)}
-				</div>
-
-				<div className="mt-4 flex items-center gap-1.5 group/name max-w-full px-2">
-					<h2
-						className={`text-center text-2xl font-black text-white truncate ${canEditProfile ? 'cursor-pointer' : ''}`}
-						onClick={canEditProfile ? startEditName : undefined}
-					>
-						{displayName}
-					</h2>
-					{canEditProfile && (
-						<button
-							type="button"
-							onClick={startEditName}
-							className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
-						>
-							<PencilIcon className="w-3.5 h-3.5" />
-						</button>
-					)}
-				</div>
-
-				{selectedTitle && (
-					<details className="group relative z-20 mt-1 max-w-full">
-						<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-xs font-semibold text-ft-muted transition-colors hover:text-white [&::-webkit-details-marker]:hidden">
-							<span className="min-w-0 truncate">{selectedTitle.name}</span>
-							<svg
-								className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-								aria-hidden="true"
+					<div className="min-w-0 text-center md:text-left">
+						<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
+							<h2
+								className={`min-w-0 truncate text-3xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
+								onClick={canEditProfile ? startEditName : undefined}
 							>
-								<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-							</svg>
-						</summary>
-
-						<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50">
-							<div className="max-h-52 overflow-y-auto py-1">
-								{titles.map((title) => (
-									<div
-										key={title.id}
-										className={`px-3 py-2 text-left text-xs leading-snug ${
-											title.id === selectedTitle.id
-												? 'bg-ft-cyan/10 font-semibold text-ft-cyan'
-												: 'text-ft-muted hover:bg-ft-hover hover:text-white'
-										}`}
-										title={title.name}
-									>
-										{title.name}
-									</div>
-								))}
-							</div>
+								{displayName}
+							</h2>
+							{canEditProfile && (
+								<button
+									type="button"
+									onClick={startEditName}
+									className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
+								>
+									<PencilIcon className="w-3.5 h-3.5" />
+								</button>
+							)}
 						</div>
-					</details>
-				)}
 
-				<p className="text-center text-sm text-ft-muted mt-1">@{profileLogin}</p>
-				<p className="text-center text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+					{selectedTitle && (
+						<details className="group relative z-20 mt-2 max-w-full">
+							<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-sm font-semibold text-ft-muted transition-colors hover:text-white md:justify-start md:text-left [&::-webkit-details-marker]:hidden">
+								<span className="min-w-0 truncate">{selectedTitle.name}</span>
+								<svg
+									className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									aria-hidden="true"
+								>
+									<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+								</svg>
+							</summary>
 
-				<div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
-					{showFriendButton && profile && renderFriendButton()}
+							<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50 md:left-0 md:translate-x-0">
+								<div className="max-h-52 overflow-y-auto py-1">
+									{titles.map((title) => (
+										<div
+											key={title.id}
+											className={`px-3 py-2 text-left text-xs leading-snug ${
+												title.id === selectedTitle.id
+													? 'bg-ft-cyan/10 font-semibold text-ft-cyan'
+													: 'text-ft-muted hover:bg-ft-hover hover:text-white'
+											}`}
+											title={title.name}
+										>
+											{title.name}
+										</div>
+									))}
+								</div>
+							</div>
+						</details>
+					)}
+
+					<p className="mt-2 text-sm text-ft-muted">@{profileLogin}</p>
+					<p className="text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+
+					{insights && (
+						<div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+							<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								{insights.campus}
+							</span>
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								{insights.role}
+							</span>
+							<span className={`rounded-full border px-3 py-1 text-xs font-bold ${
+								profile?.location
+									? 'border-green-400/30 bg-green-500/10 text-green-300'
+									: 'border-ft-border bg-ft-hover/40 text-ft-muted'
+							}`}
+								title={profile?.location ?? 'Sin location en 42'}
+							>
+								{insights.profileStatus}
+							</span>
+							<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								Pool {insights.pool}
+							</span>
+						</div>
+					)}
+
+					{insights && (
+						<div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+							<span className="rounded-full border border-ft-cyan/30 bg-ft-cyan/10 px-3 py-1 text-xs font-black text-ft-cyan">
+								{progressPercentage}%
+							</span>
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								Nivel {insights.level}
+							</span>
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-ft-muted">
+								Siguiente {insights.nextLevel}
+							</span>
+						</div>
+					)}
+
+					<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
+						{showFriendButton && profile && renderFriendButton()}
+					</div>
+
+						{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
+						{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+					</div>
 				</div>
-
-				{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
-				{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
 			</div>
 		</div>
 	);

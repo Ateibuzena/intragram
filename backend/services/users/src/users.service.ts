@@ -104,7 +104,6 @@ export class UsersService {
 			existing.phone = profile.phone || null;
 			existing.staff = !!profile.staff;
 			existing.alumni = !!profile.alumni;
-			existing.active = profile.active !== false;
 			existing.skills = profile.skills || null;
 			existing.levels = profile.levels || null;
 			existing.titles = profile.titles || null;
@@ -134,7 +133,7 @@ export class UsersService {
 			phone: profile.phone || null,
 			staff: !!profile.staff,
 			alumni: !!profile.alumni,
-			active: profile.active !== false,
+			active: false,
 			skills: profile.skills || null,
 			levels: profile.levels || null,
 			titles: profile.titles || null,

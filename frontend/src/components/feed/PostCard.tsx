@@ -11,7 +11,7 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { PostDetailModal } from './PostDetailModal';
 import type { PostCardProps } from '@/types/props';
 
-export const PostCard = ({ post, onDelete }: PostCardProps) => {
+export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
@@ -76,7 +76,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 
 	return (
 		<>
-			<article className="post-card">
+			<article className="post-card" style={isNew ? { backgroundColor: '#1b2335' } : undefined}>
 				<div className="flex items-center space-x-3 mb-4">
 					<button
 						type="button"

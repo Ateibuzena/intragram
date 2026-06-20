@@ -13,9 +13,10 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthModule } from '../auth/auth.module';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-	imports: [HttpModule, AuthModule],
+	imports: [HttpModule, AuthModule, RealtimeModule],
 	controllers: [UsersController],
 	providers: [UsersService, AuthGuard],
 	exports: [UsersService],

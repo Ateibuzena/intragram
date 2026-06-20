@@ -1,7 +1,9 @@
+import { OnModuleInit } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { UsersService } from '../users/users.service';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @WebSocketGateway({
 	cors: {
@@ -9,7 +11,7 @@ import { UsersService } from '../users/users.service';
 		credentials: true,
 	},
 })
-export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
 	@WebSocketServer() private readonly server: Server;
 
 	// socketId → { userId, login }
@@ -20,7 +22,21 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 	constructor(
 		private readonly authService: AuthService,
 		private readonly usersService: UsersService,
+		private readonly realtimeService: RealtimeService,
 	) {}
+
+	onModuleInit(): void {
+		this.realtimeService.register({
+			emitToAll: (event, data) => this.server?.emit(event, data),
+			emitToUser: (userId, event, data) => {
+				const sockets = this.userSockets.get(userId);
+				if (!sockets) return;
+				for (const socketId of sockets) {
+					this.server.to(socketId).emit(event, data);
+				}
+			},
+		});
+	}
 
 	async handleConnection(socket: Socket): Promise<void> {
 		const token = socket.handshake.auth?.token as string | undefined;

@@ -7,7 +7,6 @@ import { Navbar } from '@/components/layout/Navbar';
 import { ROUTES } from '@/constants/routes';
 import {
 	ProfileHeader,
-	CommonCoreProgress,
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
@@ -175,33 +174,24 @@ const UserProfilePage = () => {
 					</button>
 
 					<section className="mb-6 space-y-5">
-						<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
-							<ProfileHeader
-								profile={profile}
-								displayName={displayName}
-								profileLogin={profileLogin}
-								profileInitial={profileInitial}
-								loading={loading}
-								error={error}
-								online={presenceMap[profile?.id ?? ''] ?? false}
-								insights={insights}
-								canEditProfile={false}
-								showFriendButton={!isOwnProfile && !friendshipLoading}
-								relation={relation}
-								friendAction={friendAction}
-								onAddFriend={() => void handleAddFriend()}
-								onAcceptFriend={() => void handleAcceptFriend()}
-								onRemoveFriend={() => void handleRemoveFriend()}
-								className="min-h-[18rem]"
-							/>
-							<CommonCoreProgress
-								cursusGrade={insights.cursusGrade}
-								levelInteger={insights.levelInteger}
-								level={insights.level}
-								progressPercentage={insights.progressPercentage}
-								nextLevel={insights.nextLevel}
-							/>
-						</div>
+						<ProfileHeader
+							profile={profile}
+							displayName={displayName}
+							profileLogin={profileLogin}
+							profileInitial={profileInitial}
+							loading={loading}
+							error={error}
+							online={presenceMap[profile?.id ?? ''] ?? false}
+							insights={insights}
+							canEditProfile={false}
+							showFriendButton={!isOwnProfile && !friendshipLoading}
+							relation={relation}
+							friendAction={friendAction}
+							onAddFriend={() => void handleAddFriend()}
+							onAcceptFriend={() => void handleAcceptFriend()}
+							onRemoveFriend={() => void handleRemoveFriend()}
+							className="min-h-[36rem]"
+						/>
 						<ProfileStats insights={insights} />
 						<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
 							<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />

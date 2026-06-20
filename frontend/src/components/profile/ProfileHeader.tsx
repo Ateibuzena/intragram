@@ -64,6 +64,7 @@ export const ProfileHeader = ({
 	const nameInputRef = useRef<HTMLInputElement>(null);
 	const titles = insights?.titles ?? [];
 	const selectedTitle = insights?.selectedTitle ?? null;
+	const progressPercentage = Math.max(0, Math.min(100, Math.round(insights?.progressPercentage ?? 0)));
 
 	const startEditName = () => {
 		if (!canEditProfile) return;
@@ -160,7 +161,7 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className={`relative bg-ft-card border border-ft-border rounded-2xl p-5 md:p-6 h-full flex flex-col justify-center overflow-visible ${className}`}>
+		<div className={`relative h-full overflow-visible ${className}`}>
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
@@ -243,54 +244,84 @@ export const ProfileHeader = ({
 			)}
 
 			{/* ── Normal content ── */}
-			<div className="flex w-full flex-col items-center gap-5 md:flex-row md:items-center">
-				<div className="relative group/avatar shrink-0">
-					<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
-						{profile?.avatar_url ? (
-							<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-						) : (
-							<span>{profileInitial}</span>
-						)}
+			<div className="relative flex min-h-[36rem] w-full items-center justify-center overflow-visible px-4 py-14 md:min-h-[34rem] md:px-10 md:py-16">
+				{insights && (
+					<div
+						className="pointer-events-none absolute inset-x-0 top-3 z-0 mx-auto w-full max-w-6xl px-3 md:top-6 md:px-8"
+						aria-hidden="true"
+					>
+						<svg viewBox="0 0 900 430" className="h-auto w-full overflow-visible">
+							<path
+								d="M 72 390 A 378 378 0 0 1 828 390"
+								fill="none"
+								pathLength={100}
+								stroke="currentColor"
+								strokeLinecap="round"
+								strokeWidth="30"
+								className="text-ft-border/70"
+							/>
+							<path
+								d="M 72 390 A 378 378 0 0 1 828 390"
+								fill="none"
+								pathLength={100}
+								stroke="currentColor"
+								strokeDasharray={`${progressPercentage} 100`}
+								strokeLinecap="round"
+								strokeWidth="30"
+								className="text-ft-cyan drop-shadow-[0_0_34px_rgba(0,212,255,0.52)]"
+							/>
+						</svg>
 					</div>
+				)}
 
-					{canEditProfile && (
-						<button
-							type="button"
-							onClick={startEditAvatar}
-							className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
-						>
-							<PencilIcon className="w-8 h-8 text-white drop-shadow" />
-						</button>
-					)}
+				<div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 pt-24 md:flex-row md:justify-center md:pt-28">
+					<div className="relative group/avatar shrink-0">
+						<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
+							{profile?.avatar_url ? (
+								<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+							) : (
+								<span>{profileInitial}</span>
+							)}
+						</div>
 
-					{online !== undefined && (
-						<span
-							className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
-								online ? 'bg-green-400' : 'bg-ft-muted'
-							}`}
-							title={online ? 'Online' : 'Offline'}
-						/>
-					)}
-				</div>
-
-				<div className="min-w-0 flex-1 text-center md:text-left">
-					<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
-						<h2
-							className={`min-w-0 truncate text-2xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
-							onClick={canEditProfile ? startEditName : undefined}
-						>
-							{displayName}
-						</h2>
 						{canEditProfile && (
 							<button
 								type="button"
-								onClick={startEditName}
-								className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
+								onClick={startEditAvatar}
+								className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
 							>
-								<PencilIcon className="w-3.5 h-3.5" />
+								<PencilIcon className="w-8 h-8 text-white drop-shadow" />
 							</button>
 						)}
+
+						{online !== undefined && (
+							<span
+								className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
+									online ? 'bg-green-400' : 'bg-ft-muted'
+								}`}
+								title={online ? 'Online' : 'Offline'}
+							/>
+						)}
 					</div>
+
+					<div className="min-w-0 text-center md:text-left">
+						<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
+							<h2
+								className={`min-w-0 truncate text-3xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
+								onClick={canEditProfile ? startEditName : undefined}
+							>
+								{displayName}
+							</h2>
+							{canEditProfile && (
+								<button
+									type="button"
+									onClick={startEditName}
+									className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
+								>
+									<PencilIcon className="w-3.5 h-3.5" />
+								</button>
+							)}
+						</div>
 
 					{selectedTitle && (
 						<details className="group relative z-20 mt-2 max-w-full">
@@ -352,12 +383,27 @@ export const ProfileHeader = ({
 						</div>
 					)}
 
+					{insights && (
+						<div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+							<span className="rounded-full border border-ft-cyan/30 bg-ft-cyan/10 px-3 py-1 text-xs font-black text-ft-cyan">
+								{progressPercentage}%
+							</span>
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								Nivel {insights.level}
+							</span>
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-ft-muted">
+								Siguiente {insights.nextLevel}
+							</span>
+						</div>
+					)}
+
 					<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
 						{showFriendButton && profile && renderFriendButton()}
 					</div>
 
-					{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
-					{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+						{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
+						{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+					</div>
 				</div>
 			</div>
 		</div>

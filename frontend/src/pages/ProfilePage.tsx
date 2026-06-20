@@ -3,7 +3,6 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import {
 	useProfileData,
 	ProfileHeader,
-	CommonCoreProgress,
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
@@ -54,29 +53,20 @@ const ProfilePage = () => {
 	return (
 		<div className="w-full px-3 md:px-6 lg:px-8">
 			<section className="mb-6 space-y-5">
-				<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
-					<ProfileHeader
-						profile={profile}
-						displayName={displayName}
-						profileLogin={profileLogin}
-						profileInitial={profileInitial}
-						loading={loading}
-						error={error}
-						online={connected}
-						insights={insights}
-						canEditProfile={canEditProfile}
-						onSaveDisplayName={handleSaveDisplayName}
-						onSaveAvatarUrl={handleSaveAvatarUrl}
-						className="min-h-[18rem]"
-					/>
-					<CommonCoreProgress
-						cursusGrade={insights.cursusGrade}
-						levelInteger={insights.levelInteger}
-						level={insights.level}
-						progressPercentage={insights.progressPercentage}
-						nextLevel={insights.nextLevel}
-					/>
-				</div>
+				<ProfileHeader
+					profile={profile}
+					displayName={displayName}
+					profileLogin={profileLogin}
+					profileInitial={profileInitial}
+					loading={loading}
+					error={error}
+					online={connected}
+					insights={insights}
+					canEditProfile={canEditProfile}
+					onSaveDisplayName={handleSaveDisplayName}
+					onSaveAvatarUrl={handleSaveAvatarUrl}
+					className="min-h-[36rem]"
+				/>
 
 				<ProfileStats insights={insights} />
 

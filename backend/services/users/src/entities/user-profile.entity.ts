@@ -89,6 +89,9 @@ export class UserProfileEntity {
 	@Column({ type: 'jsonb', nullable: true })
 	dashes_users!: Record<string, unknown>[] | null;
 
+	@Column({ type: 'varchar', length: 40, nullable: true, default: null })
+	background_theme!: string | null;
+
 	@Column({ type: 'jsonb', nullable: true })
 	raw_profile!: Record<string, unknown> | null;
 

@@ -13,7 +13,7 @@ import {
 import { buildApiUrl } from '@/utils/apiBase';
 
 const ProfilePage = () => {
-	const { token } = useAuth();
+	const { token, patchAuthProfile } = useAuth();
 	const { connected } = usePresenceStatus();
 	const { profile, setProfile, loading, error, fallbackLogin, refreshProfile } = useProfileData();
 
@@ -26,6 +26,8 @@ const ProfilePage = () => {
 	const canEditProfile = Boolean(
 		profile && token && canonicalProfileId && profile.id === canonicalProfileId,
 	);
+
+	const activeTheme = profile?.background_theme ?? 'none';
 
 	const patchProfile = async (body: Record<string, string>) => {
 		if (!token || !canonicalProfileId) return;
@@ -48,6 +50,11 @@ const ProfilePage = () => {
 		await patchProfile({ avatar_url: url });
 	};
 
+	const handleSaveBackground = async (theme: string) => {
+		patchAuthProfile({ background_theme: theme });
+		await patchProfile({ background_theme: theme });
+	};
+
 	const insights = buildProfileInsights(profile);
 
 	return (
@@ -63,8 +70,10 @@ const ProfilePage = () => {
 					online={connected}
 					insights={insights}
 					canEditProfile={canEditProfile}
+					activeTheme={activeTheme}
 					onSaveDisplayName={handleSaveDisplayName}
 					onSaveAvatarUrl={handleSaveAvatarUrl}
+					onSaveBackground={handleSaveBackground}
 					className="min-h-[36rem]"
 				/>
 
@@ -80,4 +89,5 @@ const ProfilePage = () => {
 		</div>
 	);
 };
+
 export default ProfilePage;

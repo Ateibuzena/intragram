@@ -27,7 +27,7 @@ const HomePage = () => {
 	const hideSidebar = activeNav !== 'home';
 
 	return (
-		<div className="h-screen bg-ft-bg text-ft-text flex flex-col overflow-hidden">
+		<div className="h-screen text-ft-text flex flex-col overflow-hidden">
 			<Navbar
 				activeNav={activeNav}
 				setActiveNav={setActiveNav}

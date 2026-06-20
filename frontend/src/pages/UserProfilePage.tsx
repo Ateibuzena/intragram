@@ -153,7 +153,7 @@ const UserProfilePage = () => {
 	const insights = buildProfileInsights(profile);
 
 	return (
-		<div className="min-h-screen bg-ft-bg text-ft-text flex flex-col">
+		<div className="min-h-screen text-ft-text flex flex-col">
 			<Navbar
 				activeNav={null}
 				setActiveNav={handleSetActiveNav}

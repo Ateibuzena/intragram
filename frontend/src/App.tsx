@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
 import { usePresence } from '@/hooks/usePresence';
@@ -18,11 +19,23 @@ const PresenceManager = ({ children }: { children: React.ReactNode }) => {
 	);
 };
 
+const VALID_THEMES = ['none', 'dots', 'topographic', 'circuit', 'noise'];
+
+const BackgroundApplier = () => {
+	const { profile } = useAuth();
+	useEffect(() => {
+		const theme = VALID_THEMES.includes(profile?.background_theme ?? '') ? profile!.background_theme! : 'none';
+		document.body.dataset.bgTheme = theme;
+	}, [profile?.background_theme]);
+	return null;
+};
+
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const auth = useAuthState();
 	return (
 		<AuthContext.Provider value={auth}>
 			<PresenceManager>
+				<BackgroundApplier />
 				{children}
 			</PresenceManager>
 		</AuthContext.Provider>

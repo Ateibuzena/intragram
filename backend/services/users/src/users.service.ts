@@ -336,6 +336,9 @@ export class UsersService {
 		if (dto.avatar_url !== undefined) {
 			user.avatar_url = dto.avatar_url;
 		}
+		if (dto.background_theme !== undefined) {
+			user.background_theme = dto.background_theme;
+		}
 
 		return this.userProfileRepo.save(user);
 	}

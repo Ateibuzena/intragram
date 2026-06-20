@@ -10,7 +10,6 @@ import {
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
-	ProfileStats,
 	buildProfileInsights,
 } from '@/components/profile';
 import type { UserProfileEntityDto } from '@/components/profile';
@@ -192,7 +191,6 @@ const UserProfilePage = () => {
 							onRemoveFriend={() => void handleRemoveFriend()}
 							className="min-h-[36rem]"
 						/>
-						<ProfileStats insights={insights} />
 						<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
 							<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
 							<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />

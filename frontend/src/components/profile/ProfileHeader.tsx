@@ -271,38 +271,42 @@ export const ProfileHeader = ({
 								className="text-ft-cyan drop-shadow-[0_0_34px_rgba(0,212,255,0.52)]"
 							/>
 						</svg>
+						<div className="absolute left-[45%] top-[13%] rounded-full border border-ft-cyan/30 bg-ft-bg/80 px-2.5 py-1 text-xs font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm md:left-[44%] md:top-[12%]">
+							{progressPercentage}%
+						</div>
 					</div>
 				)}
 
-				<div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 pt-24 md:flex-row md:justify-center md:pt-28">
-					<div className="relative group/avatar shrink-0">
-						<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
-							{profile?.avatar_url ? (
-								<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-							) : (
-								<span>{profileInitial}</span>
+				<div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 pt-32 md:pt-40">
+					<div className="flex w-full max-w-4xl flex-col items-center gap-6 md:flex-row md:justify-center">
+						<div className="relative group/avatar shrink-0">
+							<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
+								{profile?.avatar_url ? (
+									<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+								) : (
+									<span>{profileInitial}</span>
+								)}
+							</div>
+
+							{canEditProfile && (
+								<button
+									type="button"
+									onClick={startEditAvatar}
+									className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+								>
+									<PencilIcon className="w-8 h-8 text-white drop-shadow" />
+								</button>
+							)}
+
+							{online !== undefined && (
+								<span
+									className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
+										online ? 'bg-green-400' : 'bg-ft-muted'
+									}`}
+									title={online ? 'Online' : 'Offline'}
+								/>
 							)}
 						</div>
-
-						{canEditProfile && (
-							<button
-								type="button"
-								onClick={startEditAvatar}
-								className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
-							>
-								<PencilIcon className="w-8 h-8 text-white drop-shadow" />
-							</button>
-						)}
-
-						{online !== undefined && (
-							<span
-								className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
-									online ? 'bg-green-400' : 'bg-ft-muted'
-								}`}
-								title={online ? 'Online' : 'Offline'}
-							/>
-						)}
-					</div>
 
 					<div className="min-w-0 text-center md:text-left">
 						<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
@@ -360,14 +364,11 @@ export const ProfileHeader = ({
 					<p className="mt-2 text-sm text-ft-muted">@{profileLogin}</p>
 					<p className="text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
 
-					{insights && (
-						<div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
-							<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
-								{insights.campus}
-							</span>
-							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
-								{insights.role}
-							</span>
+						{insights && (
+							<div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+								<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+									{insights.role}
+								</span>
 							<span className={`rounded-full border px-3 py-1 text-xs font-bold ${
 								profile?.location
 									? 'border-green-400/30 bg-green-500/10 text-green-300'
@@ -383,29 +384,53 @@ export const ProfileHeader = ({
 						</div>
 					)}
 
-					{insights && (
-						<div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
-							<span className="rounded-full border border-ft-cyan/30 bg-ft-cyan/10 px-3 py-1 text-xs font-black text-ft-cyan">
-								{progressPercentage}%
-							</span>
-							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
-								Nivel {insights.level}
-							</span>
-							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-ft-muted">
-								Siguiente {insights.nextLevel}
-							</span>
-						</div>
-					)}
+						{insights && (
+							<div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
+								<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+									Nivel {insights.level}
+								</span>
+							</div>
+						)}
 
 					<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
 						{showFriendButton && profile && renderFriendButton()}
 					</div>
 
-						{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
-						{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+							{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
+							{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
+						</div>
+					</div>
+
+							{insights && (
+								<div className="flex w-full max-w-4xl flex-wrap items-center justify-center gap-1.5 md:flex-nowrap">
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Proyectos</span>
+										<span className="text-xs font-black leading-none text-white">{insights.totalProjects}</span>
+									</div>
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Validados</span>
+										<span className="text-xs font-black leading-none text-green-300">{insights.validatedProjects}</span>
+									</div>
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Nota</span>
+										<span className="text-xs font-black leading-none text-white">{insights.averageProjectMark ?? '-'}</span>
+									</div>
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Wallet</span>
+										<span className="text-xs font-black leading-none text-white">{insights.wallet} ₳</span>
+									</div>
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Corrections</span>
+										<span className="text-xs font-black leading-none text-white">{insights.correctionPoint}</span>
+									</div>
+									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
+										<span className="text-[9px] uppercase text-ft-muted">Campus</span>
+										<span className="truncate text-xs font-black leading-none text-white">{insights.campus}</span>
+									</div>
+								</div>
+							)}
 					</div>
 				</div>
 			</div>
-		</div>
-	);
-};
+		);
+	};

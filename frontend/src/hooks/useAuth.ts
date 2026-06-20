@@ -119,7 +119,10 @@ export const useAuthState = () => {
 		};
 
 		void fetchProfile();
-		return () => controller.abort();
+		return () => {
+			controller.abort();
+			fetchingProfileRef.current = false;
+		};
 	}, [token, user, profile]);
 
 	const logout = () => {

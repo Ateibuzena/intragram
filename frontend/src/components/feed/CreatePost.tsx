@@ -78,7 +78,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 				<div className="relative flex-shrink-0">
 					<div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black overflow-hidden">
 						{avatarUrl
-							? <img src={avatarUrl} alt={initial} className="w-full h-full object-cover" />
+							? <img src={avatarUrl} alt={initial} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
 							: initial}
 					</div>
 					<span className={connected ? 'avatar-online' : 'avatar-offline'} />

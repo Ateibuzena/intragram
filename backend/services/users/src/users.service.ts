@@ -363,8 +363,12 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
+		const postIds = posts.map((p) => p.id);
+		const [likedIds, savedIds] = await Promise.all([
+			this.getLikedPostIds(userId, postIds),
+			this.getSavedPostIds(userId, postIds),
+		]);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
 	}
 
 	/**
@@ -377,8 +381,12 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
+		const postIds = posts.map((p) => p.id);
+		const [likedIds, savedIds] = await Promise.all([
+			this.getLikedPostIds(userId, postIds),
+			this.getSavedPostIds(userId, postIds),
+		]);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
 	}
 
 	/**
@@ -397,8 +405,12 @@ export class UsersService {
 			take: limit,
 			relations: ['author'],
 		});
-		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
+		const postIds = posts.map((p) => p.id);
+		const [likedIds, savedIds] = await Promise.all([
+			this.getLikedPostIds(userId, postIds),
+			this.getSavedPostIds(userId, postIds),
+		]);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
 	}
 
 	/**
@@ -421,8 +433,12 @@ export class UsersService {
 			relations: ['author'],
 		});
 
-		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		return posts.map((post) => this.mapPostToFeedDto(post, false, likedIds.has(post.id)));
+		const postIds = posts.map((p) => p.id);
+		const [likedIds, savedIds] = await Promise.all([
+			this.getLikedPostIds(userId, postIds),
+			this.getSavedPostIds(userId, postIds),
+		]);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
 	}
 
 	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
@@ -467,6 +483,12 @@ export class UsersService {
 		if (!postIds.length) return new Set();
 		const likes = await this.postLikeRepo.find({ where: { user_id: userId, post_id: In(postIds) } });
 		return new Set(likes.map((l) => l.post_id));
+	}
+
+	private async getSavedPostIds(userId: string, postIds: string[]): Promise<Set<string>> {
+		if (!postIds.length) return new Set();
+		const saved = await this.savedPostRepo.find({ where: { user_id: userId, post_id: In(postIds) } });
+		return new Set(saved.map((s) => s.post_id));
 	}
 
 	/**

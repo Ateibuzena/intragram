@@ -182,15 +182,14 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 						{displayLogin}
 					</span>
 
-					</div>
-
-				{/* Bloque logout */}
-				<button
-					onClick={handleLogout}
-					className="nav-btn nav-btn--active"
-				>
-					<LogOutIcon />
-				</button>
+					<button
+						onClick={handleLogout}
+						title="Cerrar sesión"
+						className="ml-1 p-1 rounded-lg text-ft-muted hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+					>
+						<LogOutIcon />
+					</button>
+				</div>
 			</div>
 		</header>
 	);

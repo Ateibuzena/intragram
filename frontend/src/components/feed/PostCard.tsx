@@ -47,16 +47,16 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	};
 
 	const toggleFavorite = async () => {
-		if (!token) { handleSave(); return; }
+		handleSave();
+		if (!token) return;
 		try {
-			await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
+			const res = await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${token}` },
 			});
+			if (!res.ok) handleSave(); // revert optimistic toggle
 		} catch {
-			// keep local animation on error
-		} finally {
-			handleSave();
+			handleSave(); // revert optimistic toggle
 		}
 	};
 

@@ -22,7 +22,7 @@ export interface UserProfileEntityDto {
 	updated_at: string;
 	skills?: Array<{ id: number; name: string; level?: number }>;
 	levels?: Array<{ id: number; name: string; level?: number; grade?: string | null }>;
-	titles?: Array<{ id: number; name: string }>;
+	titles?: Array<{ id: number; name: string; selected?: boolean }>;
 	projects_users?: Array<{ id: number; name: string; status?: string | null; final_mark?: number | null }>;
 	dashes_users?: Array<{ id: number; name: string; level?: number }>;
 }

@@ -554,9 +554,17 @@ export class AuthService implements OnModuleInit {
 			}
 
 			if (Array.isArray(user42.titles)) {
+				const selectedTitleIds = new Set(
+					Array.isArray(user42.titles_users)
+						? user42.titles_users
+							.filter((titleUser: any) => titleUser?.selected)
+							.map((titleUser: any) => String(titleUser?.title_id))
+						: [],
+				);
+
 				titles = user42.titles
 					.filter((title: any) => title && title.id && title.name)
-					.map((title: any) => ({ id: title.id, name: title.name }));
+					.map((title: any) => ({ id: title.id, name: title.name, selected: selectedTitleIds.has(String(title.id)) }));
 			}
 
 			if (Array.isArray(user42.projects_users)) {

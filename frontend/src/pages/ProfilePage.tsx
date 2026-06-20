@@ -4,7 +4,6 @@ import {
 	useProfileData,
 	ProfileHeader,
 	CommonCoreProgress,
-	TitlesCard,
 	SkillsRadar,
 	ProjectsCard,
 	ProfileDetails,
@@ -82,8 +81,8 @@ const ProfilePage = () => {
 							/>
 						</div>
 
-						{/* Common Core Progress and Titles Row */}
-						<div className="grid grid-cols-2 gap-3 flex-shrink-0">
+						{/* Common Core Progress */}
+						<div className="flex-shrink-0">
 							<CommonCoreProgress
 								cursusLevel={cursusLevel}
 								cursusGrade={cursusGrade}
@@ -91,7 +90,6 @@ const ProfilePage = () => {
 								level={level}
 								progressPercentage={progressPercentage}
 							/>
-							<TitlesCard profile={profile} />
 						</div>
 					</div>
 

@@ -13,8 +13,11 @@ export const CommonCoreProgress = ({
 	progressPercentage,
 }: CommonCoreProgressProps) => {
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-4">
-			<h3 className="text-sm font-bold text-white mb-3">Common Core Progress</h3>
+		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 min-h-[8.75rem]">
+			<div className="mb-3">
+				<p className="text-[10px] text-ft-cyan uppercase font-semibold">Cursus 42</p>
+				<h3 className="text-sm font-black text-white">Progreso actual</h3>
+			</div>
 			<div className="flex items-center gap-3">
 				<div className="relative w-16 h-16 flex-shrink-0">
 					<svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
@@ -40,10 +43,10 @@ export const CommonCoreProgress = ({
 						</div>
 					</div>
 				</div>
-				<div>
-					<p className="text-xs text-ft-muted">Current level cursus</p>
+				<div className="min-w-0">
+					<p className="text-xs text-ft-muted">Nivel del common core</p>
 					<p className="text-xl font-black text-white">{level}</p>
-					<p className="text-xs text-ft-muted">Grade: {cursusGrade}</p>
+					<p className="truncate text-xs text-ft-muted">Grado: {cursusGrade}</p>
 				</div>
 			</div>
 		</div>

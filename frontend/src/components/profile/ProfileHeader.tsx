@@ -30,6 +30,12 @@ const PencilIcon = ({ className }: { className?: string }) => (
 	</svg>
 );
 
+const cleanTitle = (name: string, login: string) =>
+	name
+		.replace(/%login/gi, login ? `@${login}` : 'esta persona')
+		.replace(/\s+/g, ' ')
+		.trim();
+
 export const ProfileHeader = ({
 	profile,
 	displayName,
@@ -58,6 +64,14 @@ export const ProfileHeader = ({
 	const [avatarError, setAvatarError] = useState<string | null>(null);
 
 	const nameInputRef = useRef<HTMLInputElement>(null);
+	const titles = profile?.titles
+		?.map((title) => ({
+			id: title.id,
+			name: cleanTitle(title.name || '', profileLogin),
+			selected: Boolean(title.selected),
+		}))
+		.filter((title) => title.name) ?? [];
+	const selectedTitle = titles.find((title) => title.selected) ?? titles[0] ?? null;
 
 	const startEditName = () => {
 		if (!canEditProfile) return;
@@ -154,7 +168,7 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6 h-full flex flex-col items-center justify-center overflow-hidden">
+		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6 h-full flex flex-col items-center justify-center overflow-visible">
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
@@ -279,6 +293,40 @@ export const ProfileHeader = ({
 						</button>
 					)}
 				</div>
+
+				{selectedTitle && (
+					<details className="group relative z-20 mt-1 max-w-full">
+						<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-xs font-semibold text-ft-muted transition-colors hover:text-white [&::-webkit-details-marker]:hidden">
+							<span className="min-w-0 truncate">{selectedTitle.name}</span>
+							<svg
+								className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+							</svg>
+						</summary>
+
+						<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50">
+							<div className="max-h-52 overflow-y-auto py-1">
+								{titles.map((title) => (
+									<div
+										key={title.id}
+										className={`px-3 py-2 text-left text-xs leading-snug ${
+											title.id === selectedTitle.id
+												? 'bg-ft-cyan/10 font-semibold text-ft-cyan'
+												: 'text-ft-muted hover:bg-ft-hover hover:text-white'
+										}`}
+										title={title.name}
+									>
+										{title.name}
+									</div>
+								))}
+							</div>
+						</div>
+					</details>
+				)}
 
 				<p className="text-center text-sm text-ft-muted mt-1">@{profileLogin}</p>
 				<p className="text-center text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>

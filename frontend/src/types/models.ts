@@ -11,7 +11,7 @@ export interface User {
 
 export interface Post {
 	id: string | number;
-	user: Pick<User, 'login' | 'level' | 'avatarUrl'> & { active?: boolean };
+	user: Pick<User, 'id' | 'login' | 'level' | 'avatarUrl'> & { active?: boolean };
 	content: string;
 	time: string;
 	likes: number;

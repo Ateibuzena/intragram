@@ -87,7 +87,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 							login={post.user.login}
 							imageUrl={post.user.avatarUrl}
 							size="md"
-							online={presenceMap[post.user.login] ?? post.user.active}
+							online={presenceMap[post.user.id as string] ?? false}
 						/>
 						<div className="flex-1 min-w-0">
 							<p className="text-sm font-semibold text-white truncate">

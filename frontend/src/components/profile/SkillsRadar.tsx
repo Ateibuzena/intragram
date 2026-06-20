@@ -1,20 +1,14 @@
 import { useMemo } from 'react';
-import { RadarData } from './profileTypes';
+import { ProfileSkillInsight, RadarData } from './profileTypes';
 import { splitLabel } from './profileUtils';
 
 interface SkillsRadarProps {
-	skills?: Array<{ id: number; name: string; level?: number }>;
+	skills: ProfileSkillInsight[];
 }
 
 export const SkillsRadar = ({ skills }: SkillsRadarProps) => {
 	const radarSkills = useMemo(
-		() =>
-			(skills ?? [])
-				.slice(0, 7)
-				.map((skill) => ({
-					name: skill.name || 'Unnamed',
-					level: Number(skill.level || 0),
-				})),
+		() => skills.slice(0, 7),
 		[skills],
 	);
 
@@ -57,15 +51,23 @@ export const SkillsRadar = ({ skills }: SkillsRadarProps) => {
 		return (
 			<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1 xl:h-[34rem] overflow-hidden flex flex-col">
 				<h3 className="text-sm font-bold text-white mb-3">Skills</h3>
-				<p className="text-xs text-ft-muted">No skills data</p>
+				<div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-ft-border bg-ft-hover/20 p-4">
+					<p className="text-center text-xs text-ft-muted">No hay skills sincronizadas.</p>
+				</div>
 			</div>
 		);
 	}
 
 	return (
 		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1 xl:h-[34rem] overflow-hidden flex flex-col">
-			<h3 className="text-sm font-bold text-white mb-3">Skills</h3>
-			<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-1 flex-1 min-h-0 overflow-hidden flex items-center justify-center">
+			<div className="mb-3 flex items-center justify-between gap-3">
+				<div>
+					<p className="text-[10px] font-semibold uppercase text-ft-cyan">Top {radarSkills.length}</p>
+					<h3 className="text-sm font-bold text-white">Skills</h3>
+				</div>
+				<p className="text-[10px] text-ft-muted">{skills.length} totales</p>
+			</div>
+			<div className="rounded-xl border border-ft-border bg-ft-hover/30 p-1 flex-[1.2] min-h-0 overflow-hidden flex items-center justify-center">
 				<svg
 					viewBox={`0 0 ${radarData.size} ${radarData.size}`}
 					preserveAspectRatio="xMidYMid meet"
@@ -128,6 +130,24 @@ export const SkillsRadar = ({ skills }: SkillsRadarProps) => {
 						);
 					})}
 				</svg>
+			</div>
+			<div className="mt-3 space-y-2 overflow-hidden">
+				{radarSkills.map((skill) => {
+					const width = Math.max(4, Math.min(100, (skill.level / radarData.maxLevel) * 100));
+					return (
+						<div key={skill.id} className="grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-2">
+							<div className="min-w-0">
+								<div className="mb-1 flex items-center justify-between gap-2">
+									<p className="truncate text-[11px] font-semibold text-white">{skill.name}</p>
+								</div>
+								<div className="h-1.5 overflow-hidden rounded-full bg-ft-hover">
+									<div className="h-full rounded-full bg-ft-cyan" style={{ width: `${width}%` }} />
+								</div>
+							</div>
+							<p className="text-right text-[11px] font-black text-ft-cyan">{skill.level.toFixed(2)}</p>
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);

@@ -2,40 +2,99 @@
 
 ## Purpose
 
-`ProfilePage` representa el área reservada para el perfil del usuario dentro de la navegación principal.
+`ProfilePage` and `UserProfilePage` render the 42 profile as a social and academic dashboard for Intragram.
 
-## Current State
+The profile is frontend-only in this phase: it consumes the existing user profile payload and derives useful display metrics in the browser. It does not change OAuth 42, backend persistence, or exposed endpoints.
 
-En la implementación actual es un placeholder visual. Muestra:
+## Current Experience
 
-- icono de perfil,
-- título de la sección,
-- texto descriptivo.
+The profile is composed from shared components in `frontend/src/components/profile`:
 
-## Intended Future Scope
+- `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, active status, pool, online state, and friend/edit controls when allowed.
+- `CommonCoreProgress`: current common-core level, progress percentage toward the next integer level, grade, and next-level context.
+- `SkillsRadar`: radar chart generated from the top 7 skills by level, plus exact skill bars.
+- `ProjectsCard`: project counters, status filters, status badges, final marks, best mark, and an enriched project list.
+- `ProfileStats`: academic metrics prioritized over raw fields.
+- `ProfileDetails`: lower-priority raw profile details such as email, campus, pool, location, phone, role, last login, and creation date.
 
-Según la estructura del proyecto y los endpoints ya existentes en backend, esta página debería evolucionar para incluir:
+Both own profile and public user profile use the same base components. `UserProfilePage` disables profile editing and keeps friend actions separate from the dashboard data.
 
-- datos completos del perfil,
-- avatar y nombre editable,
-- estadísticas básicas del usuario,
-- publicaciones propias,
-- quizá configuración adicional.
+## Derived Metrics
 
-## Backend Capabilities Already Available
+The derived profile layer lives in:
 
-El backend ya dispone de base para conectar esta vista con datos reales:
+```text
+frontend/src/components/profile/profileUtils.ts
+```
+
+`buildProfileInsights(profile)` derives:
+
+- total projects;
+- validated projects;
+- failed projects;
+- in-progress projects;
+- average project mark from projects with `final_mark`;
+- best project mark;
+- top skills sorted by level;
+- selected title;
+- current level rounded to two decimals;
+- integer level;
+- next level;
+- percentage toward next level;
+- campus, pool, role, profile status, wallet, and correction points.
+
+Project status badges are inferred from `projects_users.status` and `final_mark`:
+
+- `finished`, `validated`, `done`, or passing final marks map to approved/validated;
+- `failed` or failing final marks map to failed;
+- `in_progress`, `active`, or `searching` map to active;
+- missing or unknown values map to unknown.
+
+## 42 Data Used
+
+The current frontend uses these fields from the profile payload:
+
+- identity: `login`, `display_name`, `first_name`, `last_name`, `avatar_url`, `forty_two_id`;
+- status/context: `campus`, `pool_month`, `pool_year`, `staff`, `alumni`, `active`, `last_login_at`;
+- progress: `levels`;
+- skills: `skills`;
+- titles: `titles`;
+- projects: `projects_users.status`, `projects_users.final_mark`;
+- counters: `wallet`, `correction_point`;
+- secondary details: `email`, `location`, `phone`, `created_at`.
+
+## Backend Contract
+
+This page still relies on the existing endpoints:
 
 - `GET /users/login/:login`
-- `GET /users/:id`
-- `PATCH /users/:id/profile`
-- `GET /users/feed/me`
+- profile data loaded through `useProfileData`
+- `PATCH /users/:id/profile` for own display name and avatar edits
+- friend endpoints used only by `UserProfilePage`
 
-## Limitation
+No raw 42 profile payload is exposed to the frontend in this phase.
 
-Todavía no hay integración real con esos endpoints desde esta vista.
+## Future Improvements
 
-## Dependencies
+Potential backend/API enrichments:
 
-- `frontend/src/pages/ProfilePage.tsx`
-- `frontend/src/hooks/useAuth.ts`
+- achievements;
+- project start/end dates;
+- multiple campuses;
+- richer cursus selection;
+- official project validation state instead of frontend inference;
+- explicit selected title support if title selection becomes editable;
+- historical activity for profile milestones.
+
+## Manual Validation
+
+Check these scenarios after profile changes:
+
+- own profile with complete 42 data;
+- own profile with empty skills;
+- profile with empty projects;
+- public `UserProfilePage`;
+- user without avatar;
+- long names and titles;
+- desktop and mobile-width layouts;
+- public profile does not show edit controls.

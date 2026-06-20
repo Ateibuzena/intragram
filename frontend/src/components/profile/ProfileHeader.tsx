@@ -1,6 +1,6 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/Button';
-import { UserProfileEntityDto } from './profileTypes';
+import { ProfileInsights, UserProfileEntityDto } from './profileTypes';
 
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
@@ -13,6 +13,7 @@ interface ProfileHeaderProps {
 	loading: boolean;
 	error: string | null;
 	online?: boolean;
+	insights?: ProfileInsights;
 	canEditProfile?: boolean;
 	onSaveDisplayName?: (name: string) => Promise<void>;
 	onSaveAvatarUrl?: (url: string) => Promise<void>;
@@ -30,12 +31,6 @@ const PencilIcon = ({ className }: { className?: string }) => (
 	</svg>
 );
 
-const cleanTitle = (name: string, login: string) =>
-	name
-		.replace(/%login/gi, login ? `@${login}` : 'esta persona')
-		.replace(/\s+/g, ' ')
-		.trim();
-
 export const ProfileHeader = ({
 	profile,
 	displayName,
@@ -44,6 +39,7 @@ export const ProfileHeader = ({
 	loading,
 	error,
 	online,
+	insights,
 	canEditProfile,
 	onSaveDisplayName,
 	onSaveAvatarUrl,
@@ -64,14 +60,8 @@ export const ProfileHeader = ({
 	const [avatarError, setAvatarError] = useState<string | null>(null);
 
 	const nameInputRef = useRef<HTMLInputElement>(null);
-	const titles = profile?.titles
-		?.map((title) => ({
-			id: title.id,
-			name: cleanTitle(title.name || '', profileLogin),
-			selected: Boolean(title.selected),
-		}))
-		.filter((title) => title.name) ?? [];
-	const selectedTitle = titles.find((title) => title.selected) ?? titles[0] ?? null;
+	const titles = insights?.titles ?? [];
+	const selectedTitle = insights?.selectedTitle ?? null;
 
 	const startEditName = () => {
 		if (!canEditProfile) return;
@@ -168,7 +158,7 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-6 h-full flex flex-col items-center justify-center overflow-visible">
+		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-5 h-full flex flex-col items-center justify-center overflow-visible">
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
@@ -253,7 +243,7 @@ export const ProfileHeader = ({
 			{/* ── Normal content ── */}
 			<div className="flex flex-col items-center w-full">
 				<div className="relative group/avatar">
-					<div className="w-40 h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden">
+					<div className="w-36 h-36 md:w-40 md:h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
 						{profile?.avatar_url ? (
 							<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
 						) : (
@@ -272,7 +262,12 @@ export const ProfileHeader = ({
 					)}
 
 					{online !== undefined && (
-						<span className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${online ? 'bg-green-400' : 'bg-red-500'}`} />
+						<span
+							className={`absolute bottom-2 right-2 w-4 h-4 border-2 border-ft-card rounded-full ${
+								online ? 'bg-green-400' : 'bg-ft-muted'
+							}`}
+							title={online ? 'Online' : 'Offline'}
+						/>
 					)}
 				</div>
 
@@ -330,6 +325,47 @@ export const ProfileHeader = ({
 
 				<p className="text-center text-sm text-ft-muted mt-1">@{profileLogin}</p>
 				<p className="text-center text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+
+				{insights && (
+					<div className="mt-4 grid w-full grid-cols-2 gap-2 text-center">
+						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
+							<p className="text-[9px] font-semibold uppercase text-ft-muted">Campus</p>
+							<p className="truncate text-xs font-bold text-white">{insights.campus}</p>
+						</div>
+						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
+							<p className="text-[9px] font-semibold uppercase text-ft-muted">Rol</p>
+							<p className="truncate text-xs font-bold text-white">{insights.role}</p>
+						</div>
+						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
+							<p className="text-[9px] font-semibold uppercase text-ft-muted">Estado</p>
+							<p className={`truncate text-xs font-bold ${profile?.active ? 'text-green-300' : 'text-ft-muted'}`}>
+								{insights.profileStatus}
+							</p>
+						</div>
+						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
+							<p className="text-[9px] font-semibold uppercase text-ft-muted">Pool</p>
+							<p className="truncate text-xs font-bold text-white">{insights.pool}</p>
+						</div>
+					</div>
+				)}
+
+				{titles.length > 0 && (
+					<div className="mt-3 flex w-full gap-1.5 overflow-hidden">
+						{titles.slice(0, 3).map((title) => (
+							<span
+								key={title.id}
+								className={`min-w-0 truncate rounded-full border px-2 py-1 text-[10px] font-semibold ${
+									title.selected
+										? 'border-ft-cyan/40 bg-ft-cyan/10 text-ft-cyan'
+										: 'border-ft-border bg-ft-hover/40 text-ft-muted'
+								}`}
+								title={title.name}
+							>
+								{title.name}
+							</span>
+						))}
+					</div>
+				)}
 
 				<div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
 					{showFriendButton && profile && renderFriendButton()}

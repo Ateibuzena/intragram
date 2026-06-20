@@ -36,3 +36,50 @@ export interface RadarData {
 	polygon: string;
 	maxLevel: number;
 }
+
+export type ProjectStatusKind = 'validated' | 'failed' | 'in_progress' | 'unknown';
+
+export interface ProfileSkillInsight {
+	id: number;
+	name: string;
+	level: number;
+}
+
+export interface ProfileProjectInsight {
+	id: number;
+	name: string;
+	status: string;
+	statusKind: ProjectStatusKind;
+	finalMark: number | null;
+}
+
+export interface ProfileTitleInsight {
+	id: number;
+	name: string;
+	selected: boolean;
+}
+
+export interface ProfileInsights {
+	campus: string;
+	pool: string;
+	role: string;
+	profileStatus: string;
+	cursusLevel: number;
+	cursusGrade: string;
+	level: number;
+	levelInteger: number;
+	nextLevel: number;
+	progressPercentage: number;
+	wallet: number;
+	correctionPoint: number;
+	titles: ProfileTitleInsight[];
+	selectedTitle: ProfileTitleInsight | null;
+	topSkills: ProfileSkillInsight[];
+	projects: ProfileProjectInsight[];
+	totalProjects: number;
+	validatedProjects: number;
+	failedProjects: number;
+	inProgressProjects: number;
+	averageProjectMark: number | null;
+	bestProjectMark: number | null;
+}

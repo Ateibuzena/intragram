@@ -8,6 +8,7 @@ import {
 	ProjectsCard,
 	ProfileDetails,
 	ProfileStats,
+	buildProfileInsights,
 	decodeTokenPayload,
 } from '@/components/profile';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -48,16 +49,7 @@ const ProfilePage = () => {
 		await patchProfile({ avatar_url: url });
 	};
 
-	const campus = profile?.campus ?? 'N/A';
-	const role = profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student';
-	const profileStatus = profile?.active ? 'Activo' : 'Inactivo';
-	const pool = [profile?.pool_month, profile?.pool_year].filter(Boolean).join(' ') || 'N/A';
-	const cursusLevel = profile?.levels?.[0]?.level ?? 0;
-	const cursusGrade = profile?.levels?.[0]?.grade ?? 'N/A';
-	const level = Math.max(0, Math.round(cursusLevel * 100) / 100);
-	const levelInteger = Math.floor(cursusLevel);
-	const levelProgress = cursusLevel - levelInteger;
-	const progressPercentage = levelProgress * 100;
+	const insights = buildProfileInsights(profile);
 
 	return (
 		<div className="w-full px-3 md:px-6 lg:px-8">
@@ -75,6 +67,7 @@ const ProfilePage = () => {
 								loading={loading}
 								error={error}
 								online={connected}
+								insights={insights}
 								canEditProfile={canEditProfile}
 								onSaveDisplayName={handleSaveDisplayName}
 								onSaveAvatarUrl={handleSaveAvatarUrl}
@@ -84,33 +77,27 @@ const ProfilePage = () => {
 						{/* Common Core Progress */}
 						<div className="flex-shrink-0">
 							<CommonCoreProgress
-								cursusLevel={cursusLevel}
-								cursusGrade={cursusGrade}
-								levelInteger={levelInteger}
-								level={level}
-								progressPercentage={progressPercentage}
+								cursusGrade={insights.cursusGrade}
+								levelInteger={insights.levelInteger}
+								level={insights.level}
+								progressPercentage={insights.progressPercentage}
+								nextLevel={insights.nextLevel}
 							/>
 						</div>
 					</div>
 
 					{/* Skills Radar Chart */}
-					<SkillsRadar skills={profile?.skills} />
+					<SkillsRadar skills={insights.topSkills} />
 
 					{/* Projects */}
-					<ProjectsCard profile={profile} />
+					<ProjectsCard insights={insights} />
 				</div>
 
 				{/* Profile Details */}
-				<ProfileDetails profile={profile} campus={campus} />
+				<ProfileDetails profile={profile} campus={insights.campus} />
 
 				{/* Stats Cards */}
-				<ProfileStats
-					profile={profile}
-					campus={campus}
-					pool={pool}
-					role={role}
-					profileStatus={profileStatus}
-				/>
+				<ProfileStats insights={insights} />
 
 			</section>
 		</div>

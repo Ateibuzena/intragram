@@ -10,9 +10,9 @@ import TermsPage from '@/pages/TermsPage';
 import UserProfilePage from '@/pages/UserProfilePage';
 
 const PresenceManager = ({ children }: { children: React.ReactNode }) => {
-	const { connected, presenceMap } = usePresence();
+	const { connected, presenceMap, socketRef, emit } = usePresence();
 	return (
-		<PresenceContext.Provider value={{ connected, presenceMap }}>
+		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit }}>
 			{children}
 		</PresenceContext.Provider>
 	);

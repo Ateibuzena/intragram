@@ -54,5 +54,9 @@ export const usePresence = () => {
 		};
 	}, [token]);
 
-	return { connected, presenceMap };
+	const emit = (event: string, data: unknown) => {
+		socketRef.current?.emit(event, data);
+	};
+
+	return { connected, presenceMap, socketRef, emit };
 };

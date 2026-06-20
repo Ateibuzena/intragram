@@ -1,4 +1,4 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { UsersService } from '../users/users.service';
@@ -11,7 +11,11 @@ import { UsersService } from '../users/users.service';
 })
 export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer() private readonly server: Server;
-	private readonly socketUserMap = new Map<string, string>();
+
+	// socketId → { userId, login }
+	private readonly socketMeta = new Map<string, { userId: string; login: string }>();
+	// userId → Set of socketIds (multi-tab support)
+	private readonly userSockets = new Map<string, Set<string>>();
 
 	constructor(
 		private readonly authService: AuthService,
@@ -20,10 +24,7 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 
 	async handleConnection(socket: Socket): Promise<void> {
 		const token = socket.handshake.auth?.token as string | undefined;
-		if (!token) {
-			socket.disconnect(true);
-			return;
-		}
+		if (!token) { socket.disconnect(true); return; }
 
 		try {
 			const validation = await this.authService.validateToken(token);
@@ -32,16 +33,21 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 				return;
 			}
 
-			const userId = validation.payload.chat_user_id;
-			const wasAlreadyOnline = [...this.socketUserMap.values()].includes(userId);
-			this.socketUserMap.set(socket.id, userId);
+			const userId = String(validation.payload.chat_user_id);
+			const login = String(validation.payload.username ?? validation.payload.sub ?? userId);
+
+			const wasAlreadyOnline = this.userSockets.has(userId);
+
+			this.socketMeta.set(socket.id, { userId, login });
+
+			if (!this.userSockets.has(userId)) this.userSockets.set(userId, new Set());
+			this.userSockets.get(userId)!.add(socket.id);
+
 			await this.usersService.setPresence(userId, true);
 
-			// Send the current snapshot of online users to the newly connected client
-			const onlineUserIds = [...new Set(this.socketUserMap.values())];
+			const onlineUserIds = [...this.userSockets.keys()];
 			socket.emit('online:users', onlineUserIds);
 
-			// Broadcast status change only on first connection (not on extra tabs)
 			if (!wasAlreadyOnline) {
 				socket.broadcast.emit('user:status', { userId, active: true });
 			}
@@ -51,15 +57,39 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 	}
 
 	async handleDisconnect(socket: Socket): Promise<void> {
-		const userId = this.socketUserMap.get(socket.id);
-		if (!userId) return;
+		const meta = this.socketMeta.get(socket.id);
+		if (!meta) return;
 
-		this.socketUserMap.delete(socket.id);
+		const { userId } = meta;
+		this.socketMeta.delete(socket.id);
 
-		const isStillOnline = [...this.socketUserMap.values()].includes(userId);
-		if (!isStillOnline) {
-			await this.usersService.setPresence(userId, false);
-			this.server.emit('user:status', { userId, active: false });
+		const sockets = this.userSockets.get(userId);
+		if (sockets) {
+			sockets.delete(socket.id);
+			if (sockets.size === 0) {
+				this.userSockets.delete(userId);
+				await this.usersService.setPresence(userId, false);
+				this.server.emit('user:status', { userId, active: false });
+			}
+		}
+	}
+
+	@SubscribeMessage('chat:typing')
+	handleTyping(
+		@ConnectedSocket() socket: Socket,
+		@MessageBody() data: { conversationId: string; recipientId: string },
+	): void {
+		const meta = this.socketMeta.get(socket.id);
+		if (!meta || !data?.recipientId) return;
+
+		const recipientSockets = this.userSockets.get(data.recipientId);
+		if (!recipientSockets) return;
+
+		for (const socketId of recipientSockets) {
+			this.server.to(socketId).emit('chat:typing', {
+				conversationId: data.conversationId,
+				login: meta.login,
+			});
 		}
 	}
 }

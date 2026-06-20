@@ -224,12 +224,13 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className={`relative h-full overflow-visible ${className}`}>
+		<div className={`relative overflow-hidden ${className}`}>
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
-				<div className="absolute inset-0 z-10 rounded-2xl bg-ft-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-6">
-					<div className="w-36 h-36 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
+				<div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 bg-ft-card/95 backdrop-blur-sm p-6 rounded-[inherit]">
+					<h3 className="text-sm font-bold text-white">Cambiar foto de perfil</h3>
+					<div className="w-28 h-28 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
 						{avatarInput ? (
 							<img src={avatarInput} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
 						) : profile?.avatar_url ? (
@@ -238,7 +239,7 @@ export const ProfileHeader = ({
 							<span className="w-full h-full flex items-center justify-center text-2xl font-black text-black bg-ft-cyan">{profileInitial}</span>
 						)}
 					</div>
-					<div className="w-full space-y-3">
+					<div className="w-full max-w-sm space-y-3">
 						<input
 							type="url"
 							value={avatarInput}
@@ -253,7 +254,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={cancelEditAvatar}
 								disabled={savingAvatar}
-								className="flex-1 py-1.5 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
 							>
 								Cancelar
 							</button>
@@ -261,7 +262,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={() => void saveAvatar()}
 								disabled={savingAvatar}
-								className="flex-1 py-1.5 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
 							>
 								{savingAvatar ? 'Guardando...' : 'Guardar'}
 							</button>
@@ -272,8 +273,9 @@ export const ProfileHeader = ({
 
 			{/* ── Name edit overlay ── */}
 			{editingName && (
-				<div className="absolute inset-0 z-10 rounded-2xl bg-ft-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-6">
-					<div className="w-full space-y-3">
+				<div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-ft-card/95 backdrop-blur-sm p-6 rounded-[inherit]">
+					<h3 className="text-sm font-bold text-white">Cambiar nombre</h3>
+					<div className="w-full max-w-sm space-y-3">
 						<input
 							ref={nameInputRef}
 							type="text"
@@ -289,7 +291,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={cancelEditName}
 								disabled={savingName}
-								className="flex-1 py-1.5 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
 							>
 								Cancelar
 							</button>
@@ -297,7 +299,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={() => void saveName()}
 								disabled={savingName}
-								className="flex-1 py-1.5 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
 							>
 								{savingName ? 'Guardando...' : 'Guardar'}
 							</button>

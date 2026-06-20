@@ -23,6 +23,7 @@ interface ProfileHeaderProps {
 	onAddFriend?: () => void;
 	onRemoveFriend?: () => void;
 	onAcceptFriend?: () => void;
+	className?: string;
 }
 
 const PencilIcon = ({ className }: { className?: string }) => (
@@ -49,6 +50,7 @@ export const ProfileHeader = ({
 	onAddFriend,
 	onRemoveFriend,
 	onAcceptFriend,
+	className = '',
 }: ProfileHeaderProps) => {
 	const [editingName, setEditingName] = useState(false);
 	const [nameInput, setNameInput] = useState('');
@@ -158,7 +160,7 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className="relative bg-ft-card border border-ft-border rounded-2xl p-5 h-full flex flex-col items-center justify-center overflow-visible">
+		<div className={`relative bg-ft-card border border-ft-border rounded-2xl p-5 md:p-6 h-full flex flex-col justify-center overflow-visible ${className}`}>
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
@@ -241,9 +243,9 @@ export const ProfileHeader = ({
 			)}
 
 			{/* ── Normal content ── */}
-			<div className="flex flex-col items-center w-full">
-				<div className="relative group/avatar">
-					<div className="w-36 h-36 md:w-40 md:h-40 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
+			<div className="flex w-full flex-col items-center gap-5 md:flex-row md:items-center">
+				<div className="relative group/avatar shrink-0">
+					<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
 						{profile?.avatar_url ? (
 							<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
 						) : (
@@ -271,108 +273,92 @@ export const ProfileHeader = ({
 					)}
 				</div>
 
-				<div className="mt-4 flex items-center gap-1.5 group/name max-w-full px-2">
-					<h2
-						className={`text-center text-2xl font-black text-white truncate ${canEditProfile ? 'cursor-pointer' : ''}`}
-						onClick={canEditProfile ? startEditName : undefined}
-					>
-						{displayName}
-					</h2>
-					{canEditProfile && (
-						<button
-							type="button"
-							onClick={startEditName}
-							className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
+				<div className="min-w-0 flex-1 text-center md:text-left">
+					<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
+						<h2
+							className={`min-w-0 truncate text-2xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
+							onClick={canEditProfile ? startEditName : undefined}
 						>
-							<PencilIcon className="w-3.5 h-3.5" />
-						</button>
-					)}
-				</div>
-
-				{selectedTitle && (
-					<details className="group relative z-20 mt-1 max-w-full">
-						<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-xs font-semibold text-ft-muted transition-colors hover:text-white [&::-webkit-details-marker]:hidden">
-							<span className="min-w-0 truncate">{selectedTitle.name}</span>
-							<svg
-								className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-								aria-hidden="true"
+							{displayName}
+						</h2>
+						{canEditProfile && (
+							<button
+								type="button"
+								onClick={startEditName}
+								className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
 							>
-								<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-							</svg>
-						</summary>
+								<PencilIcon className="w-3.5 h-3.5" />
+							</button>
+						)}
+					</div>
 
-						<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50">
-							<div className="max-h-52 overflow-y-auto py-1">
-								{titles.map((title) => (
-									<div
-										key={title.id}
-										className={`px-3 py-2 text-left text-xs leading-snug ${
-											title.id === selectedTitle.id
-												? 'bg-ft-cyan/10 font-semibold text-ft-cyan'
-												: 'text-ft-muted hover:bg-ft-hover hover:text-white'
-										}`}
-										title={title.name}
-									>
-										{title.name}
-									</div>
-								))}
+					{selectedTitle && (
+						<details className="group relative z-20 mt-2 max-w-full">
+							<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-sm font-semibold text-ft-muted transition-colors hover:text-white md:justify-start md:text-left [&::-webkit-details-marker]:hidden">
+								<span className="min-w-0 truncate">{selectedTitle.name}</span>
+								<svg
+									className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									aria-hidden="true"
+								>
+									<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+								</svg>
+							</summary>
+
+							<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50 md:left-0 md:translate-x-0">
+								<div className="max-h-52 overflow-y-auto py-1">
+									{titles.map((title) => (
+										<div
+											key={title.id}
+											className={`px-3 py-2 text-left text-xs leading-snug ${
+												title.id === selectedTitle.id
+													? 'bg-ft-cyan/10 font-semibold text-ft-cyan'
+													: 'text-ft-muted hover:bg-ft-hover hover:text-white'
+											}`}
+											title={title.name}
+										>
+											{title.name}
+										</div>
+									))}
+								</div>
 							</div>
-						</div>
-					</details>
-				)}
+						</details>
+					)}
 
-				<p className="text-center text-sm text-ft-muted mt-1">@{profileLogin}</p>
-				<p className="text-center text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
+					<p className="mt-2 text-sm text-ft-muted">@{profileLogin}</p>
+					<p className="text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
 
-				{insights && (
-					<div className="mt-4 grid w-full grid-cols-2 gap-2 text-center">
-						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
-							<p className="text-[9px] font-semibold uppercase text-ft-muted">Campus</p>
-							<p className="truncate text-xs font-bold text-white">{insights.campus}</p>
-						</div>
-						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
-							<p className="text-[9px] font-semibold uppercase text-ft-muted">Rol</p>
-							<p className="truncate text-xs font-bold text-white">{insights.role}</p>
-						</div>
-						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
-							<p className="text-[9px] font-semibold uppercase text-ft-muted">Estado</p>
-							<p className={`truncate text-xs font-bold ${profile?.active ? 'text-green-300' : 'text-ft-muted'}`}>
-								{insights.profileStatus}
-							</p>
-						</div>
-						<div className="min-w-0 rounded-lg border border-ft-border bg-ft-hover/40 px-2 py-2">
-							<p className="text-[9px] font-semibold uppercase text-ft-muted">Pool</p>
-							<p className="truncate text-xs font-bold text-white">{insights.pool}</p>
-						</div>
-					</div>
-				)}
-
-				{titles.length > 0 && (
-					<div className="mt-3 flex w-full gap-1.5 overflow-hidden">
-						{titles.slice(0, 3).map((title) => (
-							<span
-								key={title.id}
-								className={`min-w-0 truncate rounded-full border px-2 py-1 text-[10px] font-semibold ${
-									title.selected
-										? 'border-ft-cyan/40 bg-ft-cyan/10 text-ft-cyan'
-										: 'border-ft-border bg-ft-hover/40 text-ft-muted'
-								}`}
-								title={title.name}
-							>
-								{title.name}
+					{insights && (
+						<div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+							<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								{insights.campus}
 							</span>
-						))}
+							<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								{insights.role}
+							</span>
+							<span className={`rounded-full border px-3 py-1 text-xs font-bold ${
+								profile?.location
+									? 'border-green-400/30 bg-green-500/10 text-green-300'
+									: 'border-ft-border bg-ft-hover/40 text-ft-muted'
+							}`}
+								title={profile?.location ?? 'Sin location en 42'}
+							>
+								{insights.profileStatus}
+							</span>
+							<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
+								Pool {insights.pool}
+							</span>
+						</div>
+					)}
+
+					<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
+						{showFriendButton && profile && renderFriendButton()}
 					</div>
-				)}
 
-				<div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
-					{showFriendButton && profile && renderFriendButton()}
+					{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
+					{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
 				</div>
-
-				{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
-				{error && <p className="text-xs text-red-400 mt-3">{error}</p>}
 			</div>
 		</div>
 	);

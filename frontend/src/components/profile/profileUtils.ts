@@ -96,7 +96,7 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 		campus: profile?.campus ?? 'N/A',
 		pool: [profile?.pool_month, profile?.pool_year].filter(Boolean).join(' ') || 'N/A',
 		role: profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student',
-		profileStatus: profile?.active ? 'Activo' : 'Inactivo',
+		profileStatus: profile?.location ? `En campus 42: ${profile.location}` : 'Fuera de campus 42',
 		cursusLevel,
 		cursusGrade: profile?.levels?.[0]?.grade ?? 'N/A',
 		level,

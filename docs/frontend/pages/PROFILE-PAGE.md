@@ -10,7 +10,7 @@ The profile is frontend-only in this phase: it consumes the existing user profil
 
 The profile is composed from shared components in `frontend/src/components/profile`:
 
-- `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, active status, pool, online state, and friend/edit controls when allowed.
+- `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, current 42 campus login status, pool, Intragram online state, and friend/edit controls when allowed.
 - `CommonCoreProgress`: current common-core level, progress percentage toward the next integer level, grade, and next-level context.
 - `SkillsRadar`: radar chart generated from the top 7 skills by level, plus exact skill bars.
 - `ProjectsCard`: project counters, status filters, status badges, final marks, best mark, and an enriched project list.
@@ -41,7 +41,7 @@ frontend/src/components/profile/profileUtils.ts
 - integer level;
 - next level;
 - percentage toward next level;
-- campus, pool, role, profile status, wallet, and correction points.
+- campus, pool, role, current 42 campus login status, wallet, and correction points.
 
 Project status badges are inferred from `projects_users.status` and `final_mark`:
 
@@ -55,13 +55,15 @@ Project status badges are inferred from `projects_users.status` and `final_mark`
 The current frontend uses these fields from the profile payload:
 
 - identity: `login`, `display_name`, `first_name`, `last_name`, `avatar_url`, `forty_two_id`;
-- status/context: `campus`, `pool_month`, `pool_year`, `staff`, `alumni`, `active`, `last_login_at`;
+- status/context: `campus`, `pool_month`, `pool_year`, `staff`, `alumni`, `location`, `active`, `last_login_at`;
 - progress: `levels`;
 - skills: `skills`;
 - titles: `titles`;
 - projects: `projects_users.status`, `projects_users.final_mark`;
 - counters: `wallet`, `correction_point`;
 - secondary details: `email`, `location`, `phone`, `created_at`.
+
+`active` is reserved for Intragram presence and drives online/offline UI. `location` is synchronized from 42 and drives the visible campus login label: a non-empty value means the user appears logged into a 42 campus machine/session.
 
 ## Backend Contract
 

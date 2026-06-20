@@ -174,43 +174,40 @@ const UserProfilePage = () => {
 						Volver
 					</button>
 
-					<section className="mb-4 space-y-3">
-						<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
-							<div className="flex flex-col gap-3 xl:h-[34rem]">
-								<div className="flex-1 min-h-0">
-									<ProfileHeader
-										profile={profile}
-										displayName={displayName}
-										profileLogin={profileLogin}
-										profileInitial={profileInitial}
-										loading={loading}
-										error={error}
-										online={presenceMap[profile?.id ?? ''] ?? false}
-										insights={insights}
-										canEditProfile={false}
-										showFriendButton={!isOwnProfile && !friendshipLoading}
-										relation={relation}
-										friendAction={friendAction}
-										onAddFriend={() => void handleAddFriend()}
-										onAcceptFriend={() => void handleAcceptFriend()}
-										onRemoveFriend={() => void handleRemoveFriend()}
-									/>
-								</div>
-								<div className="flex-shrink-0">
-									<CommonCoreProgress
-										cursusGrade={insights.cursusGrade}
-										levelInteger={insights.levelInteger}
-										level={insights.level}
-										progressPercentage={insights.progressPercentage}
-										nextLevel={insights.nextLevel}
-									/>
-								</div>
-							</div>
-							<SkillsRadar skills={insights.topSkills} />
-							<ProjectsCard insights={insights} />
+					<section className="mb-6 space-y-5">
+						<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
+							<ProfileHeader
+								profile={profile}
+								displayName={displayName}
+								profileLogin={profileLogin}
+								profileInitial={profileInitial}
+								loading={loading}
+								error={error}
+								online={presenceMap[profile?.id ?? ''] ?? false}
+								insights={insights}
+								canEditProfile={false}
+								showFriendButton={!isOwnProfile && !friendshipLoading}
+								relation={relation}
+								friendAction={friendAction}
+								onAddFriend={() => void handleAddFriend()}
+								onAcceptFriend={() => void handleAcceptFriend()}
+								onRemoveFriend={() => void handleRemoveFriend()}
+								className="min-h-[18rem]"
+							/>
+							<CommonCoreProgress
+								cursusGrade={insights.cursusGrade}
+								levelInteger={insights.levelInteger}
+								level={insights.level}
+								progressPercentage={insights.progressPercentage}
+								nextLevel={insights.nextLevel}
+							/>
+						</div>
+						<ProfileStats insights={insights} />
+						<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
+							<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
+							<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />
 						</div>
 						<ProfileDetails profile={profile} campus={insights.campus} />
-						<ProfileStats insights={insights} />
 					</section>
 				</div>
 			</main>

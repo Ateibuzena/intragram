@@ -53,52 +53,39 @@ const ProfilePage = () => {
 
 	return (
 		<div className="w-full px-3 md:px-6 lg:px-8">
-			<section className="mb-4 space-y-3">
-				<div className="grid grid-cols-1 xl:grid-cols-3 gap-3 xl:items-start">
-					{/* Left column: Profile Picture + Common Core Progress + Titles */}
-					<div className="flex flex-col gap-3 xl:h-[34rem]">
-						{/* Profile Header — grows to match the height of Skills and Projects */}
-						<div className="flex-1 min-h-0">
-							<ProfileHeader
-								profile={profile}
-								displayName={displayName}
-								profileLogin={profileLogin}
-								profileInitial={profileInitial}
-								loading={loading}
-								error={error}
-								online={connected}
-								insights={insights}
-								canEditProfile={canEditProfile}
-								onSaveDisplayName={handleSaveDisplayName}
-								onSaveAvatarUrl={handleSaveAvatarUrl}
-							/>
-						</div>
-
-						{/* Common Core Progress */}
-						<div className="flex-shrink-0">
-							<CommonCoreProgress
-								cursusGrade={insights.cursusGrade}
-								levelInteger={insights.levelInteger}
-								level={insights.level}
-								progressPercentage={insights.progressPercentage}
-								nextLevel={insights.nextLevel}
-							/>
-						</div>
-					</div>
-
-					{/* Skills Radar Chart */}
-					<SkillsRadar skills={insights.topSkills} />
-
-					{/* Projects */}
-					<ProjectsCard insights={insights} />
+			<section className="mb-6 space-y-5">
+				<div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
+					<ProfileHeader
+						profile={profile}
+						displayName={displayName}
+						profileLogin={profileLogin}
+						profileInitial={profileInitial}
+						loading={loading}
+						error={error}
+						online={connected}
+						insights={insights}
+						canEditProfile={canEditProfile}
+						onSaveDisplayName={handleSaveDisplayName}
+						onSaveAvatarUrl={handleSaveAvatarUrl}
+						className="min-h-[18rem]"
+					/>
+					<CommonCoreProgress
+						cursusGrade={insights.cursusGrade}
+						levelInteger={insights.levelInteger}
+						level={insights.level}
+						progressPercentage={insights.progressPercentage}
+						nextLevel={insights.nextLevel}
+					/>
 				</div>
 
-				{/* Profile Details */}
-				<ProfileDetails profile={profile} campus={insights.campus} />
-
-				{/* Stats Cards */}
 				<ProfileStats insights={insights} />
 
+				<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
+					<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
+					<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />
+				</div>
+
+				<ProfileDetails profile={profile} campus={insights.campus} />
 			</section>
 		</div>
 	);

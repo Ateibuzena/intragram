@@ -3,6 +3,7 @@ import { ProfileInsights, ProjectStatusKind } from './profileTypes';
 
 interface ProjectsCardProps {
 	insights: ProfileInsights;
+	className?: string;
 }
 
 const statusStyles: Record<ProjectStatusKind | 'all', string> = {
@@ -15,13 +16,21 @@ const statusStyles: Record<ProjectStatusKind | 'all', string> = {
 
 const statusLabels: Record<ProjectStatusKind | 'all', string> = {
 	all: 'Todos',
+	validated: 'OK',
+	failed: 'Fail',
+	in_progress: 'Activo',
+	unknown: 'Otro',
+};
+
+const filterLabels: Record<ProjectStatusKind | 'all', string> = {
+	all: 'Todos',
 	validated: 'Aprobados',
 	failed: 'Fallidos',
 	in_progress: 'Activos',
 	unknown: 'Otros',
 };
 
-export const ProjectsCard = ({ insights }: ProjectsCardProps) => {
+export const ProjectsCard = ({ insights, className = '' }: ProjectsCardProps) => {
 	const [filter, setFilter] = useState<ProjectStatusKind | 'all'>('all');
 	const filteredProjects = useMemo(
 		() => insights.projects.filter((project) => filter === 'all' || project.statusKind === filter),
@@ -29,11 +38,11 @@ export const ProjectsCard = ({ insights }: ProjectsCardProps) => {
 	);
 
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 xl:col-span-1 xl:h-[34rem] overflow-hidden flex flex-col">
+		<div className={`bg-ft-card border border-ft-border rounded-2xl p-5 min-h-[34rem] overflow-hidden flex flex-col ${className}`}>
 			<div className="mb-3 flex items-start justify-between gap-3">
 				<div>
 					<p className="text-[10px] font-semibold uppercase text-ft-cyan">{insights.totalProjects} proyectos</p>
-					<h3 className="text-sm font-bold text-white">Projects</h3>
+					<h3 className="text-lg font-black text-white">Projects</h3>
 				</div>
 				<div className="text-right">
 					<p className="text-[10px] text-ft-muted">Mejor nota</p>
@@ -66,13 +75,13 @@ export const ProjectsCard = ({ insights }: ProjectsCardProps) => {
 							filter === status ? statusStyles[status] : 'border-ft-border text-ft-muted hover:text-white'
 						}`}
 					>
-						{statusLabels[status]}
+						{filterLabels[status]}
 					</button>
 				))}
 			</div>
 
 			{insights.projects.length > 0 ? (
-				<div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
+				<div className="space-y-2 flex-1 min-h-0 max-h-[32rem] overflow-y-auto pr-1">
 					{filteredProjects.map((project, idx) => (
 						<div key={project.id ?? idx} className="border border-ft-border rounded-lg p-2.5 bg-ft-hover/20">
 							<div className="flex items-start justify-between gap-2">

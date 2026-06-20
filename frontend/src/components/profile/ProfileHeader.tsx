@@ -65,6 +65,10 @@ export const ProfileHeader = ({
 	const titles = insights?.titles ?? [];
 	const selectedTitle = insights?.selectedTitle ?? null;
 	const progressPercentage = Math.max(0, Math.min(100, Math.round(insights?.progressPercentage ?? 0)));
+	const progressAngle = Math.PI - (progressPercentage / 100) * Math.PI;
+	const progressLabelRadius = 328;
+	const progressLabelLeft = ((450 + progressLabelRadius * Math.cos(progressAngle)) / 900) * 100;
+	const progressLabelTop = ((390 - progressLabelRadius * Math.sin(progressAngle)) / 430) * 100;
 
 	const startEditName = () => {
 		if (!canEditProfile) return;
@@ -271,7 +275,10 @@ export const ProfileHeader = ({
 								className="text-ft-cyan drop-shadow-[0_0_34px_rgba(0,212,255,0.52)]"
 							/>
 						</svg>
-						<div className="absolute left-[45%] top-[13%] rounded-full border border-ft-cyan/30 bg-ft-bg/80 px-2.5 py-1 text-xs font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm md:left-[44%] md:top-[12%]">
+						<div
+							className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-ft-cyan/30 bg-ft-bg/80 px-2.5 py-1 text-xs font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm"
+							style={{ left: `${progressLabelLeft}%`, top: `${progressLabelTop}%` }}
+						>
 							{progressPercentage}%
 						</div>
 					</div>
@@ -308,24 +315,35 @@ export const ProfileHeader = ({
 							)}
 						</div>
 
-					<div className="min-w-0 text-center md:text-left">
-						<div className="flex max-w-full items-center justify-center gap-1.5 group/name md:justify-start">
-							<h2
-								className={`min-w-0 truncate text-3xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
-								onClick={canEditProfile ? startEditName : undefined}
-							>
-								{displayName}
-							</h2>
-							{canEditProfile && (
-								<button
-									type="button"
-									onClick={startEditName}
-									className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
-								>
-									<PencilIcon className="w-3.5 h-3.5" />
-								</button>
-							)}
-						</div>
+						<div className="min-w-0 text-center md:text-left">
+							<div className="flex max-w-full items-center justify-center gap-3 md:justify-start">
+								<div className="flex min-w-0 items-center justify-center gap-1.5 group/name md:justify-start">
+									<h2
+										className={`min-w-0 truncate text-3xl font-black text-white md:text-4xl ${canEditProfile ? 'cursor-pointer' : ''}`}
+										onClick={canEditProfile ? startEditName : undefined}
+									>
+										{displayName}
+									</h2>
+									{canEditProfile && (
+										<button
+											type="button"
+											onClick={startEditName}
+											className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 transition-opacity text-ft-muted hover:text-white"
+										>
+											<PencilIcon className="w-3.5 h-3.5" />
+										</button>
+									)}
+								</div>
+								{insights && (
+									<div
+										className="hidden h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan shadow-ft-glow-sm md:flex"
+										title={`Nivel 42: ${insights.level}`}
+									>
+										<span className="text-[9px] font-bold uppercase leading-none text-ft-muted">lvl</span>
+										<span className="mt-0.5 text-sm font-black leading-none text-white">{insights.level}</span>
+									</div>
+								)}
+							</div>
 
 					{selectedTitle && (
 						<details className="group relative z-20 mt-2 max-w-full">
@@ -384,15 +402,7 @@ export const ProfileHeader = ({
 						</div>
 					)}
 
-						{insights && (
-							<div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
-								<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
-									Nivel {insights.level}
-								</span>
-							</div>
-						)}
-
-					<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
+						<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
 						{showFriendButton && profile && renderFriendButton()}
 					</div>
 
@@ -402,30 +412,30 @@ export const ProfileHeader = ({
 					</div>
 
 							{insights && (
-								<div className="flex w-full max-w-4xl flex-wrap items-center justify-center gap-1.5 md:flex-nowrap">
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Proyectos</span>
-										<span className="text-xs font-black leading-none text-white">{insights.totalProjects}</span>
+								<div className="flex w-full max-w-4xl flex-wrap items-center justify-center gap-2 md:flex-nowrap">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Proyectos</span>
+										<span className="text-sm font-black leading-none text-white">{insights.totalProjects}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Validados</span>
-										<span className="text-xs font-black leading-none text-green-300">{insights.validatedProjects}</span>
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Validados</span>
+										<span className="text-sm font-black leading-none text-green-300">{insights.validatedProjects}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Nota</span>
-										<span className="text-xs font-black leading-none text-white">{insights.averageProjectMark ?? '-'}</span>
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Nota</span>
+										<span className="text-sm font-black leading-none text-white">{insights.averageProjectMark ?? '-'}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Wallet</span>
-										<span className="text-xs font-black leading-none text-white">{insights.wallet} ₳</span>
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Wallet</span>
+										<span className="text-sm font-black leading-none text-white">{insights.wallet} ₳</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Corrections</span>
-										<span className="text-xs font-black leading-none text-white">{insights.correctionPoint}</span>
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Corrections</span>
+										<span className="text-sm font-black leading-none text-white">{insights.correctionPoint}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-1.5 rounded-full border border-ft-border bg-ft-card/35 px-2.5 py-1 backdrop-blur-sm">
-										<span className="text-[9px] uppercase text-ft-muted">Campus</span>
-										<span className="truncate text-xs font-black leading-none text-white">{insights.campus}</span>
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+										<span className="text-[10px] uppercase text-ft-muted">Campus</span>
+										<span className="truncate text-sm font-black leading-none text-white">{insights.campus}</span>
 									</div>
 								</div>
 							)}

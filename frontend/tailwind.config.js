@@ -8,10 +8,10 @@ export default {
     extend: {
       colors: {
         'ft-bg': '#050816',
-        'ft-card': 'rgba(17, 24, 39, 0.64)',
+        'ft-card': 'rgba(17, 24, 39, 0.06)',
         'ft-border': 'rgba(55, 65, 81, 0.42)',
-        'ft-hover': 'rgba(27, 35, 53, 0.58)',
-        'ft-faint': 'rgba(17, 24, 39, 0.44)',
+        'ft-hover': 'rgba(27, 35, 53, 0.10)',
+        'ft-faint': 'rgba(17, 24, 39, 0.08)',
         'ft-text': '#e5e7eb',
         'ft-muted': '#6b7280',
         'ft-cyan': '#00babc',

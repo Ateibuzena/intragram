@@ -597,7 +597,7 @@ const ChatPage = () => {
 			{showUserPicker && (
 				<Modal title="Nuevo mensaje" onClose={() => setShowUserPicker(false)}>
 					<div className="space-y-3">
-						<div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-ft-border bg-ft-bg/60">
+						<div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-ft-border bg-ft-card">
 							<SearchIcon />
 							<input
 								type="text"
@@ -612,7 +612,7 @@ const ChatPage = () => {
 							/>
 						</div>
 
-						<div className="max-h-80 overflow-y-auto rounded-xl border border-ft-border bg-ft-bg/40">
+						<div className="max-h-80 overflow-y-auto rounded-xl border border-ft-border bg-ft-card">
 							{searchLoading && <p className="px-3 py-2 text-sm text-ft-muted">Buscando usuarios...</p>}
 							{!searchLoading && searchError && <p className="px-3 py-2 text-sm text-red-400">{searchError}</p>}
 							{!searchLoading && !searchError && searchResults.length === 0 && (

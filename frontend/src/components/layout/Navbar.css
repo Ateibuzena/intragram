@@ -11,11 +11,11 @@
 }
 
 .nav-btn {
-	@apply relative flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200;
+	@apply relative flex items-center space-x-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border border-transparent;
 }
 
 .nav-btn--active {
-	@apply bg-ft-cyan text-black shadow-ft-glow-sm scale-[1.02];
+	@apply bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/35 shadow-ft-glow-sm scale-[1.02];
 }
 
 .nav-btn--default {

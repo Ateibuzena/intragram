@@ -3,7 +3,7 @@
 }
 
 .filter-drawer-bg {
-	@apply absolute inset-0 bg-black/60 backdrop-blur-sm;
+	@apply absolute inset-0 bg-black/25 backdrop-blur-sm;
 }
 
 .filter-drawer-panel {

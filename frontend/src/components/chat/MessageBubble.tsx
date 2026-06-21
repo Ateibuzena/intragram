@@ -7,7 +7,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 	if (message.type === 'audio') {
 		return (
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
+				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-500/15 border border-blue-400/30' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
 					<div className="flex items-center gap-3">
 						<button className="flex-shrink-0">
 							<svg className={`w-6 h-6 ${isMe ? 'text-white' : 'text-ft-text'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -17,7 +17,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 						<div className="flex-1 h-8 bg-white/20 rounded-full overflow-hidden">
 							<div className="h-full flex items-center px-2 gap-0.5">
 								{Array.from({ length: 40 }).map((_, i) => (
-									<div key={i} className={`w-0.5 rounded-full ${isMe ? 'bg-white' : 'bg-ft-cyan'}`}
+									<div key={i} className={`w-0.5 rounded-full ${isMe ? 'bg-blue-200' : 'bg-ft-cyan'}`}
 										style={{ height: `${Math.floor(Math.random() * 70 + 30)}%` }} />
 								))}
 							</div>
@@ -37,7 +37,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 				<p className="text-xs text-ft-muted text-center mb-2">{message.timestamp}</p>
 			)}
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
+				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-500/15 border border-blue-400/30' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
 					<div className={`text-sm break-words ${isMe ? 'text-white' : 'text-ft-text'}`}>{renderContent(message.text ?? '')}</div>
 					{message.reactions && (
 						<div className="flex gap-1 mt-2">

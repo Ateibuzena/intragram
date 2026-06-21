@@ -199,7 +199,7 @@ const FriendsPage = () => {
 				<div className="surface-glass border border-ft-cyan/30 rounded-2xl overflow-hidden">
 					<div className="px-5 py-4 border-b border-ft-border flex items-center gap-2">
 						<h2 className="text-xs font-bold text-ft-cyan uppercase tracking-wider">Solicitudes de amistad</h2>
-						<span className="text-[10px] font-bold bg-ft-cyan text-black px-1.5 py-0.5 rounded-full">
+						<span className="text-[10px] font-bold bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/30 px-1.5 py-0.5 rounded-full">
 							{pendingRequests.length}
 						</span>
 					</div>

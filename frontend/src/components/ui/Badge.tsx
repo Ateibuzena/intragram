@@ -3,7 +3,7 @@ import type { BadgeProps } from '@/types/props';
 export const Badge = ({ children, variant = 'level' }: BadgeProps) => {
 	const styles = {
 		level: 'bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/20',
-		notification: 'bg-red-500 text-white',
+		notification: 'bg-red-500/15 text-red-300 border border-red-500/30',
 		status: 'bg-green-500/20 text-green-400 border border-green-500/30',
 	};
 

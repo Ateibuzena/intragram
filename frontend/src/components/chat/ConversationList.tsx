@@ -47,7 +47,7 @@ export const ConversationList = ({
 	};
 
 	return (
-		<aside className="conversation-list surface-glass">
+		<aside className="conversation-list">
 			{/* Tabs */}
 			<div className="flex border-b border-ft-border">
 				<button
@@ -72,7 +72,7 @@ export const ConversationList = ({
 				>
 					Solicitudes
 					{pendingRequests.length > 0 && (
-						<span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-ft-cyan text-black text-[9px] font-black">
+						<span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/30 text-[9px] font-black">
 							{pendingRequests.length}
 						</span>
 					)}
@@ -89,7 +89,7 @@ export const ConversationList = ({
 							</div>
 							<button
 								onClick={() => onStartNewConversation?.()}
-								className="w-10 h-10 rounded-xl bg-ft-cyan text-black flex items-center justify-center hover:bg-ft-cyan-light transition-colors flex-shrink-0"
+								className="w-10 h-10 rounded-xl bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/35 flex items-center justify-center hover:bg-ft-cyan/25 transition-colors flex-shrink-0"
 								title="Nuevo chat"
 							>
 								<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

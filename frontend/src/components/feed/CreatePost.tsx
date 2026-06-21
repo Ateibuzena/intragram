@@ -96,7 +96,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 			{/* Panel de código */}
 			{showCodePanel && (
 				<div className="mt-3 border border-ft-cyan/30 rounded-xl overflow-hidden">
-					<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
+					<div className="flex items-center justify-between px-3 py-2 bg-ft-card border-b border-ft-border">
 						<select
 							value={codeLang}
 							onChange={(e: ChangeEvent<HTMLSelectElement>) => setCodeLang(e.target.value)}
@@ -117,7 +117,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 						</button>
 					</div>
 					<textarea
-						className="w-full bg-black/40 text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
+						className="w-full bg-ft-card text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
 						placeholder={`// Escribe tu código ${codeLang} aquí...`}
 						rows={6}
 						value={codeSnippet}

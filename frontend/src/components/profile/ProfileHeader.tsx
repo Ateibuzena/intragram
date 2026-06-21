@@ -359,7 +359,7 @@ export const ProfileHeader = ({
 							/>
 						</svg>
 						<div
-							className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-ft-cyan/30 bg-ft-bg/80 px-2.5 py-1 text-xs font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm"
+							className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-ft-cyan/30 bg-ft-card px-2.5 py-1 text-xs font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm"
 							style={{ left: `${progressLabelLeft}%`, top: `${progressLabelTop}%` }}
 						>
 							{progressPercentage}%
@@ -382,7 +382,7 @@ export const ProfileHeader = ({
 								<button
 									type="button"
 									onClick={startEditAvatar}
-									className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+									className="absolute inset-0 rounded-2xl bg-black/25 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
 								>
 									<PencilIcon className="w-8 h-8 text-white drop-shadow" />
 								</button>

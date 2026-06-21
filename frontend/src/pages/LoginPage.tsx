@@ -18,7 +18,7 @@ const LoginPage = () => (
 			<div className="surface-glass border border-ft-border rounded-2xl p-6">
 				<a
 					href="/api/auth/42"
-					className="flex items-center justify-center gap-3 w-full bg-ft-cyan hover:bg-ft-cyan-light text-black font-bold py-3 rounded-xl transition-all duration-200 hover:shadow-ft-glow active:scale-[0.98]"
+					className="flex items-center justify-center gap-3 w-full bg-ft-cyan/15 hover:bg-ft-cyan/25 text-ft-cyan border border-ft-cyan/35 font-bold py-3 rounded-xl transition-all duration-200 hover:shadow-ft-glow active:scale-[0.98]"
 				>
 					Entrar con 42
 				</a>

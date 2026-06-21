@@ -112,7 +112,7 @@ export const PostDetailModal = ({
 
 	return createPortal(
 		<div
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
 			onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
 		>
 			<div className="surface-glass border border-ft-border rounded-2xl w-full max-w-xl flex flex-col max-h-[90vh] shadow-2xl">
@@ -188,7 +188,7 @@ export const PostDetailModal = ({
 								/>
 							</button>
 							<div className="flex-1 min-w-0">
-								<div className="bg-ft-hover rounded-xl px-3 py-2">
+								<div className="bg-ft-card border border-ft-border rounded-xl px-3 py-2">
 									<button
 										type="button"
 										onClick={() => navigateToProfile(comment.author.login)}

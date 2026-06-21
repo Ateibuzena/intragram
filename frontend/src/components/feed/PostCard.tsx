@@ -76,7 +76,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 
 	return (
 		<>
-			<article className="post-card" style={isNew ? { backgroundColor: '#1b2335' } : undefined}>
+			<article className={`post-card ${isNew ? 'post-card--new' : ''}`}>
 				<div className="flex items-center space-x-3 mb-4">
 					<button
 						type="button"

@@ -94,7 +94,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	};
 
 	return (
-		<header className="navbar surface-glass flex">
+		<header className="navbar flex">
 			{/* Logo + buscador */}
 			<div className="flex items-center space-x-3 flex-1 min-w-[260px] max-w-[420px]">
 				<div className="flex items-center space-x-2 shrink-0">

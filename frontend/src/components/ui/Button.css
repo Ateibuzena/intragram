@@ -15,7 +15,7 @@
 }
 
 .btn-primary {
-	@apply btn bg-ft-cyan text-black hover:bg-ft-cyan-light hover:shadow-ft-glow-sm hover:-translate-y-0.5 btn-ripple;
+	@apply btn bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/35 hover:bg-ft-cyan/25 hover:border-ft-cyan/50 hover:shadow-ft-glow-sm hover:-translate-y-0.5 btn-ripple;
 }
 
 .btn-secondary {

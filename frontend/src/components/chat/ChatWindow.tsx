@@ -130,7 +130,7 @@ export const ChatWindow = ({
 
 	return (
 		<div className="chat-window">
-			<div className="chat-header surface-glass">
+			<div className="chat-header">
 				<div className="flex items-center gap-3">
 					{(() => {
 						const isOnline = selectedChat.user.id
@@ -189,11 +189,11 @@ export const ChatWindow = ({
 				<div ref={messagesEndRef} />
 			</div>
 
-			<div className="chat-input-area surface-glass">
+			<div className="chat-input-area">
 				{/* Panel de código */}
 				{showCodePanel && (
 					<div className="mb-2 border border-ft-cyan/30 rounded-xl overflow-hidden">
-						<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
+						<div className="flex items-center justify-between px-3 py-2 bg-ft-card border-b border-ft-border">
 							<select
 								value={codeLang}
 								onChange={(e: ChangeEvent<HTMLSelectElement>) => setCodeLang(e.target.value)}
@@ -214,19 +214,19 @@ export const ChatWindow = ({
 							</button>
 						</div>
 						<textarea
-							className="w-full bg-black/40 text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
+							className="w-full bg-ft-card text-xs text-ft-cyan font-mono p-3 focus:outline-none resize-none placeholder-ft-muted/50"
 							placeholder={`// Escribe tu código ${codeLang} aquí...`}
 							rows={5}
 							value={codeSnippet}
 							onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCodeSnippet(e.target.value)}
 							spellCheck={false}
 						/>
-						<div className="flex justify-end px-3 py-2 bg-ft-hover border-t border-ft-border">
+						<div className="flex justify-end px-3 py-2 bg-ft-card border-t border-ft-border">
 							<button
 								type="button"
 								onClick={() => { void handleSendCode(); }}
 								disabled={!codeSnippet.trim() || sending}
-								className="flex items-center gap-1.5 text-xs font-semibold text-black bg-ft-cyan hover:bg-ft-cyan-light px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								className="flex items-center gap-1.5 text-xs font-semibold text-ft-cyan bg-ft-cyan/15 border border-ft-cyan/35 hover:bg-ft-cyan/25 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Enviar código →
 							</button>
@@ -263,9 +263,9 @@ export const ChatWindow = ({
 					<button
 						onClick={() => { void handleSend(); }}
 						disabled={sending || !messageText.trim()}
-						className="p-2.5 bg-ft-cyan hover:bg-ft-cyan-light rounded-full transition-all hover:shadow-ft-glow-sm active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="p-2.5 bg-ft-cyan/15 border border-ft-cyan/35 hover:bg-ft-cyan/25 rounded-full transition-all hover:shadow-ft-glow-sm active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						<svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<svg className="w-5 h-5 text-ft-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11l18-8-8 18-2-7-8-3z" />
 						</svg>
 					</button>

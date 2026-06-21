@@ -18,7 +18,7 @@ export function renderContent(content: string): ReactNode {
 		const lang = match[1] ?? '';
 		const code = match[2] ?? '';
 		parts.push(
-			<pre key={match.index} className="bg-black/50 border border-ft-border rounded-lg p-3 mt-2 mb-1 overflow-x-auto text-left">
+			<pre key={match.index} className="bg-ft-card border border-ft-border rounded-lg p-3 mt-2 mb-1 overflow-x-auto text-left">
 				{lang && (
 					<span className="block text-[10px] text-ft-muted mb-1.5 font-mono uppercase tracking-wider select-none">
 						{lang}

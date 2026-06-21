@@ -171,7 +171,7 @@ export const ProfileHeader = ({
 											<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
 										</svg>
 									</summary>
-									<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border surface-glass shadow-2xl shadow-black/50 md:left-0 md:translate-x-0">
+									<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-ft-cyan/30 bg-[#050816]/90 backdrop-blur-xl shadow-2xl shadow-black/60 md:left-0 md:translate-x-0">
 										<div className="max-h-52 overflow-y-auto py-1">
 											{titles.map((title) => (
 												<div

@@ -47,7 +47,7 @@ export const ConversationList = ({
 	};
 
 	return (
-		<aside className="conversation-list">
+		<aside className="conversation-list surface-glass">
 			{/* Tabs */}
 			<div className="flex border-b border-ft-border">
 				<button

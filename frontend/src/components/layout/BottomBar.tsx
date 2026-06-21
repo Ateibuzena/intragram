@@ -15,7 +15,7 @@ interface BottomBarProps {
 }
 
 export const BottomBar = ({ activeNav, setActiveNav, onFiltersOpen }: BottomBarProps) => (
-	<nav className="bottom-bar">
+	<nav className="bottom-bar surface-glass">
 		{NAV_ITEMS.map((item) => (
 			<button
 				key={item.key}

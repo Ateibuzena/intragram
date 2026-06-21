@@ -24,7 +24,7 @@ export const ProfilePosts = ({ username }: ProfilePostsProps) => {
 				? Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)
 				: posts.length === 0
 				? (
-					<div className="bg-ft-card border border-ft-border rounded-2xl p-5 text-center">
+					<div className="surface-glass border border-ft-border rounded-2xl p-5 text-center">
 						<p className="text-sm text-ft-muted">Aun no hay publicaciones de @{username}.</p>
 					</div>
 				)

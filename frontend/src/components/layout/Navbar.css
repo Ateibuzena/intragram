@@ -1,5 +1,5 @@
 .navbar {
-	@apply bg-ft-card/60 backdrop-blur-xl border-b border-ft-border px-4 sm:px-5 py-2.5 items-center justify-between sticky top-0 z-20 flex flex-nowrap gap-2;
+	@apply border-b border-ft-border px-4 sm:px-5 py-2.5 items-center justify-between sticky top-0 z-20 flex flex-nowrap gap-2;
 }
 
 .navbar-logo {

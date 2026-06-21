@@ -58,7 +58,7 @@ export const ChatWindow = ({
 	if (!selectedChat) {
 		return (
 			<div className="chat-empty">
-				<div className="w-24 h-24 rounded-full bg-ft-card border-2 border-ft-border flex items-center justify-center mb-4">
+				<div className="w-24 h-24 rounded-full surface-glass border-2 border-ft-border flex items-center justify-center mb-4">
 					<svg className="w-12 h-12 text-ft-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
 					</svg>
@@ -79,7 +79,7 @@ export const ChatWindow = ({
 
 	return (
 		<div className="chat-window">
-			<div className="chat-header">
+			<div className="chat-header surface-glass">
 				<div className="flex items-center gap-3">
 					{(() => {
 						const isOnline = selectedChat.user.id
@@ -125,7 +125,7 @@ export const ChatWindow = ({
 				<div ref={messagesEndRef} />
 			</div>
 
-			<div className="chat-input-area">
+			<div className="chat-input-area surface-glass">
 	
 				{/* Panel de código */}
 				{showCodePanel && (
@@ -137,7 +137,7 @@ export const ChatWindow = ({
 								className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
 							>
 								{LANGUAGES.map((l) => (
-									<option key={l.value} value={l.value} className="bg-ft-card text-white">
+									<option key={l.value} value={l.value} className="bg-ft-bg text-white">
 										{l.label}
 									</option>
 								))}

@@ -18,7 +18,7 @@ export const CommonCoreProgress = ({
 	const roundedProgress = Math.round(progressPercentage);
 
 	return (
-		<div className={`bg-ft-card border border-ft-border rounded-2xl p-5 md:p-6 min-h-[13rem] ${className}`}>
+		<div className={`surface-glass border border-ft-border rounded-2xl p-5 md:p-6 min-h-[13rem] ${className}`}>
 			<div className="mb-5 flex items-start justify-between gap-3">
 				<div className="min-w-0">
 					<p className="text-[10px] text-ft-cyan uppercase font-semibold">Cursus 42</p>

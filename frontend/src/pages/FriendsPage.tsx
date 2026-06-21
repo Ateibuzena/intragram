@@ -196,7 +196,7 @@ const FriendsPage = () => {
 
 			{/* Solicitudes pendientes */}
 			{pendingRequests.length > 0 && (
-				<div className="bg-ft-card border border-ft-cyan/30 rounded-2xl overflow-hidden">
+				<div className="surface-glass border border-ft-cyan/30 rounded-2xl overflow-hidden">
 					<div className="px-5 py-4 border-b border-ft-border flex items-center gap-2">
 						<h2 className="text-xs font-bold text-ft-cyan uppercase tracking-wider">Solicitudes de amistad</h2>
 						<span className="text-[10px] font-bold bg-ft-cyan text-black px-1.5 py-0.5 rounded-full">
@@ -246,7 +246,7 @@ const FriendsPage = () => {
 			)}
 
 			{/* Add friend form */}
-			<div className="bg-ft-card border border-ft-border rounded-2xl p-5">
+			<div className="surface-glass border border-ft-border rounded-2xl p-5">
 				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider mb-3">Agregar amigo</h2>
 				<form className="space-y-3" onSubmit={(e) => { void handleAddFriend(e); }}>
 					<div className="flex gap-2">
@@ -275,7 +275,7 @@ const FriendsPage = () => {
 			</div>
 
 			{/* Friends list */}
-			<div className="bg-ft-card border border-ft-border rounded-2xl overflow-hidden">
+			<div className="surface-glass border border-ft-border rounded-2xl overflow-hidden">
 				<div className="px-5 py-4 border-b border-ft-border">
 					<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Mis amigos</h2>
 				</div>

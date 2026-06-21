@@ -3,7 +3,7 @@
 }
 
 .chat-header {
-	@apply bg-ft-card/60 backdrop-blur-xl border-b border-ft-border px-5 py-3 flex items-center justify-between;
+	@apply border-b border-ft-border px-5 py-3 flex items-center justify-between;
 }
 
 .chat-messages {
@@ -11,7 +11,7 @@
 }
 
 .chat-input-area {
-	@apply bg-ft-card border-t border-ft-border px-5 py-3;
+	@apply border-t border-ft-border px-5 py-3;
 }
 
 .chat-input-wrapper {

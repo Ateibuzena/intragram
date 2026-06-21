@@ -108,7 +108,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 								</svg>
 							</button>
 							{menuOpen && (
-								<div className="absolute right-0 top-7 z-10 bg-ft-card border border-ft-border rounded-xl shadow-lg overflow-hidden w-44">
+								<div className="absolute right-0 top-7 z-10 surface-glass border border-ft-border rounded-xl shadow-lg overflow-hidden w-44">
 									<button
 										type="button"
 										onClick={() => void handleDeletePost()}

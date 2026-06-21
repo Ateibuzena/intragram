@@ -7,7 +7,7 @@
 }
 
 .filter-drawer-panel {
-	@apply absolute bottom-0 left-0 right-0 bg-ft-card border-t border-ft-border rounded-t-2xl p-5;
+	@apply absolute bottom-0 left-0 right-0 bg-ft-card backdrop-blur-xl border-t border-ft-border rounded-t-2xl p-5;
 	padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 

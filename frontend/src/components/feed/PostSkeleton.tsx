@@ -1,5 +1,5 @@
 export const PostSkeleton = () => (
-	<div className="bg-ft-card border border-ft-border rounded-2xl p-5 mb-3 animate-pulse">
+	<div className="surface-glass border border-ft-border rounded-2xl p-5 mb-3 animate-pulse">
 		<div className="flex items-center space-x-3 mb-4">
 			<div className="w-9 h-9 rounded-full bg-ft-faint" />
 			<div className="flex-1">

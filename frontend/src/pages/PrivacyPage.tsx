@@ -20,7 +20,7 @@ const PrivacyPage = () => (
 			<h1 className="text-2xl font-black text-white mb-1">Política de Privacidad</h1>
 			<p className="text-xs text-ft-muted mb-8">Última actualización: junio de 2026</p>
 
-			<div className="bg-ft-card border border-ft-border rounded-2xl p-6 space-y-0">
+			<div className="surface-glass border border-ft-border rounded-2xl p-6 space-y-0">
 				<Section title="1. Quiénes somos">
 					<p>
 						Intragram es una red social desarrollada como proyecto académico del currículo de 42 Network por un

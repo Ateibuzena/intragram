@@ -89,7 +89,7 @@ export const FriendsSidebar = () => {
 	};
 
 	return (
-		<aside className="sticky top-4 bg-ft-card border border-ft-border rounded-2xl overflow-hidden">
+		<aside className="sticky top-4 surface-glass border border-ft-border rounded-2xl overflow-hidden">
 			<div className="px-4 py-3 border-b border-ft-border">
 				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Comunidad</h2>
 			</div>

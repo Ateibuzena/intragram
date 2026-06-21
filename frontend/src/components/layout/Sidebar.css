@@ -1,5 +1,5 @@
 .sidebar {
-	@apply w-14 hover:w-48 h-screen sticky top-0 bg-ft-card border-r border-ft-border flex flex-col py-3 transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0;
+	@apply w-14 hover:w-48 h-screen sticky top-0 border-r border-ft-border flex flex-col py-3 transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0;
 }
 
 .sidebar-item {

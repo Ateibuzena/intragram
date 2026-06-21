@@ -20,7 +20,7 @@ const TermsPage = () => (
 			<h1 className="text-2xl font-black text-white mb-1">Términos de Servicio</h1>
 			<p className="text-xs text-ft-muted mb-8">Última actualización: junio de 2026</p>
 
-			<div className="bg-ft-card border border-ft-border rounded-2xl p-6 space-y-0">
+			<div className="surface-glass border border-ft-border rounded-2xl p-6 space-y-0">
 				<Section title="1. Aceptación de los términos">
 					<p>
 						Al acceder y usar Intragram, aceptas estos Términos de Servicio. Si no estás de acuerdo con alguno de

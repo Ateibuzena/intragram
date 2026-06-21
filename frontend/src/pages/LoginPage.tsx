@@ -15,7 +15,7 @@ const LoginPage = () => (
 					La red social de la comunidad 42
 				</p>
 			</div>
-			<div className="bg-ft-card border border-ft-border rounded-2xl p-6">
+			<div className="surface-glass border border-ft-border rounded-2xl p-6">
 				<a
 					href="/api/auth/42"
 					className="flex items-center justify-center gap-3 w-full bg-ft-cyan hover:bg-ft-cyan-light text-black font-bold py-3 rounded-xl transition-all duration-200 hover:shadow-ft-glow active:scale-[0.98]"

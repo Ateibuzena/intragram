@@ -5,7 +5,7 @@ import { FilterIcon } from './FilterIcon';
 
 export const Sidebar = ({ activeFilter, setActiveFilter }: SidebarProps) => {
 	return (
-		<aside className="sidebar group">
+		<aside className="sidebar surface-glass group">
 			<div className="flex items-center justify-center w-14 h-10 mb-3 text-ft-muted">
 				<svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

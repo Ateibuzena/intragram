@@ -74,7 +74,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const hasContent = postText.trim().length > 0 || codeSnippet.trim().length > 0;
 
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
+		<div className="surface-glass border border-ft-border rounded-2xl p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
 			<div className="flex items-start space-x-3">
 				<div className="relative flex-shrink-0">
 					<div className="w-8 h-8 rounded-full bg-ft-cyan flex items-center justify-center font-bold text-xs text-black overflow-hidden">
@@ -103,7 +103,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 							className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
 						>
 							{LANGUAGES.map((l) => (
-								<option key={l.value} value={l.value} className="bg-ft-card text-white">
+								<option key={l.value} value={l.value} className="bg-ft-bg text-white">
 									{l.label}
 								</option>
 							))}

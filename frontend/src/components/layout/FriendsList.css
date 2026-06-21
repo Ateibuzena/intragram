@@ -1,5 +1,5 @@
 .friends-list {
-	@apply w-64 h-screen sticky top-0 bg-ft-card border-l border-ft-border p-4 overflow-y-auto flex-shrink-0 flex flex-col;
+	@apply w-64 h-screen sticky top-0 bg-ft-card backdrop-blur-xl border-l border-ft-border p-4 overflow-y-auto flex-shrink-0 flex flex-col;
 }
 
 .friend-item {

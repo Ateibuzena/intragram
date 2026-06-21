@@ -8,7 +8,7 @@ interface ProfileDetailsProps {
 
 export const ProfileDetails = ({ profile, campus }: ProfileDetailsProps) => {
 	return (
-		<div className="bg-ft-card border border-ft-border rounded-2xl p-4">
+		<div className="surface-glass border border-ft-border rounded-2xl p-4">
 			<h3 className="text-sm font-bold text-white mb-3">Profile Details</h3>
 			<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
 				<div>

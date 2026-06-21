@@ -94,7 +94,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	};
 
 	return (
-		<header className="navbar flex">
+		<header className="navbar surface-glass flex">
 			{/* Logo + buscador */}
 			<div className="flex items-center space-x-3 flex-1 min-w-[260px] max-w-[420px]">
 				<div className="flex items-center space-x-2 shrink-0">
@@ -123,7 +123,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 					</div>
 
 					{dropdownOpen && results.length > 0 && (
-						<div className="absolute top-full left-0 right-0 mt-1 bg-ft-card border border-ft-border rounded-xl shadow-lg z-50 overflow-hidden">
+						<div className="absolute top-full left-0 right-0 mt-1 surface-glass border border-ft-border rounded-xl shadow-lg z-50 overflow-hidden">
 							{results.map((result) => (
 								<button
 									key={result.id}

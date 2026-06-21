@@ -161,8 +161,12 @@
 	animation: fadeSwitch 0.25s ease both;
 }
 
-/* ===== GLOBAL BUTTON UTILITIES ===== */
+/* ===== GLOBAL COMPONENT UTILITIES ===== */
 @layer components {
+	.surface-glass {
+		@apply bg-ft-card backdrop-blur-xl;
+	}
+
 	.btn-ripple {
 		position: relative;
 		overflow: hidden;

@@ -169,7 +169,7 @@ export const ProfileHeader = ({
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
-				<div className="absolute inset-0 z-10 rounded-2xl bg-ft-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-6">
+				<div className="absolute inset-0 z-10 rounded-2xl surface-glass flex flex-col items-center justify-center gap-5 p-6">
 					<div className="w-36 h-36 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
 						{avatarInput ? (
 							<img src={avatarInput} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -213,7 +213,7 @@ export const ProfileHeader = ({
 
 			{/* ── Name edit overlay ── */}
 			{editingName && (
-				<div className="absolute inset-0 z-10 rounded-2xl bg-ft-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5 p-6">
+				<div className="absolute inset-0 z-10 rounded-2xl surface-glass flex flex-col items-center justify-center gap-5 p-6">
 					<div className="w-full space-y-3">
 						<input
 							ref={nameInputRef}
@@ -359,7 +359,7 @@ export const ProfileHeader = ({
 								</svg>
 							</summary>
 
-							<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border bg-ft-card shadow-2xl shadow-black/50 md:left-0 md:translate-x-0">
+							<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-ft-border surface-glass shadow-2xl shadow-black/50 md:left-0 md:translate-x-0">
 								<div className="max-h-52 overflow-y-auto py-1">
 									{titles.map((title) => (
 										<div
@@ -413,27 +413,27 @@ export const ProfileHeader = ({
 
 							{insights && (
 								<div className="flex w-full max-w-4xl flex-wrap items-center justify-center gap-2 md:flex-nowrap">
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Proyectos</span>
 										<span className="text-sm font-black leading-none text-white">{insights.totalProjects}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Validados</span>
 										<span className="text-sm font-black leading-none text-green-300">{insights.validatedProjects}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Nota</span>
 										<span className="text-sm font-black leading-none text-white">{insights.averageProjectMark ?? '-'}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Wallet</span>
 										<span className="text-sm font-black leading-none text-white">{insights.wallet} ₳</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Corrections</span>
 										<span className="text-sm font-black leading-none text-white">{insights.correctionPoint}</span>
 									</div>
-									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border bg-ft-card/35 px-3 py-1.5 backdrop-blur-sm">
+									<div className="inline-flex min-w-0 items-baseline gap-2 rounded-full border border-ft-border surface-glass px-3 py-1.5">
 										<span className="text-[10px] uppercase text-ft-muted">Campus</span>
 										<span className="truncate text-sm font-black leading-none text-white">{insights.campus}</span>
 									</div>

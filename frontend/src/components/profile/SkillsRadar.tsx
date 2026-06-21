@@ -70,8 +70,8 @@ export const SkillsRadar = ({ skills, className = '' }: SkillsRadarProps) => {
 
 	return (
 		<div className={`p-5 min-h-[34rem] overflow-visible flex flex-col ${className}`}>
-			<div className="grid flex-1 min-h-0 items-center gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(13rem,0.65fr)]">
-				<div className="p-2 min-h-[25rem] overflow-visible flex items-center justify-center">
+			<div className="mx-auto grid w-full max-w-[64rem] flex-1 min-h-0 items-center justify-center gap-10 xl:-translate-x-5 xl:grid-cols-[minmax(34rem,36rem)_minmax(18rem,22rem)]">
+				<div className="p-2 min-h-[25rem] overflow-visible flex items-center justify-center xl:-translate-x-6 2xl:-translate-x-8">
 					<svg
 						viewBox={`0 0 ${radarData.size} ${radarData.size}`}
 						preserveAspectRatio="xMidYMid meet"

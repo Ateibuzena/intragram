@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ProfileInsights, UserProfileEntityDto } from '@/types/profile';
 import { ProfileNameEditor, ProfileNameEditorOverlay } from './ProfileNameEditor';
-import { ProfileAvatarDisplay, ProfileAvatarEditorOverlay } from './ProfileAvatarEditor';
+import { ProfileAvatarDisplay, ProfileAvatarEditorModal } from './ProfileAvatarEditor';
 import { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
 import { FriendActionButton } from './FriendActionButton';
 
@@ -68,10 +68,10 @@ export const ProfileHeader = ({
 	return (
 		<div className={`relative overflow-hidden ${className}`}>
 
-			{/* ── Overlays (absolute inset-0, cover full card) ── */}
+			{/* ── Editors ── */}
 			{editingAvatar && onSaveAvatarUrl && (
-				<ProfileAvatarEditorOverlay
-					profile={profile}
+				<ProfileAvatarEditorModal
+					avatarUrl={profile?.avatar_url ?? null}
 					profileInitial={profileInitial}
 					onSave={onSaveAvatarUrl}
 					onClose={() => setEditingAvatar(false)}

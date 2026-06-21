@@ -1,6 +1,6 @@
 export { ProfileHeader } from './ProfileHeader';
 export { ProfileNameEditor, ProfileNameEditorOverlay } from './ProfileNameEditor';
-export { ProfileAvatarDisplay, ProfileAvatarEditorOverlay } from './ProfileAvatarEditor';
+export { ProfileAvatarDisplay, ProfileAvatarEditorModal } from './ProfileAvatarEditor';
 export { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
 export { FriendActionButton } from './FriendActionButton';
 export { CommonCoreProgress } from './CommonCoreProgress';

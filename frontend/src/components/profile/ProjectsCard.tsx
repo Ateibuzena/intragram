@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ProfileInsights, ProjectStatusKind } from './profileTypes';
+import type { ProfileInsights, ProjectStatusKind } from '@/types/profile';
 
 interface ProjectsCardProps {
 	insights: ProfileInsights;

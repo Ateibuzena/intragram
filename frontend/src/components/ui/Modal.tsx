@@ -1,5 +1,5 @@
 import './Modal.css';
-import type { ModalProps } from '@/types/props';
+import type { ModalProps } from '@/types/ui';
 import { Button } from './Button';
 
 export const Modal = ({ onClose, children, title }: ModalProps) => (

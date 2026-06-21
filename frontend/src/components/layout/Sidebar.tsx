@@ -1,6 +1,6 @@
 import './Sidebar.css';
 import { FILTERS } from '@/constants/filters';
-import type { SidebarProps } from '@/types/props';
+import type { SidebarProps } from '@/types/ui';
 import { FilterIcon } from './FilterIcon';
 
 export const Sidebar = ({ activeFilter, setActiveFilter }: SidebarProps) => {

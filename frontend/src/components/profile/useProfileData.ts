@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { buildApiUrl } from '@/utils/apiBase';
-import { UserProfileEntityDto } from './profileTypes';
-import { decodeTokenPayload } from './profileUtils';
+import type { UserProfileEntityDto } from '@/types/profile';
+import { decodeTokenPayload } from '@/utils/auth';
 
 const fetchProfileFromBackend = async (
 	token: string,

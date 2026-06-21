@@ -1,4 +1,4 @@
-import { ProfileInsights } from './profileTypes';
+import type { ProfileInsights } from '@/types/profile';
 
 interface ProfileStatsProps {
 	insights: ProfileInsights;

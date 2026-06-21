@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
-import type { Post } from '@/types/models';
+import type { Post } from '@/types/feed';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { mapApiPostToPost } from '@/utils/postMappers';

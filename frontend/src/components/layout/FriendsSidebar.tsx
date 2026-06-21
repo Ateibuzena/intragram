@@ -46,7 +46,11 @@ export const FriendsSidebar = () => {
 	useEffect(() => { void fetchDirectory(); }, [fetchDirectory]);
 
 	const setProcessingId = (id: string, active: boolean) =>
-		setProcessing((prev) => { const next = new Set(prev); active ? next.add(id) : next.delete(id); return next; });
+		setProcessing((prev) => {
+			const next = new Set(prev);
+			if (active) next.add(id); else next.delete(id);
+			return next;
+		});
 
 	const handleAdd = async (id: string, login: string) => {
 		if (processing.has(id)) return;

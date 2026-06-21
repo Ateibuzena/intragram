@@ -1,6 +1,6 @@
 import './Avatar.css';
 import { getGradient } from '@/utils/theme';
-import type { AvatarProps } from '@/types/props';
+import type { AvatarProps } from '@/types/ui';
 
 export const Avatar = ({ login, imageUrl = null, size = 'md', online }: AvatarProps) => (
 	<div className="relative flex-shrink-0">

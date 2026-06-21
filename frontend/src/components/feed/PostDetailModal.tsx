@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { buildApiUrl } from '@/utils/apiBase';
-import { renderContent } from '@/utils/renderContent';
+import { RenderedContent } from '@/components/content/RenderedContent';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
-import type { Post, PostComment } from '@/types/models';
+import type { Post, PostComment } from '@/types/feed';
 
 interface PostDetailModalProps {
 	post: Post;
@@ -144,7 +144,7 @@ export const PostDetailModal = ({
 							<p className="text-xs text-ft-muted">{post.time}</p>
 						</div>
 					</button>
-					<div className="text-sm text-ft-text leading-relaxed">{renderContent(post.content)}</div>
+					<div className="text-sm text-ft-text leading-relaxed"><RenderedContent content={post.content} /></div>
 				</div>
 
 				{/* Stats */}

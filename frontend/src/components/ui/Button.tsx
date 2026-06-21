@@ -1,5 +1,5 @@
 import './Button.css';
-import type { ButtonProps } from '@/types/props';
+import type { ButtonProps } from '@/types/ui';
 
 export const Button = ({
 	variant = 'primary',

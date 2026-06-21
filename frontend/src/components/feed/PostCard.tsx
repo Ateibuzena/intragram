@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/Badge';
 import { usePost } from '@/hooks/usePost';
 import { useAuth } from '@/hooks/useAuth';
 import { buildApiUrl } from '@/utils/apiBase';
-import { renderContent } from '@/utils/renderContent';
+import { RenderedContent } from '@/components/content/RenderedContent';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { PostDetailModal } from './PostDetailModal';
-import type { PostCardProps } from '@/types/props';
+import type { PostCardProps } from '@/types/ui';
 
 export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const { token, profile } = useAuth();
@@ -125,7 +125,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 					)}
 				</div>
 
-				<div className="text-sm text-ft-text leading-relaxed mb-4">{renderContent(post.content)}</div>
+				<div className="text-sm text-ft-text leading-relaxed mb-4"><RenderedContent content={post.content} /></div>
 
 				<div className="flex items-center gap-3 pt-3 border-t border-ft-border">
 					<button

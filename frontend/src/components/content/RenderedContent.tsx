@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
 
-/**
- * Renders plain text with Markdown code blocks (```lang\ncode```) as
- * styled <pre><code> elements. The rest of the text is displayed as-is.
- */
+interface RenderedContentProps {
+	content: string;
+}
 
-export function renderContent(content: string): ReactNode {
+export const RenderedContent = ({ content }: RenderedContentProps) => {
 	const CODE_BLOCK_RE = /```(\w*)\n?([\s\S]*?)```/g;
 	const parts: ReactNode[] = [];
 	let lastIndex = 0;
@@ -35,4 +34,4 @@ export function renderContent(content: string): ReactNode {
 	}
 
 	return <>{parts.length > 0 ? parts : content}</>;
-}
+};

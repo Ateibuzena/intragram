@@ -1,5 +1,5 @@
 import './Input.css';
-import type { InputProps } from '@/types/props';
+import type { InputProps } from '@/types/ui';
 
 export const Input = ({ icon, className = '', ...props }: InputProps) => (
 	<div className="input-wrapper">

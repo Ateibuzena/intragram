@@ -13,7 +13,7 @@ import {
 	buildProfileInsights,
 } from '@/components/profile';
 import type { UserProfileEntityDto } from '@/components/profile';
-import type { NavKey } from '@/types/models';
+import type { NavKey } from '@/types/ui';
 
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';

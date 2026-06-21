@@ -1,8 +1,15 @@
-import { renderContent } from '@/utils/renderContent';
-import type { MessageBubbleProps } from '@/types/props';
+import { useMemo } from 'react';
+import { RenderedContent } from '@/components/content/RenderedContent';
+import type { MessageBubbleProps } from '@/types/ui';
+
+const WAVEFORM_BARS = Array.from({ length: 40 }, (_, i) => {
+	const seed = (i * 2654435761) >>> 0;
+	return 30 + (seed % 70);
+});
 
 export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) => {
 	const isMe = message.sender === 'me';
+	const waveHeights = useMemo(() => WAVEFORM_BARS, []);
 
 	if (message.type === 'audio') {
 		return (
@@ -16,9 +23,9 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 						</button>
 						<div className="flex-1 h-8 bg-white/20 rounded-full overflow-hidden">
 							<div className="h-full flex items-center px-2 gap-0.5">
-								{Array.from({ length: 40 }).map((_, i) => (
+								{waveHeights.map((h, i) => (
 									<div key={i} className={`w-0.5 rounded-full ${isMe ? 'bg-blue-200' : 'bg-ft-cyan'}`}
-										style={{ height: `${Math.floor(Math.random() * 70 + 30)}%` }} />
+										style={{ height: `${h}%` }} />
 								))}
 							</div>
 						</div>
@@ -38,7 +45,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 			)}
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
 				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-500/15 border border-blue-400/30' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
-					<div className={`text-sm break-words ${isMe ? 'text-white' : 'text-ft-text'}`}>{renderContent(message.text ?? '')}</div>
+					<div className={`text-sm break-words ${isMe ? 'text-white' : 'text-ft-text'}`}><RenderedContent content={message.text ?? ''} /></div>
 					{message.reactions && (
 						<div className="flex gap-1 mt-2">
 							{message.reactions.map((emoji, i) => (

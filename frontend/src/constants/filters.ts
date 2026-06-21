@@ -1,4 +1,4 @@
-import type { FilterKey } from '@/types/models';
+import type { FilterKey } from '@/types/feed';
 
 export interface FeedFilter {
 	key: FilterKey;

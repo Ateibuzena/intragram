@@ -1,4 +1,4 @@
-import type { FilterKey } from '@/types/models';
+import type { FilterKey } from '@/types/feed';
 
 interface FilterIconProps { filterKey: FilterKey; }
 

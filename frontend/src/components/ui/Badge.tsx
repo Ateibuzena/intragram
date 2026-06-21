@@ -1,4 +1,4 @@
-import type { BadgeProps } from '@/types/props';
+import type { BadgeProps } from '@/types/ui';
 
 export const Badge = ({ children, variant = 'level' }: BadgeProps) => {
 	const styles = {

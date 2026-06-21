@@ -1,4 +1,8 @@
 export { ProfileHeader } from './ProfileHeader';
+export { ProfileNameEditor, ProfileNameEditorOverlay } from './ProfileNameEditor';
+export { ProfileAvatarDisplay, ProfileAvatarEditorOverlay } from './ProfileAvatarEditor';
+export { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
+export { FriendActionButton } from './FriendActionButton';
 export { CommonCoreProgress } from './CommonCoreProgress';
 export { SkillsRadar } from './SkillsRadar';
 export { ProjectsCard } from './ProjectsCard';
@@ -15,5 +19,6 @@ export type {
 	ProfileSkillInsight,
 	ProfileTitleInsight,
 	ProjectStatusKind,
-} from './profileTypes';
-export { buildProfileInsights, cleanTitle, decodeTokenPayload, formatDate, splitLabel } from './profileUtils';
+} from '@/types/profile';
+export { buildProfileInsights, cleanTitle, formatDate, splitLabel } from '@/utils/profile';
+export { decodeTokenPayload } from '@/utils/auth';

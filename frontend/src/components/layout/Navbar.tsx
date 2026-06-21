@@ -1,6 +1,6 @@
 import './Navbar.css';
 import { useEffect, useRef, useState } from 'react';
-import type { NavKey } from '@/types/models';
+import type { NavKey } from '@/types/ui';
 import { NavIcon } from './NavIcon';
 import { LogOutIcon } from './LogOutIcon';
 import { useAuth } from '@/hooks/useAuth';

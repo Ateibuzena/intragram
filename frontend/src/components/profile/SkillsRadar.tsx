@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { ProfileSkillInsight, RadarData } from './profileTypes';
-import { splitLabel } from './profileUtils';
+import type { ProfileSkillInsight, RadarData } from '@/types/profile';
+import { splitLabel } from '@/utils/profile';
 
 const RADAR_SIZE = 520;
 const RADAR_CENTER = RADAR_SIZE / 2;

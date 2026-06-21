@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ConversationList.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Input } from '@/components/ui/Input';
-import type { ConversationListProps } from '@/types/props';
+import type { ConversationListProps } from '@/types/ui';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
 type ChatTab = 'mensajes' | 'solicitudes';

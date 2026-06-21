@@ -1,5 +1,8 @@
 import type * as React from 'react';
-import type { Conversation, FilterKey, Message, Post } from './models';
+import type { Conversation, Message, PendingFriendRequest } from './chat';
+import type { FilterKey, Post } from './feed';
+
+export type NavKey = 'home' | 'chat' | 'profile';
 
 export interface PostCardProps {
 	post: Post;
@@ -11,12 +14,6 @@ export interface MessageBubbleProps {
 	key?: string | number;
 	message: Message;
 	showTimestamp: boolean;
-}
-
-export interface PendingFriendRequest {
-	id: string;
-	login: string;
-	avatar_url?: string | null;
 }
 
 export interface ConversationListProps {
@@ -47,12 +44,6 @@ export interface SidebarProps {
 	setActiveFilter: (filter: FilterKey) => void;
 }
 
-export interface FilterDrawerProps {
-	activeFilter: FilterKey;
-	setActiveFilter: (filter: FilterKey) => void;
-	onClose: () => void;
-}
-
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
 	size?: 'sm' | 'md' | 'lg';
@@ -73,12 +64,6 @@ export interface BadgeProps {
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	icon?: React.ReactNode;
-}
-
-export interface CardProps {
-	children: React.ReactNode;
-	className?: string;
-	hover?: boolean;
 }
 
 export interface ModalProps {

@@ -1,5 +1,5 @@
 import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
-import type { Post } from '@/types/models';
+import type { Post } from '@/types/feed';
 import { formatTime } from '@/utils/formatters';
 
 export const mapApiPostToPost = (api: IFeedPost): Post => ({

@@ -1,4 +1,4 @@
-import type { NavKey } from '@/types/models';
+import type { NavKey } from '@/types/ui';
 
 interface NavIconProps { navKey: NavKey; }
 

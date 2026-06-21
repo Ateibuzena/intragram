@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './ChatWindow.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import type { ChatWindowProps } from '@/types/props';
+import type { ChatWindowProps } from '@/types/ui';
 import { MessageBubble } from './MessageBubble';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { LANGUAGES } from '@/constants/languages';

@@ -1,5 +1,5 @@
-import { UserProfileEntityDto } from './profileTypes';
-import { formatDate } from './profileUtils';
+import type { UserProfileEntityDto } from '@/types/profile';
+import { formatDate } from '@/utils/profile';
 
 interface ProfileDetailsProps {
 	profile: UserProfileEntityDto | null;

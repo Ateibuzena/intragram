@@ -35,14 +35,18 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { UsersService, IDirectoryEntry } from './users.service';
-import { IUserProfile, IPostComment, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, IPostComment, IFeedPost, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Controller('users')
 export class UsersController {
-	constructor(private readonly usersService: UsersService) {}
+	constructor(
+		private readonly usersService: UsersService,
+		private readonly realtimeService: RealtimeService,
+	) {}
 
 	private async resolveAuthenticatedProfileId(req: any): Promise<string | null> {
 		const chatUserId = req.user?.chat_user_id;
@@ -388,10 +392,12 @@ export class UsersController {
 	 */
 	@UseGuards(AuthGuard)
 	@Post('feed')
-	async createPost(@Body() dto: CreateFeedPostDto, @Req() req: any) {
+	async createPost(@Body() dto: CreateFeedPostDto, @Req() req: any): Promise<IFeedPost> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.createPost(profile.id, dto);
+			const post = await this.usersService.createPost(profile.id, dto);
+			this.realtimeService.emitToAll('feed:new-post', post);
+			return post;
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

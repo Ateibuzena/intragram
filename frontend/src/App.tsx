@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
 import { usePresence } from '@/hooks/usePresence';
@@ -10,12 +11,23 @@ import TermsPage from '@/pages/TermsPage';
 import UserProfilePage from '@/pages/UserProfilePage';
 
 const PresenceManager = ({ children }: { children: React.ReactNode }) => {
-	const { connected, presenceMap } = usePresence();
+	const { connected, presenceMap, socketRef, emit } = usePresence();
 	return (
-		<PresenceContext.Provider value={{ connected, presenceMap }}>
+		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit }}>
 			{children}
 		</PresenceContext.Provider>
 	);
+};
+
+const VALID_THEMES = ['none', 'dots', 'topographic', 'circuit', 'noise'];
+
+const BackgroundApplier = () => {
+	const { profile } = useAuth();
+	useEffect(() => {
+		const theme = VALID_THEMES.includes(profile?.background_theme ?? '') ? profile!.background_theme! : 'none';
+		document.body.dataset.bgTheme = theme;
+	}, [profile?.background_theme]);
+	return null;
 };
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +35,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<AuthContext.Provider value={auth}>
 			<PresenceManager>
+				<BackgroundApplier />
 				{children}
 			</PresenceManager>
 		</AuthContext.Provider>

@@ -7,6 +7,7 @@ export interface UserProfileEntityDto {
 	last_name: string | null;
 	display_name: string | null;
 	avatar_url: string | null;
+	background_theme?: string | null;
 	campus: string | null;
 	pool_month: string | null;
 	pool_year: string | null;

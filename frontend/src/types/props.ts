@@ -4,6 +4,7 @@ import type { Conversation, FilterKey, Message, Post } from './models';
 export interface PostCardProps {
 	post: Post;
 	onDelete?: (postId: string) => void;
+	isNew?: boolean;
 }
 
 export interface MessageBubbleProps {

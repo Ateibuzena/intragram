@@ -5,10 +5,10 @@ import { formatTime } from '@/utils/formatters';
 export const mapApiPostToPost = (api: IFeedPost): Post => ({
 	id: api.id,
 	user: {
+		id: api.author?.id,
 		login: api.author?.login ?? 'desconocido',
 		level: api.author?.correction_point ?? 0,
 		avatarUrl: api.author?.avatar_url ?? null,
-		active: api.author?.active ?? false,
 	},
 	content: api.content ?? '',
 	time: formatTime(api.created_at),

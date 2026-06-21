@@ -7,7 +7,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 	if (message.type === 'audio') {
 		return (
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-				<div className={`max-w-xs ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
+				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
 					<div className="flex items-center gap-3">
 						<button className="flex-shrink-0">
 							<svg className={`w-6 h-6 ${isMe ? 'text-white' : 'text-ft-text'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -37,8 +37,8 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 				<p className="text-xs text-ft-muted text-center mb-2">{message.timestamp}</p>
 			)}
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-				<div className={`max-w-sm ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
-					<div className={`text-sm ${isMe ? 'text-white' : 'text-ft-text'}`}>{renderContent(message.text ?? '')}</div>
+				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-600' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
+					<div className={`text-sm break-words ${isMe ? 'text-white' : 'text-ft-text'}`}>{renderContent(message.text ?? '')}</div>
 					{message.reactions && (
 						<div className="flex gap-1 mt-2">
 							{message.reactions.map((emoji, i) => (

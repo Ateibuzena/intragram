@@ -5,6 +5,61 @@ import { ProfileInsights, UserProfileEntityDto } from './profileTypes';
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
 
+const BG_THEMES = [
+	{ key: 'none',        label: 'Sólido' },
+	{ key: 'dots',        label: 'Puntos' },
+	{ key: 'topographic', label: 'Topográfico' },
+	{ key: 'circuit',     label: 'Circuito' },
+	{ key: 'noise',       label: 'Grano' },
+] as const;
+
+const ThemeSwatch = ({ themeKey }: { themeKey: string }) => {
+	if (themeKey === 'none') return <div className="absolute inset-0 bg-ft-bg rounded-lg" />;
+	if (themeKey === 'dots') return (
+		<div className="absolute inset-0 bg-ft-bg rounded-lg" style={{
+			backgroundImage: 'radial-gradient(circle, rgba(0,186,188,0.4) 1px, transparent 1px)',
+			backgroundSize: '6px 6px',
+		}} />
+	);
+	if (themeKey === 'topographic') return (
+		<div className="absolute inset-0 bg-ft-bg rounded-lg overflow-hidden">
+			<svg className="absolute inset-0 w-full h-full" viewBox="0 0 64 36" preserveAspectRatio="xMidYMid slice">
+				<ellipse cx="32" cy="18" rx="28" ry="10" fill="none" stroke="rgba(0,186,188,0.4)" strokeWidth="1" />
+				<ellipse cx="32" cy="18" rx="20" ry="7" fill="none" stroke="rgba(0,186,188,0.4)" strokeWidth="1" />
+				<ellipse cx="32" cy="18" rx="12" ry="4" fill="none" stroke="rgba(0,186,188,0.4)" strokeWidth="1" />
+				<ellipse cx="8"  cy="32" rx="14" ry="6" fill="none" stroke="rgba(0,186,188,0.25)" strokeWidth="1" />
+				<ellipse cx="56" cy="4"  rx="12" ry="5" fill="none" stroke="rgba(0,186,188,0.25)" strokeWidth="1" />
+			</svg>
+		</div>
+	);
+	if (themeKey === 'circuit') return (
+		<div className="absolute inset-0 bg-ft-bg rounded-lg overflow-hidden">
+			<svg className="absolute inset-0 w-full h-full" viewBox="0 0 64 36" preserveAspectRatio="xMidYMid slice">
+				<g fill="none" stroke="rgba(0,186,188,0.4)" strokeWidth="1">
+					<path d="M4 18h12v-8h10" /><path d="M60 18h-12v8h-10" />
+					<path d="M32 4v10h10" /><path d="M32 32v-10h-10" />
+				</g>
+				<g fill="rgba(0,186,188,0.5)">
+					<circle cx="4" cy="18" r="2" /><circle cx="60" cy="18" r="2" />
+					<circle cx="32" cy="4" r="2" /><circle cx="32" cy="32" r="2" />
+					<circle cx="26" cy="10" r="1.5" /><circle cx="38" cy="26" r="1.5" />
+				</g>
+			</svg>
+		</div>
+	);
+	if (themeKey === 'noise') return (
+		<div className="absolute inset-0 bg-ft-bg rounded-lg overflow-hidden">
+			<svg className="absolute inset-0 w-full h-full">
+				<filter id={`np-${themeKey}`}>
+					<feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" />
+				</filter>
+				<rect width="100%" height="100%" filter={`url(#np-${themeKey})`} opacity="0.15" />
+			</svg>
+		</div>
+	);
+	return null;
+};
+
 interface ProfileHeaderProps {
 	profile: UserProfileEntityDto | null;
 	displayName: string;
@@ -15,8 +70,10 @@ interface ProfileHeaderProps {
 	online?: boolean;
 	insights?: ProfileInsights;
 	canEditProfile?: boolean;
+	activeTheme?: string;
 	onSaveDisplayName?: (name: string) => Promise<void>;
 	onSaveAvatarUrl?: (url: string) => Promise<void>;
+	onSaveBackground?: (theme: string) => Promise<void>;
 	showFriendButton?: boolean;
 	relation?: Relation;
 	friendAction?: FriendAction;
@@ -42,8 +99,10 @@ export const ProfileHeader = ({
 	online,
 	insights,
 	canEditProfile,
+	activeTheme = 'none',
 	onSaveDisplayName,
 	onSaveAvatarUrl,
+	onSaveBackground,
 	showFriendButton,
 	relation = 'none',
 	friendAction = 'idle',
@@ -165,12 +224,13 @@ export const ProfileHeader = ({
 	};
 
 	return (
-		<div className={`relative h-full overflow-visible ${className}`}>
+		<div className={`relative overflow-hidden ${className}`}>
 
 			{/* ── Avatar edit overlay ── */}
 			{editingAvatar && (
-				<div className="absolute inset-0 z-10 rounded-2xl surface-glass flex flex-col items-center justify-center gap-5 p-6">
-					<div className="w-36 h-36 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
+				<div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 surface-glass p-6 rounded-[inherit]">
+					<h3 className="text-sm font-bold text-white">Cambiar foto de perfil</h3>
+					<div className="w-28 h-28 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
 						{avatarInput ? (
 							<img src={avatarInput} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
 						) : profile?.avatar_url ? (
@@ -179,7 +239,7 @@ export const ProfileHeader = ({
 							<span className="w-full h-full flex items-center justify-center text-2xl font-black text-black bg-ft-cyan">{profileInitial}</span>
 						)}
 					</div>
-					<div className="w-full space-y-3">
+					<div className="w-full max-w-sm space-y-3">
 						<input
 							type="url"
 							value={avatarInput}
@@ -194,7 +254,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={cancelEditAvatar}
 								disabled={savingAvatar}
-								className="flex-1 py-1.5 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
 							>
 								Cancelar
 							</button>
@@ -202,7 +262,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={() => void saveAvatar()}
 								disabled={savingAvatar}
-								className="flex-1 py-1.5 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
 							>
 								{savingAvatar ? 'Guardando...' : 'Guardar'}
 							</button>
@@ -213,8 +273,9 @@ export const ProfileHeader = ({
 
 			{/* ── Name edit overlay ── */}
 			{editingName && (
-				<div className="absolute inset-0 z-10 rounded-2xl surface-glass flex flex-col items-center justify-center gap-5 p-6">
-					<div className="w-full space-y-3">
+				<div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 surface-glass p-6 rounded-[inherit]">
+					<h3 className="text-sm font-bold text-white">Cambiar nombre</h3>
+					<div className="w-full max-w-sm space-y-3">
 						<input
 							ref={nameInputRef}
 							type="text"
@@ -230,7 +291,7 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={cancelEditName}
 								disabled={savingName}
-								className="flex-1 py-1.5 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-medium text-ft-muted border border-ft-border rounded-xl hover:bg-ft-hover disabled:opacity-40 transition-all"
 							>
 								Cancelar
 							</button>
@@ -238,12 +299,34 @@ export const ProfileHeader = ({
 								type="button"
 								onClick={() => void saveName()}
 								disabled={savingName}
-								className="flex-1 py-1.5 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
+								className="flex-1 py-2 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
 							>
 								{savingName ? 'Guardando...' : 'Guardar'}
 							</button>
 						</div>
 					</div>
+				</div>
+			)}
+
+			{/* ── Background theme picker ── */}
+			{canEditProfile && onSaveBackground && (
+				<div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+					{BG_THEMES.map(({ key, label }) => {
+						const isActive = activeTheme === key;
+						return (
+							<button
+								key={key}
+								title={label}
+								onClick={() => void onSaveBackground(key)}
+								className={`relative w-8 h-5 rounded-md overflow-hidden flex-shrink-0 transition-all duration-200
+									${isActive
+										? 'border-2 border-ft-cyan scale-110 shadow-[0_0_6px_rgba(0,186,188,0.6)]'
+										: 'border border-white/30 hover:border-white/70 hover:scale-105'}`}
+							>
+								<ThemeSwatch themeKey={key} />
+							</button>
+						);
+					})}
 				</div>
 			)}
 

@@ -11,7 +11,7 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { PostDetailModal } from './PostDetailModal';
 import type { PostCardProps } from '@/types/props';
 
-export const PostCard = ({ post, onDelete }: PostCardProps) => {
+export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
@@ -47,16 +47,16 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 	};
 
 	const toggleFavorite = async () => {
-		if (!token) { handleSave(); return; }
+		handleSave();
+		if (!token) return;
 		try {
-			await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
+			const res = await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${token}` },
 			});
+			if (!res.ok) handleSave(); // revert optimistic toggle
 		} catch {
-			// keep local animation on error
-		} finally {
-			handleSave();
+			handleSave(); // revert optimistic toggle
 		}
 	};
 
@@ -76,7 +76,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 
 	return (
 		<>
-			<article className="post-card">
+			<article className="post-card" style={isNew ? { backgroundColor: '#1b2335' } : undefined}>
 				<div className="flex items-center space-x-3 mb-4">
 					<button
 						type="button"
@@ -87,7 +87,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 							login={post.user.login}
 							imageUrl={post.user.avatarUrl}
 							size="md"
-							online={presenceMap[post.user.login] ?? post.user.active}
+							online={presenceMap[post.user.id as string] ?? false}
 						/>
 						<div className="flex-1 min-w-0">
 							<p className="text-sm font-semibold text-white truncate">

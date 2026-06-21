@@ -17,6 +17,7 @@ export interface IUserProfile {
 	staff: boolean;
 	alumni: boolean;
 	active: boolean;
+	background_theme: string | null;
 	last_login_at: string | null;
 	created_at: string;
 	updated_at: string;

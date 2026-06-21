@@ -1,17 +1,5 @@
-export const LogOutIcon = () => {
-  return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 3v8m0 4a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"
-      />
-    </svg>
-  );
-};
+export const LogOutIcon = () => (
+	<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+	</svg>
+);

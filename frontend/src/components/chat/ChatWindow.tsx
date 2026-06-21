@@ -9,6 +9,9 @@ import { MessageBubble } from './MessageBubble';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { LANGUAGES } from '@/constants/languages';
 
+const TYPING_DEBOUNCE_MS = 400;
+const TYPING_CLEAR_MS = 2500;
+
 export const ChatWindow = ({
 	selectedChat,
 	messages,
@@ -18,17 +21,65 @@ export const ChatWindow = ({
 	onSendMessage,
  	onStartNewConversation,
 }: ChatWindowProps) => {
-	const { presenceMap } = usePresenceStatus();
+	const { presenceMap, socketRef, emit, connected } = usePresenceStatus();
 	const navigate = useNavigate();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [messageText, setMessageText] = useState('');
+	const [typingLogin, setTypingLogin] = useState<string | null>(null);
+	const typingClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const typingEmitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [messages]);
+
+	// Listen for typing events from the other user.
+	// connected is a dependency so the effect re-runs once the socket actually connects.
+	useEffect(() => {
+		const socket = socketRef.current;
+		if (!socket || !connected || !selectedChat) return;
+
+		const handler = ({ conversationId, login }: { conversationId: string; login: string }) => {
+			if (String(conversationId) !== String(selectedChat.id)) return;
+			setTypingLogin(login);
+			if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+			typingClearTimer.current = setTimeout(() => setTypingLogin(null), TYPING_CLEAR_MS);
+		};
+
+		socket.on('chat:typing', handler);
+		return () => {
+			socket.off('chat:typing', handler);
+			if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+		};
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [connected, selectedChat?.id]);
+
+	// Clear typing when conversation switches or a message arrives
+	useEffect(() => { setTypingLogin(null); }, [selectedChat?.id]);
+	useEffect(() => {
+		if (messages.length > 0) setTypingLogin(null);
+	}, [messages.length]);
+
 	const [showCodePanel, setShowCodePanel] = useState(false);
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
+
+	const handleMessageChange = (value: string) => {
+		setMessageText(value);
+
+		if (!selectedChat?.id || !selectedChat?.user?.id) return;
+
+		// Debounce: emit typing event only after user pauses briefly
+		if (typingEmitTimer.current) clearTimeout(typingEmitTimer.current);
+		typingEmitTimer.current = setTimeout(() => {
+			if (value.trim()) {
+				emit('chat:typing', {
+					conversationId: String(selectedChat.id),
+					recipientId: String(selectedChat.user.id),
+				});
+			}
+		}, TYPING_DEBOUNCE_MS);
+	};
 
 	const handleSend = async () => {
 		const trimmed = messageText.trim();
@@ -122,11 +173,23 @@ export const ChatWindow = ({
 					<MessageBubble key={msg.id} message={msg}
 						showTimestamp={idx === 0 || messages[idx - 1].timestamp !== msg.timestamp} />
 				))}
+
+				{/* Typing indicator */}
+				{typingLogin && (
+					<div className="flex items-center gap-2 px-1 py-1">
+						<span className="text-xs text-ft-muted italic">{typingLogin} está escribiendo</span>
+						<span className="flex gap-0.5 items-center">
+							<span className="w-1 h-1 rounded-full bg-ft-muted animate-bounce [animation-delay:0ms]" />
+							<span className="w-1 h-1 rounded-full bg-ft-muted animate-bounce [animation-delay:150ms]" />
+							<span className="w-1 h-1 rounded-full bg-ft-muted animate-bounce [animation-delay:300ms]" />
+						</span>
+					</div>
+				)}
+
 				<div ref={messagesEndRef} />
 			</div>
 
 			<div className="chat-input-area surface-glass">
-	
 				{/* Panel de código */}
 				{showCodePanel && (
 					<div className="mb-2 border border-ft-cyan/30 rounded-xl overflow-hidden">
@@ -187,7 +250,7 @@ export const ChatWindow = ({
 							type="text"
 							placeholder="Envía un mensaje..."
 							value={messageText}
-							onChange={(e: ChangeEvent<HTMLInputElement>) => setMessageText(e.target.value)}
+							onChange={(e: ChangeEvent<HTMLInputElement>) => handleMessageChange(e.target.value)}
 							onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
 								if (e.key === 'Enter') {
 									void handleSend();

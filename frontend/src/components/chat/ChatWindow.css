@@ -1,5 +1,5 @@
 .chat-window {
-	@apply flex-1 flex flex-col bg-ft-bg;
+	@apply flex-1 flex flex-col;
 }
 
 .chat-header {
@@ -19,5 +19,5 @@
 }
 
 .chat-empty {
-	@apply flex-1 flex flex-col items-center justify-center bg-ft-bg;
+	@apply flex-1 flex flex-col items-center justify-center;
 }

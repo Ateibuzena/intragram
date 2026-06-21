@@ -19,9 +19,12 @@ interface UserProfile {
 	email: string | null;
 	display_name: string | null;
 	avatar_url: string | null;
+	background_theme: string | null;
 	wallet: number;
 	correction_point: number;
 }
+
+export type { UserProfile };
 
 interface AuthContextType {
 	token: string | null;
@@ -30,6 +33,7 @@ interface AuthContextType {
 	profile: UserProfile | null;
 	loadingProfile: boolean;
 	logout: () => void;
+	patchAuthProfile: (partial: Partial<UserProfile>) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -119,7 +123,10 @@ export const useAuthState = () => {
 		};
 
 		void fetchProfile();
-		return () => controller.abort();
+		return () => {
+			controller.abort();
+			fetchingProfileRef.current = false;
+		};
 	}, [token, user, profile]);
 
 	const logout = () => {
@@ -130,5 +137,9 @@ export const useAuthState = () => {
 		setProfile(null);
 	};
 
-	return { token, isAuthenticated: !!token, user, profile, loadingProfile, logout };
+	const patchAuthProfile = (partial: Partial<UserProfile>) => {
+		setProfile((prev) => prev ? { ...prev, ...partial } : prev);
+	};
+
+	return { token, isAuthenticated: !!token, user, profile, loadingProfile, logout, patchAuthProfile };
 };

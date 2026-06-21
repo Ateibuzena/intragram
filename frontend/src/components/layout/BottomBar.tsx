@@ -27,9 +27,6 @@ export const BottomBar = ({ activeNav, setActiveNav, onFiltersOpen }: BottomBarP
 				)}
 				<NavIcon navKey={item.key} />
 				<span className="text-[10px] font-semibold">{item.label}</span>
-				{item.key === 'notifications' && (
-					<span className="absolute top-0 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-badge">3</span>
-				)}
 			</button>
 		))}
 

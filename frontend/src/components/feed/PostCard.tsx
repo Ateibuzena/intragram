@@ -68,7 +68,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
 				method: 'DELETE',
 				headers: { Authorization: `Bearer ${token}` },
 			});
-			if (res.ok) onDelete?.(post.id);
+			if (res.ok) onDelete?.(String(post.id));
 		} catch {
 			// ignore
 		}

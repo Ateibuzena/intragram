@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ChatWindow.css';
 import { Avatar } from '@/components/ui/Avatar';
@@ -132,7 +133,7 @@ export const ChatWindow = ({
 						<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
 							<select
 								value={codeLang}
-								onChange={(e: Event) => setCodeLang((e.target as HTMLSelectElement).value)}
+								onChange={(e: ChangeEvent<HTMLSelectElement>) => setCodeLang(e.target.value)}
 								className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
 							>
 								{LANGUAGES.map((l) => (
@@ -154,7 +155,7 @@ export const ChatWindow = ({
 							placeholder={`// Escribe tu código ${codeLang} aquí...`}
 							rows={5}
 							value={codeSnippet}
-							onChange={(e: Event) => setCodeSnippet((e.target as HTMLTextAreaElement).value)}
+							onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCodeSnippet(e.target.value)}
 							spellCheck={false}
 						/>
 						<div className="flex justify-end px-3 py-2 bg-ft-hover border-t border-ft-border">
@@ -186,8 +187,8 @@ export const ChatWindow = ({
 							type="text"
 							placeholder="Envía un mensaje..."
 							value={messageText}
-							onChange={(e: Event) => setMessageText((e.target as HTMLInputElement).value)}
-							onKeyDown={(e: KeyboardEvent) => {
+							onChange={(e: ChangeEvent<HTMLInputElement>) => setMessageText(e.target.value)}
+							onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
 								if (e.key === 'Enter') {
 									void handleSend();
 								}

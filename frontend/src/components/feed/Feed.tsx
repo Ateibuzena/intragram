@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { IFeedPost } from '@intragram/shared/users';
+import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
 import type { FilterKey, Post } from '@/types/models';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';

@@ -38,7 +38,7 @@ export const ProjectsCard = ({ insights, className = '' }: ProjectsCardProps) =>
 	);
 
 	return (
-		<div className={`bg-ft-card border border-ft-border rounded-2xl p-5 min-h-[34rem] overflow-hidden flex flex-col ${className}`}>
+		<div className={`p-5 min-h-[34rem] overflow-hidden flex flex-col ${className}`}>
 			<div className="mb-3 flex items-start justify-between gap-3">
 				<div>
 					<p className="text-[10px] font-semibold uppercase text-ft-cyan">{insights.totalProjects} proyectos</p>

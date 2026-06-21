@@ -1,5 +1,3 @@
-import type { IUserProfile } from './user-profile';
-
 export interface IFeedPostAuthorSummary {
 	id: string;
 	login: string;

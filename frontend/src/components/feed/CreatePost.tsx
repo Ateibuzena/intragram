@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -88,7 +89,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 					placeholder="¿Qué estás aprendiendo hoy? Comparte con la comunidad 42..."
 					rows={2}
 					value={postText}
-					onChange={(e: Event) => setPostText((e.target as HTMLTextAreaElement).value)}
+					onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setPostText(e.target.value)}
 				/>
 			</div>
 
@@ -98,7 +99,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 					<div className="flex items-center justify-between px-3 py-2 bg-ft-hover border-b border-ft-border">
 						<select
 							value={codeLang}
-							onChange={(e: Event) => setCodeLang((e.target as HTMLSelectElement).value)}
+							onChange={(e: ChangeEvent<HTMLSelectElement>) => setCodeLang(e.target.value)}
 							className="bg-transparent text-xs text-ft-cyan font-mono focus:outline-none cursor-pointer"
 						>
 							{LANGUAGES.map((l) => (
@@ -120,7 +121,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 						placeholder={`// Escribe tu código ${codeLang} aquí...`}
 						rows={6}
 						value={codeSnippet}
-						onChange={(e: Event) => setCodeSnippet((e.target as HTMLTextAreaElement).value)}
+						onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCodeSnippet(e.target.value)}
 						spellCheck={false}
 					/>
 				</div>

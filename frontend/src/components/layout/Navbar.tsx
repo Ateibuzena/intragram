@@ -195,8 +195,3 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 		</header>
 	);
 };
-
-{/* <span className="hidden lg:inline">{item.label}</span>
-						{item.key === 'notifications' && (
-							<span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-badge">3</span>
-						)} */}

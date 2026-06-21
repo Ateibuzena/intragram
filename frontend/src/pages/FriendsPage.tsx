@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -78,7 +79,7 @@ const FriendsPage = () => {
 		return () => controller.abort();
 	}, [token]);
 
-	const handleAddFriend = async (event: { preventDefault(): void }) => {
+	const handleAddFriend = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!token) return;
 		const normalizedLogin = friendLogin.trim().toLowerCase();
@@ -247,11 +248,11 @@ const FriendsPage = () => {
 			{/* Add friend form */}
 			<div className="bg-ft-card border border-ft-border rounded-2xl p-5">
 				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider mb-3">Agregar amigo</h2>
-				<form className="space-y-3" onSubmit={(e: SubmitEvent) => { void handleAddFriend(e); }}>
+				<form className="space-y-3" onSubmit={(e) => { void handleAddFriend(e); }}>
 					<div className="flex gap-2">
 						<Input
 							value={friendLogin}
-							onChange={(e: Event) => setFriendLogin((e.target as HTMLInputElement).value)}
+							onChange={(e: ChangeEvent<HTMLInputElement>) => setFriendLogin(e.target.value)}
 							placeholder="Login de 42 (ej: jonhdoe)"
 							aria-label="Login del amigo"
 							className="flex-1"

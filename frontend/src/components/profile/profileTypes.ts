@@ -32,7 +32,13 @@ export interface RadarData {
 	center: number;
 	radius: number;
 	rings: number;
-	axisPoints: Array<{ x: number; y: number; labelX: number; labelY: number }>;
+	axisPoints: Array<{
+		x: number;
+		y: number;
+		labelX: number;
+		labelY: number;
+		textAnchor: 'start' | 'middle' | 'end';
+	}>;
 	polygon: string;
 	maxLevel: number;
 }

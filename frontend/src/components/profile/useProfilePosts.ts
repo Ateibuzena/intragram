@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { IFeedPost } from '@intragram/shared/users';
+import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
 import type { Post } from '@/types/models';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';

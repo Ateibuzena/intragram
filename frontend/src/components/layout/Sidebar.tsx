@@ -1,5 +1,5 @@
 import './Sidebar.css';
-import { FILTERS } from '@/constants/mockData';
+import { FILTERS } from '@/constants/filters';
 import type { SidebarProps } from '@/types/props';
 import { FilterIcon } from './FilterIcon';
 

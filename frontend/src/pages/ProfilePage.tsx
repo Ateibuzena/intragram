@@ -67,9 +67,9 @@ const ProfilePage = () => {
 					className="min-h-[36rem]"
 				/>
 
-				<div className="grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(28rem,0.9fr)] 2xl:items-start">
-					<SkillsRadar skills={insights.topSkills} className="2xl:min-h-[38rem]" />
-					<ProjectsCard insights={insights} className="2xl:min-h-[38rem]" />
+				<div className="grid grid-cols-1 justify-items-center gap-4">
+					<SkillsRadar skills={insights.topSkills} className="w-full max-w-[76rem] min-h-[38rem]" />
+					<ProjectsCard insights={insights} className="w-full max-w-[76rem] min-h-[38rem]" />
 				</div>
 
 				<ProfileDetails profile={profile} campus={insights.campus} />

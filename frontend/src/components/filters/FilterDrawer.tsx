@@ -1,5 +1,5 @@
 import './FilterDrawer.css';
-import { FILTERS } from '@/constants/mockData';
+import { FILTERS } from '@/constants/filters';
 import type { FilterDrawerProps } from '@/types/props';
 
 export const FilterDrawer = ({ activeFilter, setActiveFilter, onClose }: FilterDrawerProps) => (

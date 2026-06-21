@@ -1,4 +1,4 @@
-import type { IFeedPost } from '@intragram/shared/users';
+import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
 import type { Post } from '@/types/models';
 import { formatTime } from '@/utils/formatters';
 

@@ -18,7 +18,7 @@ type DirectoryEntry = {
 };
 
 export const FriendsSidebar = () => {
-	const { token } = useAuth();
+	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
 
@@ -26,6 +26,7 @@ export const FriendsSidebar = () => {
 	const [loading, setLoading] = useState(true);
 	const [relOverrides, setRelOverrides] = useState<Record<string, Relation>>({});
 	const [processing, setProcessing] = useState<Set<string>>(new Set());
+	const [filter, setFilter] = useState<'all' | 'online'>('all');
 
 	const fetchDirectory = useCallback(async () => {
 		if (!token) return;
@@ -92,31 +93,89 @@ export const FriendsSidebar = () => {
 		} catch { /* ignore */ } finally { setProcessingId(id, false); }
 	};
 
+	const directoryEntries = profile ? entries.filter((entry) => entry.id !== profile.id) : entries;
+	const isEntryOnline = (entry: DirectoryEntry) => presenceMap[entry.id] ?? entry.active ?? false;
+	const totalUsers = directoryEntries.length;
+	const onlineUsers = directoryEntries.filter(isEntryOnline).length;
+	const pendingReceived = directoryEntries.filter((entry) => (relOverrides[entry.id] ?? entry.relation) === 'pending_received').length;
+	const visibleEntries = filter === 'online' ? directoryEntries.filter(isEntryOnline) : directoryEntries;
+
 	return (
-		<aside className="sticky top-4 surface-glass border border-ft-border rounded-2xl overflow-hidden">
-			<div className="px-4 py-3 border-b border-ft-border">
-				<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Comunidad</h2>
+		<aside className="border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
+			<div className="mb-4 flex items-start justify-between gap-3">
+				<div>
+					<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Comunidad</h2>
+				</div>
+				<div className="flex shrink-0 items-center gap-1.5">
+					<button
+						type="button"
+						onClick={() => setFilter('all')}
+						className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${
+							filter === 'all'
+								? 'border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-ft-cyan/20 hover:text-white'
+						}`}
+						title="Mostrar todos los perfiles"
+					>
+						{totalUsers}
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('online')}
+						className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${
+							filter === 'online'
+								? 'border-green-400/40 bg-green-500/15 text-green-300'
+								: 'border-green-400/30 bg-green-500/10 text-green-300 hover:bg-green-500/15'
+						}`}
+						title="Mostrar perfiles online"
+					>
+						{onlineUsers}
+					</button>
+				</div>
 			</div>
 
-			{loading && (
-				<div className="px-4 py-6 text-center text-xs text-ft-muted">Cargando...</div>
-			)}
-
-			{!loading && entries.length === 0 && (
-				<div className="px-4 py-6 text-center">
-					<p className="text-xs text-ft-muted">No hay usuarios disponibles.</p>
+			{pendingReceived > 0 && (
+				<div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
+					{pendingReceived} solicitud{pendingReceived === 1 ? '' : 'es'} pendiente{pendingReceived === 1 ? '' : 's'}
 				</div>
 			)}
 
-			{entries.length > 0 && (
-				<ul className="divide-y divide-ft-border max-h-[calc(100vh-12rem)] overflow-y-auto">
-					{entries.map((entry) => {
+			{loading && (
+				<div className="space-y-2">
+					{Array.from({ length: 3 }, (_, index) => (
+						<div key={index} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5">
+							<div className="h-8 w-8 rounded-full bg-ft-hover" />
+							<div className="min-w-0 flex-1 space-y-1.5">
+								<div className="h-2.5 w-24 rounded-full bg-ft-hover" />
+								<div className="h-2 w-16 rounded-full bg-ft-hover" />
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+
+			{!loading && visibleEntries.length === 0 && (
+				<div className="rounded-xl border border-dashed border-ft-border px-4 py-5 text-center">
+					<div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-ft-border bg-ft-hover/40">
+						<svg className="h-5 w-5 text-ft-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m0-4a4 4 0 100-8 4 4 0 000 8zm8 0a4 4 0 100-8 4 4 0 000 8z" />
+						</svg>
+					</div>
+					<p className="text-xs font-semibold text-ft-text">
+						{filter === 'online' ? 'No hay usuarios online' : 'No hay usuarios disponibles'}
+					</p>
+				</div>
+			)}
+
+			{visibleEntries.length > 0 && (
+				<ul className="-mx-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
+					{visibleEntries.map((entry) => {
 						const rel = relOverrides[entry.id] ?? entry.relation;
 						const busy = processing.has(entry.id);
-						const isOnline = presenceMap[entry.id] ?? false;
+						const isOnline = isEntryOnline(entry);
 
 						return (
-							<li key={entry.id} className="flex items-center gap-2.5 px-4 py-2.5">
+							<li key={entry.id} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-ft-hover">
 								<button
 									type="button"
 									onClick={() => navigate(`/profile/${entry.login}`)}

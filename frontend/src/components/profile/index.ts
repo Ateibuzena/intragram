@@ -1,5 +1,5 @@
 export { ProfileHeader } from './ProfileHeader';
-export { ProfileNameEditor, ProfileNameEditorOverlay } from './ProfileNameEditor';
+export { ProfileNameEditor, ProfileNameEditorModal } from './ProfileNameEditor';
 export { ProfileAvatarDisplay, ProfileAvatarEditorModal } from './ProfileAvatarEditor';
 export { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
 export { FriendActionButton } from './FriendActionButton';

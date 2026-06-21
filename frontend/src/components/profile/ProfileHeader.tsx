@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ProfileInsights, UserProfileEntityDto } from '@/types/profile';
-import { ProfileNameEditor, ProfileNameEditorOverlay } from './ProfileNameEditor';
+import { ProfileNameEditor, ProfileNameEditorModal } from './ProfileNameEditor';
 import { ProfileAvatarDisplay, ProfileAvatarEditorModal } from './ProfileAvatarEditor';
 import { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
 import { FriendActionButton } from './FriendActionButton';
@@ -79,7 +79,7 @@ export const ProfileHeader = ({
 			)}
 
 			{editingName && onSaveDisplayName && (
-				<ProfileNameEditorOverlay
+				<ProfileNameEditorModal
 					displayName={displayName}
 					onSave={onSaveDisplayName}
 					onClose={() => setEditingName(false)}

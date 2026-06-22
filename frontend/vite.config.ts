@@ -15,10 +15,10 @@ export default defineConfig({
     port: 80,
     strictPort: true,
 <<<<<<< HEAD
-    origin: 'https://q8znls9b-8443.uks1.devtunnels.ms',
+    origin: 'https://q8znls9b-8443.uks1.devtunnels.ms/',
     proxy: {
       '/api': {
-        target: 'https://q8znls9b-8443.uks1.devtunnels.ms',
+        target: 'https://q8znls9b-8443.uks1.devtunnels.ms/',
 =======
     origin: 'https://q8znls9b-8443.uks1.devtunnels.ms/',
     proxy: {

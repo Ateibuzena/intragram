@@ -38,11 +38,7 @@ import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guar
 
 @Controller('auth')
 export class AuthController {
-<<<<<<< HEAD
-	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://q8znls9b-8443.uks1.devtunnels.ms';
-=======
 	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://q8znls9b-8443.uks1.devtunnels.ms/';
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
 
 	constructor(private readonly authService: AuthService) {}
 

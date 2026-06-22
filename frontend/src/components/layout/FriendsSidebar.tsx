@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useFriendContext, type FriendRelation } from '@/hooks/useFriendContext';
 
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type CommunityFilter = 'all' | 'online' | 'campus' | 'country' | 'projects' | 'level' | 'cursus' | 'achievements';
@@ -23,6 +24,7 @@ type DirectoryEntry = {
 	active?: boolean;
 	relation: FriendRelation;
 };
+
 
 export const FriendsSidebar = () => {
 	const { token, profile } = useAuth();
@@ -125,7 +127,6 @@ export const FriendsSidebar = () => {
 
 	const totalUsers = directoryEntries.length;
 	const onlineUsers = directoryEntries.filter(isEntryOnline).length;
-	const pendingReceived = directoryEntries.filter((entry) => (relOverrides[entry.id] ?? entry.relation) === 'pending_received').length;
 	const visibleEntries = filter === 'online' ? directoryEntries.filter(isEntryOnline) : directoryEntries;
 	const buttonBase = 'rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors';
 

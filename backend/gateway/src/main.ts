@@ -21,11 +21,7 @@ async function bootstrap() {
 	const metricsService = app.get(MetricsService);
 	app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
 
-<<<<<<< HEAD
-	const rawCorsOrigin = process.env.CORS_ORIGIN ?? 'https://q8znls9b-8443.uks1.devtunnels.ms';
-=======
 	const rawCorsOrigin = process.env.CORS_ORIGIN ?? 'https://q8znls9b-8443.uks1.devtunnels.ms/';
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
 	const corsOrigin = (() => {
 		try { return new URL(rawCorsOrigin).origin; } catch { return rawCorsOrigin; }
 	})();

@@ -4,6 +4,19 @@ export interface IFeedPostAuthorSummary {
 	display_name: string | null;
 	avatar_url: string | null;
 	correction_point: number;
+	campus: string | null;
+	campus_country?: string | null;
+	level?: number | null;
+	cursus_grade?: string | null;
+	featured_achievement?: {
+		id: number;
+		name: string;
+		kind?: string | null;
+		tier?: string | null;
+		image?: string | null;
+	} | null;
+	common_projects_count?: number;
+	common_projects?: string[];
 	last_login_at: string | null;
 	active: boolean;
 }

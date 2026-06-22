@@ -10,12 +10,26 @@ import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
 
 export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+export type IDirectoryScope = 'all' | 'mine' | 'country' | 'projects';
+export interface IDirectoryFilters {
+	min_level?: number;
+	max_level?: number;
+	cursus?: string;
+	achievement?: string;
+	project?: string;
+}
 export interface IDirectoryEntry {
 	id: string;
 	login: string;
 	display_name: string | null;
 	avatar_url: string | null;
 	campus: string | null;
+	campus_id: number | null;
+	campus_country: string | null;
+	campus_city: string | null;
+	campus_match: 'campus' | 'country' | 'worldwide';
+	common_projects_count: number;
+	common_projects: string[];
 	active: boolean;
 	relation: IDirectoryRelation;
 }
@@ -211,9 +225,9 @@ export class UsersService {
 	/**
 	 * Returns friend suggestions for the authenticated user (campus → country → worldwide).
 	 */
-	async getSuggestions(userId: string): Promise<IUserProfile[]> {
+	async getSuggestions(userId: string): Promise<IDirectoryEntry[]> {
 		try {
-			return await this.httpClient.get<IUserProfile[]>(`${this.usersBaseUrl}/friends/suggestions/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IDirectoryEntry[]>(`${this.usersBaseUrl}/friends/suggestions/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener sugerencias de amistad');
 		}
@@ -222,9 +236,12 @@ export class UsersService {
 	/**
 	 * Returns all users in the platform (except self) with their relation status, ordered by campus proximity.
 	 */
-	async getDirectory(userId: string): Promise<IDirectoryEntry[]> {
+	async getDirectory(userId: string, campusScope: IDirectoryScope = 'all', filters: IDirectoryFilters = {}): Promise<IDirectoryEntry[]> {
 		try {
-			return await this.httpClient.get<IDirectoryEntry[]>(`${this.usersBaseUrl}/directory/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IDirectoryEntry[]>(`${this.usersBaseUrl}/directory/${userId}`, {
+				timeoutMs: 5000,
+				params: { campus_scope: campusScope, ...filters },
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'obtener directorio de usuarios');
 		}

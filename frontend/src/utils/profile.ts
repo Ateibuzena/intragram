@@ -34,7 +34,12 @@ export const splitLabel = (value: string): [string, string?, string?] => {
 
 const normalizeStatus = (status?: string | null) => (status ?? 'unknown').trim().toLowerCase();
 
-export const getProjectStatusKind = (status?: string | null, finalMark?: number | null): ProjectStatusKind => {
+export const getProjectStatusKind = (
+	status?: string | null,
+	finalMark?: number | null,
+	validated?: boolean | null,
+): ProjectStatusKind => {
+	if (typeof validated === 'boolean') return validated ? 'validated' : 'failed';
 	const normalized = normalizeStatus(status);
 	if (normalized.includes('fail') || normalized.includes('ko')) return 'failed';
 	if (normalized.includes('progress') || normalized.includes('active') || normalized.includes('searching')) return 'in_progress';
@@ -52,7 +57,8 @@ const average = (values: number[]) => {
 
 export const buildProfileInsights = (profile: UserProfileEntityDto | null): ProfileInsights => {
 	const login = profile?.login ?? '';
-	const cursusLevel = profile?.levels?.[0]?.level ?? 0;
+	const mainLevel = profile?.levels?.[0] ?? null;
+	const cursusLevel = mainLevel?.level ?? 0;
 	const level = Math.max(0, Math.round(cursusLevel * 100) / 100);
 	const levelInteger = Math.floor(cursusLevel);
 	const progressPercentage = Math.max(0, Math.min(100, (cursusLevel - levelInteger) * 100));
@@ -69,8 +75,13 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 		id: project.id,
 		name: project.name || 'Unnamed project',
 		status: project.status || 'unknown',
-		statusKind: getProjectStatusKind(project.status, project.final_mark),
+		statusKind: getProjectStatusKind(project.status, project.final_mark, project.validated),
 		finalMark: typeof project.final_mark === 'number' ? project.final_mark : null,
+		validated: typeof project.validated === 'boolean' ? project.validated : null,
+		markedAt: project.marked_at ?? null,
+		createdAt: project.created_at ?? null,
+		updatedAt: project.updated_at ?? null,
+		slug: project.slug ?? null,
 	}));
 
 	const markedProjects = projects
@@ -79,11 +90,16 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 
 	return {
 		campus: profile?.campus ?? 'N/A',
+		campusCountry: profile?.campus_country ?? 'N/A',
+		campusCity: profile?.campus_city ?? 'N/A',
 		pool: [profile?.pool_month, profile?.pool_year].filter(Boolean).join(' ') || 'N/A',
 		role: profile?.staff ? 'Staff' : profile?.alumni ? 'Alumni' : 'Student',
 		profileStatus: profile?.location ? `En campus 42: ${profile.location}` : 'Fuera de campus 42',
 		cursusLevel,
-		cursusGrade: profile?.levels?.[0]?.grade ?? 'N/A',
+		cursusGrade: mainLevel?.grade ?? 'N/A',
+		cursusBeginAt: mainLevel?.begin_at ?? null,
+		cursusEndAt: mainLevel?.end_at ?? null,
+		cursusBlackholedAt: mainLevel?.blackholed_at ?? null,
 		level,
 		levelInteger,
 		nextLevel: levelInteger + 1,
@@ -100,6 +116,16 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 			}))
 			.sort((a, b) => b.level - a.level),
 		projects,
+		achievements: (profile?.achievements ?? [])
+			.map((achievement) => ({
+				id: achievement.id,
+				name: achievement.name || 'Achievement',
+				description: achievement.description ?? null,
+				kind: achievement.kind ?? null,
+				tier: achievement.tier ?? null,
+				image: achievement.image ?? null,
+			}))
+			.filter((achievement) => achievement.name),
 		totalProjects: projects.length,
 		validatedProjects: projects.filter((project) => project.statusKind === 'validated').length,
 		failedProjects: projects.filter((project) => project.statusKind === 'failed').length,

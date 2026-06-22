@@ -22,6 +22,9 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 	const isAuthor = !!profile?.login && profile.login === post.user.login;
+	const achievement = post.user.featuredAchievement;
+	const commonProjects = post.user.commonProjects ?? [];
+	const commonProjectsCount = post.user.commonProjectsCount ?? commonProjects.length;
 
 	useEffect(() => {
 		if (!menuOpen) return;
@@ -94,7 +97,19 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 								{post.user.login}
 								<span className="ml-2"><Badge variant="level">Lvl {post.user.level}</Badge></span>
 							</p>
-							<p className="text-xs text-ft-muted">{post.time}</p>
+							<div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+								<p className="text-xs text-ft-muted">{post.time}</p>
+								{post.user.campus && (
+									<span className="max-w-[10rem] truncate rounded-full border border-ft-border bg-ft-hover/40 px-2 py-0.5 text-[9px] font-semibold text-ft-muted" title={[post.user.campus, post.user.campusCountry].filter(Boolean).join(', ')}>
+										{post.user.campus}
+									</span>
+								)}
+								{post.user.cursusGrade && (
+									<span className="rounded-full border border-ft-cyan/25 bg-ft-cyan/10 px-2 py-0.5 text-[9px] font-semibold text-ft-cyan">
+										{post.user.cursusGrade}
+									</span>
+								)}
+							</div>
 						</div>
 					</button>
 					{isAuthor && (
@@ -126,6 +141,22 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 				</div>
 
 				<div className="text-sm text-ft-text leading-relaxed mb-4 [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
+
+				{(achievement || commonProjectsCount > 0) && (
+					<div className="mb-4 flex flex-wrap items-center gap-2">
+						{achievement && (
+							<span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200" title={achievement.name}>
+								{achievement.image && <img src={achievement.image} alt="" className="h-4 w-4 rounded object-cover" loading="lazy" />}
+								<span className="truncate">{achievement.name}</span>
+							</span>
+						)}
+						{commonProjectsCount > 0 && (
+							<span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ft-cyan/25 bg-ft-cyan/10 px-2.5 py-1 text-[10px] font-semibold text-ft-cyan" title={commonProjects.join(', ')}>
+								{commonProjectsCount} proyecto{commonProjectsCount === 1 ? '' : 's'} en comun
+							</span>
+						)}
+					</div>
+				)}
 
 				<div className="flex items-center gap-3 pt-3 border-t border-ft-border">
 					<button

@@ -16,7 +16,7 @@ El objetivo es construir una aplicación web moderna, desplegable con Docker, qu
 - observabilidad básica con Prometheus y Grafana,
 - una base suficientemente modular como para seguir creciendo.
 
-### Key Features
+### Key Features 
 
 - Login con 42 vía OAuth.
 - Protección de rutas en frontend y validación JWT en backend.
@@ -67,7 +67,11 @@ make up
 3. Abrir la aplicación en:
 
 ```text
+<<<<<<< HEAD
 https://q8znls9b-8443.uks1.devtunnels.ms
+=======
+https://q8znls9b-8443.uks1.devtunnels.ms/
+>>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
 ```
 
 4. Iniciar sesión con una cuenta de 42.
@@ -84,10 +88,17 @@ make fclean
 
 ### Architecture Entry Points
 
+<<<<<<< HEAD
 - Frontend servido por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/`
 - API pública del gateway: `https://q8znls9b-8443.uks1.devtunnels.ms/api/`
 - Prometheus proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/`
 - Grafana proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/grafana/`
+=======
+- Frontend servido por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//`
+- API pública del gateway: `https://q8znls9b-8443.uks1.devtunnels.ms//api/`
+- Prometheus proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/`
+- Grafana proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//grafana/`
+>>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
 
 ## Team Information
 

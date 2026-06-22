@@ -34,7 +34,8 @@ import {
 	Req,
 	UseGuards,
 } from '@nestjs/common';
-import { UsersService, IDirectoryEntry } from './users.service';
+import { UsersService } from './users.service';
+import type { IDirectoryEntry, IDirectoryFilters, IDirectoryScope } from './users.service';
 import { IUserProfile, IPostComment, IFeedPost, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
@@ -280,7 +281,7 @@ export class UsersController {
 	 */
 	@UseGuards(AuthGuard)
 	@Get('friends/suggestions')
-	async getSuggestions(@Req() req: any): Promise<IUserProfile[]> {
+	async getSuggestions(@Req() req: any): Promise<IDirectoryEntry[]> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			return await this.usersService.getSuggestions(profile.id);
@@ -294,10 +295,31 @@ export class UsersController {
 	 */
 	@UseGuards(AuthGuard)
 	@Get('directory')
-	async getDirectory(@Req() req: any): Promise<IDirectoryEntry[]> {
+	async getDirectory(
+		@Req() req: any,
+		@Query('campus_scope') campusScope: IDirectoryScope = 'all',
+		@Query('min_level') minLevel?: string,
+		@Query('max_level') maxLevel?: string,
+		@Query('cursus') cursus?: string,
+		@Query('achievement') achievement?: string,
+		@Query('project') project?: string,
+	): Promise<IDirectoryEntry[]> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getDirectory(profile.id);
+			const parsedMinLevel = minLevel ? Number(minLevel) : undefined;
+			const parsedMaxLevel = maxLevel ? Number(maxLevel) : undefined;
+			const filters: IDirectoryFilters = {
+				min_level: Number.isFinite(parsedMinLevel) ? parsedMinLevel : undefined,
+				max_level: Number.isFinite(parsedMaxLevel) ? parsedMaxLevel : undefined,
+				cursus,
+				achievement,
+				project,
+			};
+			return await this.usersService.getDirectory(
+				profile.id,
+				['mine', 'country', 'projects'].includes(campusScope) ? campusScope : 'all',
+				filters,
+			);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

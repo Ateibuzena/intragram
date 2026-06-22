@@ -6,6 +6,8 @@ export { FriendActionButton } from './FriendActionButton';
 export { CommonCoreProgress } from './CommonCoreProgress';
 export { SkillsRadar } from './SkillsRadar';
 export { ProjectsCard } from './ProjectsCard';
+export { AchievementsCard } from './AchievementsCard';
+export { AcademicTimeline } from './AcademicTimeline';
 export { ProfileDetails } from './ProfileDetails';
 export { ProfileStats } from './ProfileStats';
 export { ProfilePosts } from './ProfilePosts';
@@ -18,6 +20,7 @@ export type {
 	ProfileProjectInsight,
 	ProfileSkillInsight,
 	ProfileTitleInsight,
+	ProfileAchievementInsight,
 	ProjectStatusKind,
 } from '@/types/profile';
 export { buildProfileInsights, cleanTitle, formatDate, splitLabel } from '@/utils/profile';

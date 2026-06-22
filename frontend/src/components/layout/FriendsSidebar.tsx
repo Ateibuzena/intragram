@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
 type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+type CommunityFilter = 'all' | 'online' | 'campus' | 'country' | 'projects' | 'level' | 'cursus' | 'achievements';
 
 type DirectoryEntry = {
 	id: string;
@@ -13,6 +14,12 @@ type DirectoryEntry = {
 	display_name?: string | null;
 	avatar_url?: string | null;
 	campus?: string | null;
+	campus_id?: number | null;
+	campus_country?: string | null;
+	campus_city?: string | null;
+	campus_match?: 'campus' | 'country' | 'worldwide';
+	common_projects_count?: number;
+	common_projects?: string[];
 	active?: boolean;
 	relation: Relation;
 };
@@ -26,12 +33,37 @@ export const FriendsSidebar = () => {
 	const [loading, setLoading] = useState(true);
 	const [relOverrides, setRelOverrides] = useState<Record<string, Relation>>({});
 	const [processing, setProcessing] = useState<Set<string>>(new Set());
-	const [filter, setFilter] = useState<'all' | 'online'>('all');
+	const [filter, setFilter] = useState<CommunityFilter>('all');
 
 	const fetchDirectory = useCallback(async () => {
 		if (!token) return;
+		setLoading(true);
 		try {
-			const res = await fetch(buildApiUrl('/users/directory'), {
+			const mainLevel = profile?.levels?.[0] ?? null;
+			const level = typeof mainLevel?.level === 'number' ? mainLevel.level : null;
+			const achievement = profile?.achievements?.find((item) => item.tier || item.kind || item.name) ?? null;
+			const scopeByFilter: Partial<Record<CommunityFilter, string>> = {
+				campus: 'mine',
+				country: 'country',
+				projects: 'projects',
+			};
+			const scope = scopeByFilter[filter];
+			const params = new URLSearchParams();
+			if (scope) params.set('campus_scope', scope);
+			if (filter === 'level' && level !== null) {
+				const baseLevel = Math.floor(level);
+				params.set('min_level', String(baseLevel));
+				params.set('max_level', String(baseLevel + 0.999));
+			}
+			if (filter === 'cursus' && mainLevel) {
+				params.set('cursus', mainLevel.slug || mainLevel.name || String(mainLevel.id));
+			}
+			if (filter === 'achievements' && achievement) {
+				params.set('achievement', achievement.tier || achievement.kind || achievement.name);
+			}
+			const query = params.toString();
+			const path = query ? `/users/directory?${query}` : '/users/directory';
+			const res = await fetch(buildApiUrl(path), {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (!res.ok) return;
@@ -42,7 +74,7 @@ export const FriendsSidebar = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [token]);
+	}, [filter, profile?.achievements, profile?.levels, token]);
 
 	useEffect(() => { void fetchDirectory(); }, [fetchDirectory]);
 
@@ -99,6 +131,7 @@ export const FriendsSidebar = () => {
 	const onlineUsers = directoryEntries.filter(isEntryOnline).length;
 	const pendingReceived = directoryEntries.filter((entry) => (relOverrides[entry.id] ?? entry.relation) === 'pending_received').length;
 	const visibleEntries = filter === 'online' ? directoryEntries.filter(isEntryOnline) : directoryEntries;
+	const buttonBase = 'rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors';
 
 	return (
 		<aside className="border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
@@ -110,7 +143,7 @@ export const FriendsSidebar = () => {
 					<button
 						type="button"
 						onClick={() => setFilter('all')}
-						className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${
+						className={`${buttonBase} ${
 							filter === 'all'
 								? 'border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan'
 								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-ft-cyan/20 hover:text-white'
@@ -122,7 +155,7 @@ export const FriendsSidebar = () => {
 					<button
 						type="button"
 						onClick={() => setFilter('online')}
-						className={`rounded-full border px-2 py-1 text-[10px] font-semibold transition-colors ${
+						className={`${buttonBase} ${
 							filter === 'online'
 								? 'border-green-400/40 bg-green-500/15 text-green-300'
 								: 'border-green-400/30 bg-green-500/10 text-green-300 hover:bg-green-500/15'
@@ -130,6 +163,78 @@ export const FriendsSidebar = () => {
 						title="Mostrar perfiles online"
 					>
 						{onlineUsers}
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('campus')}
+						className={`${buttonBase} ${
+							filter === 'campus'
+								? 'border-violet-400/40 bg-violet-500/15 text-violet-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-violet-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles de mi campus"
+					>
+						Mi campus
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('country')}
+						className={`${buttonBase} ${
+							filter === 'country'
+								? 'border-sky-400/40 bg-sky-500/15 text-sky-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-sky-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles de mi pais"
+					>
+						Pais
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('projects')}
+						className={`${buttonBase} ${
+							filter === 'projects'
+								? 'border-amber-400/40 bg-amber-500/15 text-amber-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-amber-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles con proyectos en comun"
+					>
+						Proyectos
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('level')}
+						className={`${buttonBase} ${
+							filter === 'level'
+								? 'border-lime-400/40 bg-lime-500/15 text-lime-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-lime-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles cerca de mi nivel"
+					>
+						Nivel
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('cursus')}
+						className={`${buttonBase} ${
+							filter === 'cursus'
+								? 'border-indigo-400/40 bg-indigo-500/15 text-indigo-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-indigo-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles de mi cursus"
+					>
+						Cursus
+					</button>
+					<button
+						type="button"
+						onClick={() => setFilter('achievements')}
+						className={`${buttonBase} ${
+							filter === 'achievements'
+								? 'border-rose-400/40 bg-rose-500/15 text-rose-200'
+								: 'border-ft-border bg-ft-hover/40 text-ft-text hover:border-rose-400/30 hover:text-white'
+						}`}
+						title="Mostrar perfiles con logros similares"
+					>
+						Logros
 					</button>
 				</div>
 			</div>
@@ -162,7 +267,21 @@ export const FriendsSidebar = () => {
 						</svg>
 					</div>
 					<p className="text-xs font-semibold text-ft-text">
-						{filter === 'online' ? 'No hay usuarios online' : 'No hay usuarios disponibles'}
+						{filter === 'online'
+							? 'No hay usuarios online'
+							: filter === 'campus'
+								? 'No hay usuarios de tu campus'
+								: filter === 'country'
+									? 'No hay usuarios de tu pais'
+									: filter === 'projects'
+										? 'No hay usuarios con proyectos en comun'
+										: filter === 'level'
+											? 'No hay usuarios cerca de tu nivel'
+											: filter === 'cursus'
+												? 'No hay usuarios de tu cursus'
+												: filter === 'achievements'
+													? 'No hay usuarios con logros similares'
+													: 'No hay usuarios disponibles'}
 					</p>
 				</div>
 			)}
@@ -173,6 +292,14 @@ export const FriendsSidebar = () => {
 						const rel = relOverrides[entry.id] ?? entry.relation;
 						const busy = processing.has(entry.id);
 						const isOnline = isEntryOnline(entry);
+						const campusLabel = [entry.campus_city, entry.campus_country].filter(Boolean).join(', ') || entry.campus;
+						const matchLabel = entry.campus_match === 'campus'
+							? 'Campus'
+							: entry.campus_match === 'country'
+								? 'Pais'
+								: null;
+						const commonProjects = entry.common_projects ?? [];
+						const commonProjectCount = entry.common_projects_count ?? commonProjects.length;
 
 						return (
 							<li key={entry.id} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-ft-hover">
@@ -193,7 +320,26 @@ export const FriendsSidebar = () => {
 										{entry.login}
 									</button>
 									{entry.campus && (
-										<p className="text-[10px] text-ft-muted truncate">{entry.campus}</p>
+										<div className="flex min-w-0 items-center gap-1.5">
+											<p className="truncate text-[10px] text-ft-muted" title={campusLabel ?? undefined}>
+												{entry.campus}
+												{campusLabel && campusLabel !== entry.campus ? ` · ${campusLabel}` : ''}
+											</p>
+											{matchLabel && (
+												<span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] font-bold ${
+													entry.campus_match === 'campus'
+														? 'border-violet-400/30 bg-violet-500/10 text-violet-200'
+														: 'border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan'
+												}`}>
+													{matchLabel}
+												</span>
+											)}
+										</div>
+									)}
+									{commonProjects.length > 0 && (
+										<p className="truncate text-[10px] text-ft-cyan" title={commonProjects.join(', ')}>
+											{commonProjectCount} proyecto{commonProjectCount === 1 ? '' : 's'} en comun
+										</p>
 									)}
 								</div>
 

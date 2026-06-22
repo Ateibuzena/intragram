@@ -5,6 +5,8 @@ import {
 	ProfileHeader,
 	SkillsRadar,
 	ProjectsCard,
+	AchievementsCard,
+	AcademicTimeline,
 	ProfileDetails,
 	buildProfileInsights,
 	decodeTokenPayload,
@@ -78,10 +80,12 @@ const ProfilePage = () => {
 
 				<div className="grid grid-cols-1 justify-items-center gap-4">
 					<SkillsRadar skills={insights.topSkills} className="w-full max-w-[76rem] min-h-[38rem]" />
+					<AchievementsCard insights={insights} className="w-full max-w-[76rem]" />
+					<AcademicTimeline insights={insights} className="w-full max-w-[76rem]" />
 					<ProjectsCard insights={insights} className="w-full max-w-[76rem] min-h-[38rem]" />
 				</div>
 
-				<ProfileDetails profile={profile} campus={insights.campus} />
+				<ProfileDetails profile={profile} insights={insights} />
 			</section>
 		</div>
 	);

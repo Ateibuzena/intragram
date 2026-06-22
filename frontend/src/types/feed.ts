@@ -4,7 +4,21 @@ export type FilterKey = 'reciente' | 'amigos' | 'favoritos' | 'trending' | 'perf
 
 export interface Post {
 	id: string | number;
-	user: Pick<User, 'id' | 'login' | 'level' | 'avatarUrl'> & { active?: boolean };
+	user: Pick<User, 'id' | 'login' | 'level' | 'avatarUrl'> & {
+		active?: boolean;
+		campus?: string | null;
+		campusCountry?: string | null;
+		cursusGrade?: string | null;
+		featuredAchievement?: {
+			id: number;
+			name: string;
+			kind?: string | null;
+			tier?: string | null;
+			image?: string | null;
+		} | null;
+		commonProjectsCount?: number;
+		commonProjects?: string[];
+	};
 	content: string;
 	time: string;
 	likes: number;

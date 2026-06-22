@@ -231,8 +231,29 @@ export class UsersController {
 	}
 
 	@Get('directory/:id')
-	async getDirectory(@Param('id') id: string) {
-		return this.usersService.getDirectory(id);
+	async getDirectory(
+		@Param('id') id: string,
+		@Query('campus_scope') campusScope: 'all' | 'mine' | 'country' | 'projects' = 'all',
+		@Query('min_level') minLevel?: string,
+		@Query('max_level') maxLevel?: string,
+		@Query('cursus') cursus?: string,
+		@Query('achievement') achievement?: string,
+		@Query('project') project?: string,
+	) {
+		const parsedMinLevel = minLevel ? Number(minLevel) : undefined;
+		const parsedMaxLevel = maxLevel ? Number(maxLevel) : undefined;
+		return this.usersService.getDirectory(
+			id,
+			50,
+			['mine', 'country', 'projects'].includes(campusScope) ? campusScope : 'all',
+			{
+				minLevel: Number.isFinite(parsedMinLevel) ? parsedMinLevel : undefined,
+				maxLevel: Number.isFinite(parsedMaxLevel) ? parsedMaxLevel : undefined,
+				cursus,
+				achievement,
+				project,
+			},
+		);
 	}
 
 	@Get('friends/:id')

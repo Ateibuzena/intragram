@@ -27,7 +27,7 @@ import { CreateChatConversationReads1771786800000 } from './migrations/177178680
 			password: process.env.DB_PASSWORD || 'chat_password',
 			database: process.env.DB_DATABASE || 'chat_db',
 			entities: [ChatConversationEntity, ChatMessageEntity, ChatConversationReadEntity],
-			migrations: [CreateChatConversationReads1771786800000],
+			migrations: [],
 			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',

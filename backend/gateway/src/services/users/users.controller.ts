@@ -318,6 +318,20 @@ export class UsersController {
 	}
 
 	/**
+	 * Returns the relation status between the authenticated user and a target user.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('friends/status/:targetId')
+	async getFriendshipStatus(@Req() req: any, @Param('targetId') targetId: string): Promise<{ relation: string }> {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getFriendshipStatus(profile.id, targetId);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
 	 * Removes a friend from the authenticated user.
 	 */
 	@UseGuards(AuthGuard)

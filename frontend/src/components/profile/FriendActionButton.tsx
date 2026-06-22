@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/Button';
+import type { FriendRelation } from '@/hooks/useFriendContext';
 
-type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
 
 interface FriendActionButtonProps {
-	relation: Relation;
+	relation: FriendRelation;
 	friendAction: FriendAction;
 	onAddFriend?: () => void;
 	onRemoveFriend?: () => void;

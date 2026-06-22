@@ -6,7 +6,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatConversations } from '@/hooks/useChatConversations';
 import { useChatMessages } from '@/hooks/useChatMessages';
-import { usePendingFriendRequests } from '@/hooks/usePendingFriendRequests';
+import { useFriendContext } from '@/hooks/useFriendContext';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { decodeTokenPayload } from '@/utils/auth';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -21,7 +21,7 @@ const SearchIcon = () => (
 
 const ChatPage = () => {
 	const { token } = useAuth();
-	const { syncUnreadChats, currentChatRef, setUnreadRequests } = usePresenceStatus();
+	const { syncUnreadChats, currentChatRef } = usePresenceStatus();
 
 	const currentUserId = useMemo(() => {
 		const payload = decodeTokenPayload(token);
@@ -52,11 +52,10 @@ const ChatPage = () => {
 	} = useChatMessages(token, selectedChatId, currentUserId);
 
 	const {
-		pendingRequests,
-		loading: pendingLoading,
+		pendingReceived,
 		acceptRequest: handleAcceptRequest,
 		rejectRequest: handleRejectRequest,
-	} = usePendingFriendRequests(token);
+	} = useFriendContext();
 
 	useEffect(() => {
 		currentChatRef.current = selectedChatId;
@@ -67,10 +66,6 @@ const ChatPage = () => {
 		if (!selectedChatId) return;
 		void markConversationRead(selectedChatId).then(syncUnreadChats);
 	}, [selectedChatId, markConversationRead, syncUnreadChats]);
-
-	useEffect(() => {
-		setUnreadRequests(pendingRequests.length);
-	}, [pendingRequests, setUnreadRequests]);
 
 	const [creatingConversation, setCreatingConversation] = useState(false);
 	const [showUserPicker, setShowUserPicker] = useState(false);
@@ -169,8 +164,8 @@ const ChatPage = () => {
 				selectedChat={selectedChat}
 				onSelectChat={(conv) => setSelectedChatId(String(conv.id))}
 				onStartNewConversation={handleStartNewConversation}
-				pendingRequests={pendingRequests}
-				pendingLoading={pendingLoading}
+				pendingRequests={pendingReceived}
+				pendingLoading={false}
 				onAcceptRequest={handleAcceptRequest}
 				onRejectRequest={handleRejectRequest}
 			/>

@@ -268,6 +268,17 @@ export class UsersService {
 	}
 
 	/**
+	 * Returns the relation status between myId and targetId.
+	 */
+	async getFriendshipStatus(myId: string, targetId: string): Promise<{ relation: IDirectoryRelation }> {
+		try {
+			return await this.httpClient.get<{ relation: IDirectoryRelation }>(`${this.usersBaseUrl}/friends/status/${myId}/${targetId}`, { timeoutMs: 5000 });
+		} catch (error) {
+			this.handleHttpError(error, 'obtener estado de amistad');
+		}
+	}
+
+	/**
 	 * Accepts a pending friend request.
 	 */
 	async acceptFriendRequest(userId: string, requesterId: string): Promise<IUserProfile> {

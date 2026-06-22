@@ -11,8 +11,6 @@ interface PresenceContextType {
 	setUnreadChats: Dispatch<SetStateAction<number>>;
 	syncUnreadChats: () => Promise<void>;
 	currentChatRef: MutableRefObject<string | null>;
-	unreadRequests: number;
-	setUnreadRequests: Dispatch<SetStateAction<number>>;
 }
 
 const noop = () => {};
@@ -28,8 +26,6 @@ export const PresenceContext = createContext<PresenceContextType>({
 	setUnreadChats: noop,
 	syncUnreadChats: async () => {},
 	currentChatRef: defaultChatRef,
-	unreadRequests: 0,
-	setUnreadRequests: noop,
 });
 
 export const usePresenceStatus = () => useContext(PresenceContext);

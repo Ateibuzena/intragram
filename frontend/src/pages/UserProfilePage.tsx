@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useFriend } from '@/hooks/useFriend';
 import { buildApiUrl } from '@/utils/apiBase';
 import { Navbar } from '@/components/layout/Navbar';
 import { ROUTES } from '@/constants/routes';
@@ -15,9 +16,7 @@ import {
 import type { UserProfileEntityDto } from '@/components/profile';
 import type { NavKey } from '@/types/ui';
 
-type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
-type FriendItem = { id: string; login: string };
 
 const UserProfilePage = () => {
 	const { login } = useParams<{ login: string }>();
@@ -29,12 +28,12 @@ const UserProfilePage = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState('');
-
-	const [relation, setRelation] = useState<Relation>('none');
-	const [friendshipLoading, setFriendshipLoading] = useState(false);
 	const [friendAction, setFriendAction] = useState<FriendAction>('idle');
 
 	const isOwnProfile = !!myProfile?.login && myProfile.login === login;
+
+	// Pass undefined when viewing own profile to skip fetch entirely.
+	const friend = useFriend(isOwnProfile ? undefined : profile?.id, profile?.login ?? undefined);
 
 	useEffect(() => {
 		if (!login || !token) return;
@@ -61,81 +60,25 @@ const UserProfilePage = () => {
 		return () => { cancelled = true; };
 	}, [login, token]);
 
-	useEffect(() => {
-		if (!token || !profile || isOwnProfile) return;
-		let cancelled = false;
-
-		const checkFriendship = async () => {
-			setFriendshipLoading(true);
-			try {
-				const res = await fetch(buildApiUrl('/users/friends/me'), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				if (!res.ok || cancelled) return;
-				const friends = (await res.json()) as FriendItem[];
-				if (!cancelled) setRelation(friends.some((f) => f.id === profile.id) ? 'friends' : 'none');
-			} catch {
-				// ignore
-			} finally {
-				if (!cancelled) setFriendshipLoading(false);
-			}
-		};
-
-		void checkFriendship();
-		return () => { cancelled = true; };
-	}, [token, profile?.id, isOwnProfile]);
-
 	const handleAddFriend = async () => {
-		if (!token || !profile || friendAction !== 'idle') return;
+		if (friendAction !== 'idle') return;
 		setFriendAction('adding');
-		try {
-			const res = await fetch(buildApiUrl('/users/friends/me'), {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-				body: JSON.stringify({ friend_login: profile.login }),
-			});
-			if (!res.ok) throw new Error();
-			const data = (await res.json()) as { status?: string };
-			setRelation(data.status === 'accepted' ? 'friends' : 'pending_sent');
-		} catch {
-			// ignore — button stays in current state
-		} finally {
-			setFriendAction('idle');
-		}
+		try { await friend.send(); }
+		finally { setFriendAction('idle'); }
 	};
 
 	const handleAcceptFriend = async () => {
-		if (!token || !profile || friendAction !== 'idle') return;
+		if (friendAction !== 'idle') return;
 		setFriendAction('accepting');
-		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${profile.id}/accept`), {
-				method: 'PATCH',
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			if (!res.ok) throw new Error();
-			setRelation('friends');
-		} catch {
-			// ignore
-		} finally {
-			setFriendAction('idle');
-		}
+		try { await friend.accept(); }
+		finally { setFriendAction('idle'); }
 	};
 
 	const handleRemoveFriend = async () => {
-		if (!token || !profile || friendAction !== 'idle') return;
+		if (friendAction !== 'idle') return;
 		setFriendAction('removing');
-		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${profile.id}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			if (!res.ok) throw new Error();
-			setRelation('none');
-		} catch {
-			// ignore
-		} finally {
-			setFriendAction('idle');
-		}
+		try { await friend.remove(); }
+		finally { setFriendAction('idle'); }
 	};
 
 	const handleSetActiveNav = (nav: NavKey) => {
@@ -183,8 +126,8 @@ const UserProfilePage = () => {
 							online={presenceMap[profile?.id ?? ''] ?? false}
 							insights={insights}
 							canEditProfile={false}
-							showFriendButton={!isOwnProfile && !friendshipLoading}
-							relation={relation}
+							showFriendButton={!isOwnProfile && !friend.loading}
+							relation={friend.relation}
 							friendAction={friendAction}
 							onAddFriend={() => void handleAddFriend()}
 							onAcceptFriend={() => void handleAcceptFriend()}

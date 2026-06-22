@@ -5,6 +5,7 @@ import { NavIcon } from './NavIcon';
 import { LogOutIcon } from './LogOutIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useFriendContext } from '@/hooks/useFriendContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { buildApiUrl } from '@/utils/apiBase';
@@ -32,7 +33,9 @@ interface NavbarProps {
 
 export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarProps) => {
 	const { user, profile, token, logout } = useAuth();
-	const { connected, unreadChats, unreadRequests } = usePresenceStatus();
+	const { connected, unreadChats } = usePresenceStatus();
+	const { pendingReceived } = useFriendContext();
+	const unreadRequests = pendingReceived.length;
 	const navigate = useNavigate();
 	const displayLogin = profile?.login || user?.username || '';
 	const displayName = profile?.display_name || user?.display_name || displayLogin;

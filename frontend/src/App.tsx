@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
 import { usePresence } from '@/hooks/usePresence';
 import { PresenceContext } from '@/hooks/usePresenceContext';
+import { FriendProvider } from '@/hooks/useFriendContext';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
@@ -11,10 +12,12 @@ import TermsPage from '@/pages/TermsPage';
 import UserProfilePage from '@/pages/UserProfilePage';
 
 const PresenceManager = ({ children }: { children: React.ReactNode }) => {
-	const { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef, unreadRequests, setUnreadRequests } = usePresence();
+	const { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef } = usePresence();
 	return (
-		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef, unreadRequests, setUnreadRequests }}>
-			{children}
+		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef }}>
+			<FriendProvider>
+				{children}
+			</FriendProvider>
 		</PresenceContext.Provider>
 	);
 };

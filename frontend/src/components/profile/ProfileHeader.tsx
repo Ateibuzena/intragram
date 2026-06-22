@@ -4,8 +4,8 @@ import { ProfileNameEditor, ProfileNameEditorModal } from './ProfileNameEditor';
 import { ProfileAvatarDisplay, ProfileAvatarEditorModal } from './ProfileAvatarEditor';
 import { ProfileBackgroundSelector } from './ProfileBackgroundSelector';
 import { FriendActionButton } from './FriendActionButton';
+import type { FriendRelation } from '@/hooks/useFriendContext';
 
-type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
 
 interface ProfileHeaderProps {
@@ -23,7 +23,7 @@ interface ProfileHeaderProps {
 	onSaveAvatarUrl?: (url: string) => Promise<void>;
 	onSaveBackground?: (theme: string) => Promise<void>;
 	showFriendButton?: boolean;
-	relation?: Relation;
+	relation?: FriendRelation;
 	friendAction?: FriendAction;
 	onAddFriend?: () => void;
 	onRemoveFriend?: () => void;

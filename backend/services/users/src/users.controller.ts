@@ -280,6 +280,15 @@ export class UsersController {
 	}
 
 	/**
+	 * Returns the relation status between myId and targetId.
+	 */
+	@Get('friends/status/:myId/:targetId')
+	async getFriendshipStatus(@Param('myId') myId: string, @Param('targetId') targetId: string) {
+		const relation = await this.usersService.getFriendshipStatus(myId, targetId);
+		return { relation };
+	}
+
+	/**
 	 * Accepts a pending friend request from requesterId to id.
 	 */
 	@Patch('friends/:id/accept/:requesterId')

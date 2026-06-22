@@ -4,8 +4,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { buildApiUrl } from '@/utils/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
-
-type Relation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+import { useFriendContext } from '@/hooks/useFriendContext';
+import type { FriendRelation } from '@/hooks/useFriendContext';
 
 type DirectoryEntry = {
 	id: string;
@@ -14,17 +14,18 @@ type DirectoryEntry = {
 	avatar_url?: string | null;
 	campus?: string | null;
 	active?: boolean;
-	relation: Relation;
+	relation: FriendRelation;
 };
 
 export const FriendsSidebar = () => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
+	const { pendingReceived, getRelation, seedRelations, sendRequest, acceptRequest, removeFriend } =
+		useFriendContext();
 
 	const [entries, setEntries] = useState<DirectoryEntry[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [relOverrides, setRelOverrides] = useState<Record<string, Relation>>({});
 	const [processing, setProcessing] = useState<Set<string>>(new Set());
 	const [filter, setFilter] = useState<'all' | 'online'>('all');
 
@@ -37,14 +38,19 @@ export const FriendsSidebar = () => {
 			if (!res.ok) return;
 			const data: DirectoryEntry[] = await res.json();
 			setEntries(data);
+			// Seed the shared cache so other components (e.g. UserProfilePage)
+			// already know the relation for every user in the directory.
+			seedRelations(data.map(({ id, relation }) => ({ id, relation })));
 		} catch {
 			// ignore
 		} finally {
 			setLoading(false);
 		}
-	}, [token]);
+	}, [token, seedRelations]);
 
 	useEffect(() => { void fetchDirectory(); }, [fetchDirectory]);
+
+	// ── Processing set helpers ─────────────────────────────────────────────────
 
 	const setProcessingId = (id: string, active: boolean) =>
 		setProcessing((prev) => {
@@ -53,52 +59,44 @@ export const FriendsSidebar = () => {
 			return next;
 		});
 
+	// ── Action wrappers ────────────────────────────────────────────────────────
+
 	const handleAdd = async (id: string, login: string) => {
 		if (processing.has(id)) return;
 		setProcessingId(id, true);
-		try {
-			const res = await fetch(buildApiUrl('/users/friends/me'), {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-				body: JSON.stringify({ friend_login: login }),
-			});
-			if (res.ok) {
-				const data = await res.json() as { status: 'pending' | 'accepted' };
-				setRelOverrides((prev) => ({ ...prev, [id]: data.status === 'accepted' ? 'friends' : 'pending_sent' }));
-			}
-		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+		try { await sendRequest(id, login); }
+		finally { setProcessingId(id, false); }
 	};
 
 	const handleAccept = async (id: string) => {
 		if (processing.has(id)) return;
 		setProcessingId(id, true);
-		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${id}/accept`), {
-				method: 'PATCH',
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			if (res.ok) setRelOverrides((prev) => ({ ...prev, [id]: 'friends' }));
-		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+		try { await acceptRequest(id); }
+		finally { setProcessingId(id, false); }
 	};
 
 	const handleRemove = async (id: string) => {
 		if (processing.has(id)) return;
 		setProcessingId(id, true);
-		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${id}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			if (res.ok) setRelOverrides((prev) => ({ ...prev, [id]: 'none' }));
-		} catch { /* ignore */ } finally { setProcessingId(id, false); }
+		try { await removeFriend(id); }
+		finally { setProcessingId(id, false); }
 	};
 
-	const directoryEntries = profile ? entries.filter((entry) => entry.id !== profile.id) : entries;
-	const isEntryOnline = (entry: DirectoryEntry) => presenceMap[entry.id] ?? entry.active ?? false;
+	// ── Derived values ─────────────────────────────────────────────────────────
+
+	const directoryEntries = profile
+		? entries.filter((entry) => entry.id !== profile.id)
+		: entries;
+
+	const isEntryOnline = (entry: DirectoryEntry) =>
+		presenceMap[entry.id] ?? entry.active ?? false;
+
 	const totalUsers = directoryEntries.length;
 	const onlineUsers = directoryEntries.filter(isEntryOnline).length;
-	const pendingReceived = directoryEntries.filter((entry) => (relOverrides[entry.id] ?? entry.relation) === 'pending_received').length;
-	const visibleEntries = filter === 'online' ? directoryEntries.filter(isEntryOnline) : directoryEntries;
+	const visibleEntries =
+		filter === 'online' ? directoryEntries.filter(isEntryOnline) : directoryEntries;
+
+	// ── Render ─────────────────────────────────────────────────────────────────
 
 	return (
 		<aside className="border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
@@ -134,9 +132,9 @@ export const FriendsSidebar = () => {
 				</div>
 			</div>
 
-			{pendingReceived > 0 && (
+			{pendingReceived.length > 0 && (
 				<div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300">
-					{pendingReceived} solicitud{pendingReceived === 1 ? '' : 'es'} pendiente{pendingReceived === 1 ? '' : 's'}
+					{pendingReceived.length} solicitud{pendingReceived.length === 1 ? '' : 'es'} pendiente{pendingReceived.length === 1 ? '' : 's'}
 				</div>
 			)}
 
@@ -170,7 +168,10 @@ export const FriendsSidebar = () => {
 			{visibleEntries.length > 0 && (
 				<ul className="-mx-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
 					{visibleEntries.map((entry) => {
-						const rel = relOverrides[entry.id] ?? entry.relation;
+						// Always read relation from the shared cache so that actions
+						// performed in any component (profile page, chat, etc.) are
+						// reflected here without a directory re-fetch.
+						const rel = getRelation(entry.id);
 						const busy = processing.has(entry.id);
 						const isOnline = isEntryOnline(entry);
 

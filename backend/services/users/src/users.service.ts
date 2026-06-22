@@ -692,6 +692,21 @@ export class UsersService {
 	}
 
 	/**
+	 * Returns the relation status between myId and targetId.
+	 */
+	async getFriendshipStatus(myId: string, targetId: string): Promise<IDirectoryRelation> {
+		const f = await this.friendshipRepo.findOne({
+			where: [
+				{ user_id: myId, friend_id: targetId },
+				{ user_id: targetId, friend_id: myId },
+			],
+		});
+		if (!f) return 'none';
+		if (f.status === 'accepted') return 'friends';
+		return f.user_id === myId ? 'pending_sent' : 'pending_received';
+	}
+
+	/**
 	 * Accepts a pending friend request from requesterId to userId.
 	 */
 	async acceptFriendRequest(userId: string, requesterId: string): Promise<UserProfileEntity> {

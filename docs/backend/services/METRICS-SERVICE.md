@@ -90,8 +90,8 @@ Eso es suficiente para que Prometheus detecte latencia, errores y disponibilidad
 
 Todo queda detrás de Nginx:
 
-- Grafana: `https://localhost:8443/grafana/`
-- Prometheus: `https://localhost:8443/prometheus/`
+- Grafana: `https://tt1sdrhn-8443.uks1.devtunnels.ms//grafana/`
+- Prometheus: `https://tt1sdrhn-8443.uks1.devtunnels.ms//prometheus/`
 
 ## Inicio rápido
 
@@ -101,8 +101,8 @@ docker compose up -d --build
 
 Después abre:
 
-- `https://localhost:8443/grafana/`
-- `https://localhost:8443/prometheus/`
+- `https://tt1sdrhn-8443.uks1.devtunnels.ms//grafana/`
+- `https://tt1sdrhn-8443.uks1.devtunnels.ms//prometheus/`
 
 ## Qué comprobar
 
@@ -115,7 +115,7 @@ docker compose logs -f prometheus grafana node-exporter
 Comprueba que Prometheus ve los targets:
 
 ```bash
-curl -k https://localhost:8443/prometheus/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
+curl -k https://tt1sdrhn-8443.uks1.devtunnels.ms//prometheus/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
 ```
 
 Comprueba que los servicios responden en `/metrics`:

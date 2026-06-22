@@ -112,7 +112,7 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 El frontend está pensado para ejecutarse dentro del stack completo con Docker Compose, detrás de Nginx. El punto de acceso esperado es:
 
 ```text
-https://localhost:8443
+https://tt1sdrhn-8443.uks1.devtunnels.ms/
 ```
 
 ## Related Documentation

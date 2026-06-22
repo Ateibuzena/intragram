@@ -32,7 +32,7 @@ interface NavbarProps {
 
 export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarProps) => {
 	const { user, profile, token, logout } = useAuth();
-	const { connected } = usePresenceStatus();
+	const { connected, unreadChats, unreadRequests } = usePresenceStatus();
 	const navigate = useNavigate();
 	const displayLogin = profile?.login || user?.username || '';
 	const displayName = profile?.display_name || user?.display_name || displayLogin;
@@ -157,9 +157,19 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 					<button
 						key={item.key}
 						onClick={() => setActiveNav(item.key)}
-						className={`nav-btn ${activeNav === item.key ? 'nav-btn--active' : 'nav-btn--default'}`}
+						className={`nav-btn relative ${activeNav === item.key ? 'nav-btn--active' : 'nav-btn--default'}`}
 					>
 						<NavIcon navKey={item.key} />
+						{item.key === 'chat' && unreadChats > 0 && (
+							<span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-ft-cyan text-black text-[9px] font-bold rounded-full flex items-center justify-center leading-none border border-ft-card">
+								{unreadChats > 9 ? '9+' : unreadChats}
+							</span>
+						)}
+						{item.key === 'chat' && unreadRequests > 0 && (
+							<span className="absolute -top-1 -left-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none border border-ft-card">
+								{unreadRequests > 9 ? '9+' : unreadRequests}
+							</span>
+						)}
 					</button>
 				))}
 			</nav>

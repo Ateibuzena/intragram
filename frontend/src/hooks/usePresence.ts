@@ -1,12 +1,55 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useAuth } from './useAuth';
+import { buildApiUrl } from '@/utils/apiBase';
 
 export const usePresence = () => {
 	const { token } = useAuth();
 	const socketRef = useRef<Socket | null>(null);
 	const [connected, setConnected] = useState(false);
 	const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
+	const [unreadChats, setUnreadChats] = useState(0);
+	const [unreadRequests, setUnreadRequests] = useState(0);
+	// Tracks which conversation is currently open so we don't badge it
+	const currentChatRef = useRef<string | null>(null);
+
+	// Fetch initial unread counts whenever the user authenticates
+	useEffect(() => {
+		if (!token) {
+			setUnreadChats(0);
+			setUnreadRequests(0);
+			return;
+		}
+		let cancelled = false;
+		const headers = { Authorization: `Bearer ${token}` };
+
+		fetch(buildApiUrl('/chat/conversations'), { headers })
+			.then((r) => r.ok ? r.json() as Promise<Array<{ unread_count?: number }>> : [])
+			.then((convs) => { if (!cancelled) setUnreadChats(convs.filter((c) => (c.unread_count ?? 0) > 0).length); })
+			.catch(() => {});
+
+		fetch(buildApiUrl('/users/friends/pending'), { headers })
+			.then((r) => r.ok ? r.json() as Promise<unknown[]> : [])
+			.then((reqs) => { if (!cancelled) setUnreadRequests(reqs.length); })
+			.catch(() => {});
+
+		return () => { cancelled = true; };
+	}, [token]);
+
+	// Poll friend requests every 30 s to keep the badge current
+	useEffect(() => {
+		if (!token) return;
+		const poll = () => {
+			fetch(buildApiUrl('/users/friends/pending'), {
+				headers: { Authorization: `Bearer ${token}` },
+			})
+				.then((r) => r.ok ? r.json() as Promise<unknown[]> : [])
+				.then((reqs) => setUnreadRequests(reqs.length))
+				.catch(() => {});
+		};
+		const id = setInterval(poll, 30_000);
+		return () => clearInterval(id);
+	}, [token]);
 
 	useEffect(() => {
 		if (!token) {
@@ -32,16 +75,31 @@ export const usePresence = () => {
 		socket.on('disconnect', () => setConnected(false));
 		socket.on('connect_error', () => setConnected(false));
 
-		// Initial snapshot: set all received IDs as online, rest as offline
 		socket.on('online:users', (userIds: string[]) => {
 			const next: Record<string, boolean> = {};
 			userIds.forEach((id) => { next[id] = true; });
 			setPresenceMap(next);
 		});
 
-		// Real-time delta: one user changed status
 		socket.on('user:status', ({ userId, active }: { userId: string; active: boolean }) => {
 			setPresenceMap((prev) => ({ ...prev, [userId]: active }));
+		});
+
+		socket.on('friend:request', () => {
+			setUnreadRequests((prev) => prev + 1);
+		});
+
+		// Badge only for conversations the user is NOT currently viewing
+		socket.on('chat:new-message', ({ conversationId }: { conversationId: string }) => {
+			if (conversationId !== currentChatRef.current) {
+				setUnreadChats((prev) => prev + 1);
+			} else {
+				// User is viewing this chat: keep last_read_at current so polling stays clean
+				void fetch(buildApiUrl(`/chat/conversations/${conversationId}/read`), {
+					method: 'POST',
+					headers: { Authorization: `Bearer ${token}` },
+				}).catch(() => {});
+			}
 		});
 
 		socketRef.current = socket;
@@ -58,5 +116,5 @@ export const usePresence = () => {
 		socketRef.current?.emit(event, data);
 	};
 
-	return { connected, presenceMap, socketRef, emit };
+	return { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, currentChatRef, unreadRequests, setUnreadRequests };
 };

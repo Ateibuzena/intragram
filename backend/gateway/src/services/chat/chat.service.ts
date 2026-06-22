@@ -97,6 +97,21 @@ export class ChatService {
 	}
 
 	/**
+	 * Marks a conversation as read for the user.
+	 */
+	async markConversationRead(userId: string, conversationId: string): Promise<void> {
+		try {
+			await this.httpClient.post<void>(
+				`${this.chatBaseUrl}/chat/conversations/${conversationId}/read`,
+				{},
+				{ timeoutMs: 5000, headers: this.buildUserHeaders(userId) },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'marcar conversación como leída');
+		}
+	}
+
+	/**
 	 * Builds the internal headers with the user id.
 	 */
 	private buildUserHeaders(userId: string) {

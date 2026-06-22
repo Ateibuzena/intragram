@@ -4,6 +4,7 @@ import { ChatWindow } from '@/components/chat/ChatWindow';
 import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import type { Conversation, Message, User } from '@/types/models';
 import type { PendingFriendRequest } from '@/types/props';
 import { formatTime } from '@/utils/formatters';
@@ -17,6 +18,7 @@ interface BackendConversation {
 	updated_at: string;
 	last_message: string | null;
 	last_message_at: string | null;
+	unread_count: number;
 }
 
 interface BackendMessage {
@@ -71,7 +73,7 @@ const mapConversationToUI = (
 		user,
 		lastMessage: conversation.last_message ?? 'Sin mensajes',
 		timestamp: formatTime(conversation.last_message_at ?? conversation.updated_at),
-		unread: false,
+		unread: conversation.unread_count ?? 0,
 	};
 };
 
@@ -90,6 +92,7 @@ const CONVERSATIONS_POLL_INTERVAL_MS = 3000;
 
 const ChatPage = () => {
 	const { token } = useAuth();
+	const { setUnreadChats, currentChatRef, setUnreadRequests } = usePresenceStatus();
 
 	const [rawConversations, setRawConversations] = useState<BackendConversation[]>([]);
 	const [usersById, setUsersById] = useState<Record<string, User>>({});
@@ -117,9 +120,38 @@ const ChatPage = () => {
 		return payload?.chat_user_id ?? payload?.sub ?? null;
 	}, [token]);
 
+	// Keep navbar badge in sync — never count the currently open conversation
+	useEffect(() => {
+		const count = rawConversations.filter(
+			(c) => (c.unread_count ?? 0) > 0 && c.id !== selectedChatId,
+		).length;
+		setUnreadChats(count);
+	}, [rawConversations, setUnreadChats, selectedChatId]);
+
+	// Track which chat is open + mark as read whenever the selection changes
+	useEffect(() => {
+		currentChatRef.current = selectedChatId;
+		return () => { currentChatRef.current = null; };
+	}, [selectedChatId, currentChatRef]);
+
+	useEffect(() => {
+		if (!selectedChatId || !token) return;
+		setRawConversations((prev) =>
+			prev.map((c) => (c.id === selectedChatId ? { ...c, unread_count: 0 } : c)),
+		);
+		void fetch(buildApiUrl(`/chat/conversations/${selectedChatId}/read`), {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${token}` },
+		}).catch(() => {});
+	}, [selectedChatId, token]);
+
+	// Force unread: 0 for the open conversation regardless of what the API returns
 	const conversations = useMemo(
-		() => rawConversations.map((conversation) => mapConversationToUI(conversation, currentUserId, usersById)),
-		[rawConversations, currentUserId, usersById],
+		() => rawConversations.map((conversation) => {
+			const ui = mapConversationToUI(conversation, currentUserId, usersById);
+			return ui.id === selectedChatId ? { ...ui, unread: 0 } : ui;
+		}),
+		[rawConversations, currentUserId, usersById, selectedChatId],
 	);
 
 	const selectedChat = useMemo(
@@ -449,7 +481,10 @@ const ChatPage = () => {
 				});
 				if (!res.ok || cancelled) return;
 				const data = (await res.json()) as PendingFriendRequest[];
-				if (!cancelled) setPendingRequests(data);
+				if (!cancelled) {
+					setPendingRequests(data);
+					setUnreadRequests(data.length);
+				}
 			} catch {
 				// ignore
 			} finally {
@@ -470,7 +505,11 @@ const ChatPage = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (res.ok) {
-				setPendingRequests((prev) => prev.filter((r) => r.id !== requesterId));
+				setPendingRequests((prev) => {
+					const next = prev.filter((r) => r.id !== requesterId);
+					setUnreadRequests(next.length);
+					return next;
+				});
 			}
 		} catch {
 			// ignore
@@ -485,7 +524,11 @@ const ChatPage = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (res.ok) {
-				setPendingRequests((prev) => prev.filter((r) => r.id !== requesterId));
+				setPendingRequests((prev) => {
+					const next = prev.filter((r) => r.id !== requesterId);
+					setUnreadRequests(next.length);
+					return next;
+				});
 			}
 		} catch {
 			// ignore

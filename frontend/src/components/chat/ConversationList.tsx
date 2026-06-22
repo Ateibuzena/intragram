@@ -118,18 +118,22 @@ export const ConversationList = ({
 									size="lg"
 									online={conv.user.id ? (presenceMap[String(conv.user.id)] ?? conv.user.online) : conv.user.online}
 								/>
-									{conv.unread && <span className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border-2 border-ft-card rounded-full" />}
+									{conv.unread > 0 && (
+										<span className="absolute -bottom-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-ft-cyan text-black text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-ft-card leading-none">
+											{conv.unread > 99 ? '99+' : conv.unread}
+										</span>
+									)}
 								</div>
 								<div className="flex-1 min-w-0 text-left">
 									<div className="flex items-center justify-between mb-1">
-										<p className={`text-sm font-semibold truncate ${conv.unread ? 'text-white' : 'text-ft-text'}`}>
+										<p className={`text-sm font-semibold truncate ${conv.unread > 0 ? 'text-white' : 'text-ft-text'}`}>
 											{conv.user.displayName || conv.user.login}
 										</p>
 										<span className="text-xs text-ft-muted flex-shrink-0 ml-2">{conv.timestamp}</span>
 									</div>
-									<p className={`text-xs truncate ${conv.unread ? 'text-white font-medium' : 'text-ft-muted'}`}>{conv.lastMessage}</p>
+									<p className={`text-xs truncate ${conv.unread > 0 ? 'text-white font-medium' : 'text-ft-muted'}`}>{conv.lastMessage}</p>
 								</div>
-								{conv.unread && <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2" />}
+								{conv.unread > 0 && <div className="flex-shrink-0 w-2 h-2 bg-ft-cyan rounded-full mt-2" />}
 							</button>
 						))}
 					</div>

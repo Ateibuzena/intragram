@@ -1,15 +1,3 @@
-/**
- * In-memory chat service for Intragram.
- * Business logic for managing conversations and messages between users.
- *
- * Features:
- * - Service health check
- * - List conversations of a user
- * - Create a conversation between two users
- * - List messages of a conversation
- * - Send a message to a conversation
- */
-
 import { Injectable } from '@nestjs/common';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,10 +6,10 @@ import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
+import { ChatConversationReadEntity } from './entities/chat-conversation-read.entity';
 
 @Injectable()
 export class ChatService {
-	// Ephemeral state of connected users (could be migrated to another mechanism later).
 	private readonly connectedUsers = new Set<string>();
 
 	constructor(
@@ -29,40 +17,49 @@ export class ChatService {
 		private readonly conversationRepo: Repository<ChatConversationEntity>,
 		@InjectRepository(ChatMessageEntity)
 		private readonly messageRepo: Repository<ChatMessageEntity>,
+		@InjectRepository(ChatConversationReadEntity)
+		private readonly readRepo: Repository<ChatConversationReadEntity>,
 	) {}
 
-	/**
-	 * Returns the list of connected users.
-	 */
 	getConnectedUsers(): string[] {
 		return [...this.connectedUsers];
 	}
 
-	/**
-	 * Service health check.
-	 */
 	getHealth(): HealthResponse {
 		return createHealthResponse('chat');
 	}
 
-	/**
-	 * Lists the conversations accessible to the authenticated user.
-	 *
-	 * Uses a QueryBuilder because `participants` is a text array in PostgreSQL
-	 * and we need the `ANY` operator to check membership.
-	 */
-	async getConversations(userId: string): Promise<ChatConversationEntity[]> {
+	async getConversations(userId: string): Promise<Array<ChatConversationEntity & { unread_count: number }>> {
 		this.assertUser(userId);
-		return this.conversationRepo
+
+		const conversations = await this.conversationRepo
 			.createQueryBuilder('conversation')
 			.where(':userId = ANY(conversation.participants)', { userId })
 			.orderBy('conversation.updated_at', 'DESC')
 			.getMany();
+
+		if (!conversations.length) return [];
+
+		const conversationIds = conversations.map((c) => c.id);
+
+		const unreadRows: Array<{ conversationId: string; unread_count: string }> =
+			await this.messageRepo.manager.query(
+				`SELECT m."conversationId", COUNT(*)::int AS unread_count
+				 FROM chat_messages m
+				 LEFT JOIN chat_conversation_reads r
+				   ON r.user_id = $1 AND r.conversation_id = m."conversationId"
+				 WHERE m."senderId" != $1
+				   AND m."conversationId" = ANY($2)
+				   AND m.created_at > COALESCE(r.last_read_at, '1970-01-01'::timestamptz)
+				 GROUP BY m."conversationId"`,
+				[userId, conversationIds],
+			);
+
+		const unreadMap = new Map(unreadRows.map((row) => [row.conversationId, Number(row.unread_count)]));
+
+		return conversations.map((c) => Object.assign(c, { unread_count: unreadMap.get(c.id) ?? 0 }));
 	}
 
-	/**
-	 * Creates or reuses a conversation between two participants.
-	 */
 	async createConversation(userId: string, dto: CreateConversationDto) {
 		this.assertUser(userId);
 		this.assertRecipient(dto.recipientId);
@@ -96,9 +93,6 @@ export class ChatService {
 		return { conversation: saved };
 	}
 
-	/**
-	 * Returns the message history of an accessible conversation.
-	 */
 	async getMessages(userId: string, conversationId: string): Promise<ChatMessageEntity[]> {
 		const conversation = await this.getAccessibleConversation(userId, conversationId);
 		return this.messageRepo.find({
@@ -107,9 +101,6 @@ export class ChatService {
 		});
 	}
 
-	/**
-	 * Adds a message to the conversation and updates the summary.
-	 */
 	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
 		if (!dto.message?.trim()) {
 			throw new BadRequestException('Message cannot be empty');
@@ -133,12 +124,17 @@ export class ChatService {
 		conversation.updated_at = createdAt;
 		await this.conversationRepo.save(conversation);
 
-		return { message: savedMessage };
+		return { message: savedMessage, participants: conversation.participants };
 	}
 
-	/**
-	 * Validates that the conversation exists and that the user is part of it.
-	 */
+	async markConversationRead(userId: string, conversationId: string): Promise<void> {
+		await this.getAccessibleConversation(userId, conversationId);
+		await this.readRepo.upsert(
+			{ user_id: userId, conversation_id: conversationId, last_read_at: new Date() },
+			['user_id', 'conversation_id'],
+		);
+	}
+
 	private async getAccessibleConversation(userId: string, conversationId: string) {
 		this.assertUser(userId);
 		const conversation = await this.conversationRepo.findOne({ where: { id: conversationId } });
@@ -154,18 +150,12 @@ export class ChatService {
 		return conversation;
 	}
 
-	/**
-	 * Validates that the user id is not empty.
-	 */
 	private assertUser(userId: string) {
 		if (!userId || !userId.trim()) {
 			throw new BadRequestException('x-user-id header missing');
 		}
 	}
 
-	/**
-	 * Validates that the recipient is provided.
-	 */
 	private assertRecipient(recipientId: string) {
 		if (!recipientId || !recipientId.trim()) {
 			throw new BadRequestException('recipientId is required');

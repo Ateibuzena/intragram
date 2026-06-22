@@ -44,6 +44,15 @@ export class UserProfileEntity {
 	@Column({ type: 'varchar', length: 120, nullable: true })
 	campus!: string | null;
 
+	@Column({ type: 'int', nullable: true })
+	campus_id!: number | null;
+
+	@Column({ type: 'varchar', length: 120, nullable: true })
+	campus_country!: string | null;
+
+	@Column({ type: 'varchar', length: 120, nullable: true })
+	campus_city!: string | null;
+
 	@Column({ type: 'varchar', length: 120, nullable: true })
 	pool_month!: string | null;
 
@@ -71,6 +80,9 @@ export class UserProfileEntity {
 	@Column({ type: 'boolean', default: true })
 	active!: boolean;
 
+	@Column({ type: 'boolean', nullable: true, default: null })
+	forty_two_active!: boolean | null;
+
 	@Column({ type: 'timestamp', nullable: true })
 	last_login_at!: Date | null;
 
@@ -88,6 +100,9 @@ export class UserProfileEntity {
 
 	@Column({ type: 'jsonb', nullable: true })
 	dashes_users!: Record<string, unknown>[] | null;
+
+	@Column({ type: 'jsonb', nullable: true })
+	achievements!: Record<string, unknown>[] | null;
 
 	@Column({ type: 'varchar', length: 40, nullable: true, default: null })
 	background_theme!: string | null;

@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { ProfileInsights, ProjectStatusKind } from '@/types/profile';
+import { formatDate } from '@/utils/profile';
+import { useAuth } from '@/hooks/useAuth';
+import { buildApiUrl } from '@/utils/apiBase';
 
 interface ProjectsCardProps {
 	insights: ProfileInsights;
@@ -30,12 +33,48 @@ const filterLabels: Record<ProjectStatusKind | 'all', string> = {
 	unknown: 'Otros',
 };
 
+type ProjectPeer = {
+	id: string;
+	login: string;
+	campus?: string | null;
+	campus_match?: 'campus' | 'country' | 'worldwide';
+	common_projects_count?: number;
+};
+
 export const ProjectsCard = ({ insights, className = '' }: ProjectsCardProps) => {
+	const { token } = useAuth();
 	const [filter, setFilter] = useState<ProjectStatusKind | 'all'>('all');
+	const [peerProjectId, setPeerProjectId] = useState<number | null>(null);
+	const [peers, setPeers] = useState<ProjectPeer[]>([]);
+	const [peersLoading, setPeersLoading] = useState(false);
 	const filteredProjects = useMemo(
 		() => insights.projects.filter((project) => filter === 'all' || project.statusKind === filter),
 		[filter, insights.projects],
 	);
+
+	const fetchProjectPeers = async (projectId: number, projectKey: string) => {
+		if (!token) return;
+		if (peerProjectId === projectId) {
+			setPeerProjectId(null);
+			setPeers([]);
+			return;
+		}
+		setPeerProjectId(projectId);
+		setPeersLoading(true);
+		try {
+			const params = new URLSearchParams({ project: projectKey });
+			const res = await fetch(buildApiUrl(`/users/directory?${params.toString()}`), {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (!res.ok) return;
+			const data = await res.json() as ProjectPeer[];
+			setPeers(data.slice(0, 6));
+		} catch {
+			setPeers([]);
+		} finally {
+			setPeersLoading(false);
+		}
+	};
 
 	return (
 		<div className={`p-5 min-h-[34rem] overflow-hidden flex flex-col ${className}`}>
@@ -100,6 +139,48 @@ export const ProjectsCard = ({ insights, className = '' }: ProjectsCardProps) =>
 									Nota <span className="text-ft-cyan font-semibold">{project.finalMark ?? '-'}</span>
 								</p>
 							</div>
+							<div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-ft-muted">
+								<p className="min-w-0 truncate" title={project.slug ?? undefined}>
+									{project.slug ?? 'Sin slug'}
+								</p>
+								<p className="shrink-0">
+									{project.markedAt ? formatDate(project.markedAt) : 'Sin correccion'}
+								</p>
+							</div>
+							<div className="mt-1 grid grid-cols-2 gap-2 text-[9px] text-ft-muted">
+								<p className="truncate" title={formatDate(project.createdAt)}>
+									Creado: <span className="text-white/80">{formatDate(project.createdAt)}</span>
+								</p>
+								<p className="truncate text-right" title={formatDate(project.updatedAt)}>
+									Actualizado: <span className="text-white/80">{formatDate(project.updatedAt)}</span>
+								</p>
+							</div>
+							<div className="mt-2 flex items-center justify-between gap-2">
+								<button
+									type="button"
+									onClick={() => void fetchProjectPeers(project.id, project.slug || project.name)}
+									className="rounded-lg border border-ft-border px-2 py-1 text-[10px] font-semibold text-ft-muted transition-colors hover:border-ft-cyan/30 hover:bg-ft-cyan/10 hover:text-ft-cyan"
+								>
+									{peerProjectId === project.id ? 'Ocultar personas' : 'Personas que lo hicieron'}
+								</button>
+							</div>
+							{peerProjectId === project.id && (
+								<div className="mt-2 rounded-lg border border-ft-border bg-ft-hover/20 p-2">
+									{peersLoading ? (
+										<p className="text-[10px] text-ft-muted">Buscando perfiles...</p>
+									) : peers.length > 0 ? (
+										<div className="flex flex-wrap gap-1.5">
+											{peers.map((peer) => (
+												<span key={peer.id} className="rounded-full border border-ft-border bg-ft-hover/50 px-2 py-0.5 text-[10px] font-semibold text-white" title={peer.campus ?? undefined}>
+													@{peer.login}
+												</span>
+											))}
+										</div>
+									) : (
+										<p className="text-[10px] text-ft-muted">No hay perfiles sincronizados para este proyecto.</p>
+									)}
+								</div>
+							)}
 						</div>
 					))}
 					{filteredProjects.length === 0 && (

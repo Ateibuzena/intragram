@@ -22,6 +22,19 @@ interface UserProfile {
 	background_theme: string | null;
 	wallet: number;
 	correction_point: number;
+	levels?: Array<{
+		id: number;
+		name: string;
+		slug?: string | null;
+		level?: number;
+		grade?: string | null;
+	}>;
+	achievements?: Array<{
+		id: number;
+		name: string;
+		kind?: string | null;
+		tier?: string | null;
+	}>;
 }
 
 export type { UserProfile };

@@ -19,10 +19,18 @@ import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { UserSavedPostEntity } from './entities/user-saved-post.entity';
 import { UserPostLikeEntity } from './entities/user-post-like.entity';
 import { UserPostCommentEntity } from './entities/user-post-comment.entity';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto, mapOAuth42MeToUpsertUser } from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
+export type IDirectoryScope = 'all' | 'mine' | 'country' | 'projects';
+export interface IDirectoryFilters {
+	minLevel?: number;
+	maxLevel?: number;
+	cursus?: string;
+	achievement?: string;
+	project?: string;
+}
 
 export interface IDirectoryEntry {
 	id: string;
@@ -31,8 +39,17 @@ export interface IDirectoryEntry {
 	avatar_url: string | null;
 	campus: string | null;
 	active: boolean;
+	campus_id: number | null;
+	campus_country: string | null;
+	campus_city: string | null;
+	campus_match: 'campus' | 'country' | 'worldwide';
+	common_projects_count: number;
+	common_projects: string[];
 	relation: IDirectoryRelation;
 }
+
+const asJsonArray = <T extends object>(value?: T[]): Record<string, unknown>[] | null =>
+	value ? value as unknown as Record<string, unknown>[] : null;
 
 @Injectable()
 export class UsersService {
@@ -82,7 +99,11 @@ export class UsersService {
 			profile.image?.versions?.small ||
 			null;
 
-		const campusName = profile.campus?.[0]?.name || null;
+		const primaryCampus = profile.campus?.[0];
+		const campusName = primaryCampus?.name || null;
+		const campusId = primaryCampus?.id ?? null;
+		const campusCountry = primaryCampus?.country || UsersService.campusToCountry(campusName);
+		const campusCity = primaryCampus?.city || null;
 		const displayName = profile.displayname || profile.usual_full_name || login;
 
 		if (existing) {
@@ -96,6 +117,9 @@ export class UsersService {
 			existing.display_name = existing.display_name || importedDisplayName;
 			existing.avatar_url = existing.avatar_url || avatarUrl;
 			existing.campus = campusName;
+			existing.campus_id = campusId;
+			existing.campus_country = campusCountry;
+			existing.campus_city = campusCity;
 			existing.pool_month = profile.pool_month || null;
 			existing.pool_year = profile.pool_year || null;
 			existing.wallet = profile.wallet || 0;
@@ -104,13 +128,15 @@ export class UsersService {
 			existing.phone = profile.phone || null;
 			existing.staff = !!profile.staff;
 			existing.alumni = !!profile.alumni;
-			existing.skills = profile.skills || null;
-			existing.levels = profile.levels || null;
-			existing.titles = profile.titles || null;
-			existing.projects_users = profile.projects_users || null;
-			existing.dashes_users = profile.dashes_users || null;
+			existing.forty_two_active = profile.active ?? null;
+			existing.skills = asJsonArray(profile.skills);
+			existing.levels = asJsonArray(profile.levels);
+			existing.titles = asJsonArray(profile.titles);
+			existing.projects_users = asJsonArray(profile.projects_users);
+			existing.dashes_users = asJsonArray(profile.dashes_users);
+			existing.achievements = asJsonArray(profile.achievements);
 			existing.last_login_at = new Date();
-			existing.raw_profile = profile as unknown as Record<string, unknown>;
+			existing.raw_profile = profile.raw_profile || (profile as unknown as Record<string, unknown>);
 
 			return this.userProfileRepo.save(existing);
 		}
@@ -125,6 +151,9 @@ export class UsersService {
 			display_name: displayName,
 			avatar_url: avatarUrl,
 			campus: campusName,
+			campus_id: campusId,
+			campus_country: campusCountry,
+			campus_city: campusCity,
 			pool_month: profile.pool_month || null,
 			pool_year: profile.pool_year || null,
 			wallet: profile.wallet || 0,
@@ -134,13 +163,15 @@ export class UsersService {
 			staff: !!profile.staff,
 			alumni: !!profile.alumni,
 			active: false,
-			skills: profile.skills || null,
-			levels: profile.levels || null,
-			titles: profile.titles || null,
-			projects_users: profile.projects_users || null,
-			dashes_users: profile.dashes_users || null,
+			forty_two_active: profile.active ?? null,
+			skills: asJsonArray(profile.skills),
+			levels: asJsonArray(profile.levels),
+			titles: asJsonArray(profile.titles),
+			projects_users: asJsonArray(profile.projects_users),
+			dashes_users: asJsonArray(profile.dashes_users),
+			achievements: asJsonArray(profile.achievements),
 			last_login_at: new Date(),
-			raw_profile: profile as unknown as Record<string, unknown>,
+			raw_profile: profile.raw_profile || (profile as unknown as Record<string, unknown>),
 		});
 
 		return this.userProfileRepo.save(created);
@@ -169,97 +200,7 @@ export class UsersService {
 				timeout: 5000,
 			});
 
-			const user42 = response.data as any;
-
-			// Extract profile stats similar to handleOAuth42Callback in auth.service
-			let skills: any[] = [];
-			let levels: any[] = [];
-			let titles: any[] = [];
-			let projectsUsers: any[] = [];
-			let dashesUsers: any[] = [];
-
-			// We only use data from the main cursus (id 21)
-			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
-				const cursus21 = user42.cursus_users.find(
-					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
-				);
-
-				if (cursus21) {
-					if (typeof cursus21.level === 'number') {
-						levels = [
-							{
-								id: cursus21.cursus_id || 21,
-								name: cursus21.cursus?.name || '42cursus',
-								level: cursus21.level,
-							},
-						];
-					}
-
-					if (Array.isArray(cursus21.skills)) {
-						skills = cursus21.skills.map((skill: any) => ({
-							id: skill.id,
-							name: skill.name,
-							level: skill.level,
-						}));
-					}
-				}
-			}
-
-			if (Array.isArray(user42.titles)) {
-				const selectedTitleIds = new Set(
-					Array.isArray(user42.titles_users)
-						? user42.titles_users
-							.filter((titleUser: any) => titleUser?.selected)
-							.map((titleUser: any) => String(titleUser?.title_id))
-						: [],
-				);
-
-				titles = user42.titles
-					.filter((title: any) => title && title.id && title.name)
-					.map((title: any) => ({ id: title.id, name: title.name, selected: selectedTitleIds.has(String(title.id)) }));
-			}
-
-			if (Array.isArray(user42.projects_users)) {
-				projectsUsers = user42.projects_users
-					.filter((projectUser: any) => Array.isArray(projectUser?.cursus_ids) && projectUser.cursus_ids.includes(21))
-					.map((projectUser: any) => ({
-						id: projectUser.id,
-						name: projectUser?.project?.name || 'Unnamed project',
-						status: projectUser.status || 'unknown',
-						final_mark: projectUser.final_mark,
-					}));
-			}
-
-			if (Array.isArray(user42.dashes_users)) {
-				dashesUsers = user42.dashes_users;
-			}
-
-			// Map data to UpsertOAuth42UserDto
-			const upsertPayload: UpsertOAuth42UserDto = {
-				id: user42.id,
-				login: user42.login,
-				email: user42.email,
-				first_name: user42.first_name,
-				last_name: user42.last_name,
-				displayname: user42.displayname,
-				usual_full_name: user42.usual_full_name,
-				image: user42.image,
-				campus: user42.campus,
-				pool_month: user42.pool_month,
-				pool_year: user42.pool_year,
-				wallet: user42.wallet,
-				correction_point: user42.correction_point,
-				location: user42.location,
-				phone: user42.phone,
-				staff: !!user42.staff,
-				alumni: !!user42.alumni,
-				active: user42.active,
-				skills,
-				levels,
-				titles,
-				projects_users: projectsUsers,
-				dashes_users: dashesUsers,
-			};
+			const upsertPayload = mapOAuth42MeToUpsertUser(response.data as Record<string, unknown>);
 
 			// Sync profile
 			return this.upsertFromOAuth42(upsertPayload);
@@ -370,7 +311,8 @@ export class UsersService {
 			this.getLikedPostIds(userId, postIds),
 			this.getSavedPostIds(userId, postIds),
 		]);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
 	}
 
 	/**
@@ -388,7 +330,8 @@ export class UsersService {
 			this.getLikedPostIds(userId, postIds),
 			this.getSavedPostIds(userId, postIds),
 		]);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
 	}
 
 	/**
@@ -412,7 +355,8 @@ export class UsersService {
 			this.getLikedPostIds(userId, postIds),
 			this.getSavedPostIds(userId, postIds),
 		]);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
 	}
 
 	/**
@@ -440,7 +384,8 @@ export class UsersService {
 			this.getLikedPostIds(userId, postIds),
 			this.getSavedPostIds(userId, postIds),
 		]);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id)));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
 	}
 
 	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
@@ -452,10 +397,102 @@ export class UsersService {
 			this.getLikedPostIds(userId, [postId]),
 		]);
 
-		return this.mapPostToFeedDto(post, !!savedResult, likedIds.has(postId));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return this.mapPostToFeedDto(post, !!savedResult, likedIds.has(postId), viewerProjects, userId);
 	}
 
-	private mapPostToFeedDto(post: UserPostEntity, savedByCurrentUser = false, likedByCurrentUser = false): IFeedPost {
+	private async getViewerProjectIndex(userId: string): Promise<Map<string, string>> {
+		const viewer = await this.userProfileRepo.findOne({
+			where: { id: userId },
+			select: ['id', 'projects_users'],
+		});
+		return UsersService.projectIndex(viewer?.projects_users ?? null);
+	}
+
+	private static getMainLevel(user: UserProfileEntity): { level: number | null; grade: string | null } {
+		const levels = Array.isArray(user.levels) ? user.levels : [];
+		const mainLevel = levels.find((level) => level.id === 21 || level.slug === '42cursus') ?? levels[0];
+		return {
+			level: typeof mainLevel?.level === 'number' ? Math.round(mainLevel.level * 100) / 100 : null,
+			grade: typeof mainLevel?.grade === 'string' ? mainLevel.grade : null,
+		};
+	}
+
+	private static getFeaturedAchievement(user: UserProfileEntity): IFeedPost['author']['featured_achievement'] {
+		const achievements = Array.isArray(user.achievements) ? user.achievements : [];
+		const visible = achievements.filter((achievement) => achievement.visible !== false);
+		const featured = visible.find((achievement) => achievement.tier) ?? visible[0];
+		if (!featured) return null;
+		return {
+			id: typeof featured.id === 'number' ? featured.id : 0,
+			name: typeof featured.name === 'string' ? featured.name : 'Achievement',
+			kind: typeof featured.kind === 'string' ? featured.kind : null,
+			tier: typeof featured.tier === 'string' ? featured.tier : null,
+			image: typeof featured.image === 'string' ? featured.image : null,
+		};
+	}
+
+	private static commonProjectLabels(
+		viewerProjects: Map<string, string>,
+		authorProjects: Record<string, unknown>[] | null,
+		viewerId: string,
+		authorId: string,
+	): string[] {
+		if (viewerId === authorId) return [];
+		return [...UsersService.projectIndex(authorProjects)]
+			.filter(([projectKey]) => viewerProjects.has(projectKey))
+			.map(([, label]) => label);
+	}
+
+	private static matchesDirectoryFilters(user: UserProfileEntity, filters: IDirectoryFilters): boolean {
+		const mainLevel = UsersService.getMainLevel(user).level;
+		if (typeof filters.minLevel === 'number' && (mainLevel === null || mainLevel < filters.minLevel)) return false;
+		if (typeof filters.maxLevel === 'number' && (mainLevel === null || mainLevel > filters.maxLevel)) return false;
+
+		if (filters.cursus) {
+			const needle = filters.cursus.toLowerCase();
+			const levels = Array.isArray(user.levels) ? user.levels : [];
+			const hasCursus = levels.some((level) => {
+				const slug = typeof level.slug === 'string' ? level.slug.toLowerCase() : '';
+				const name = typeof level.name === 'string' ? level.name.toLowerCase() : '';
+				const id = typeof level.id === 'number' ? String(level.id) : '';
+				return slug === needle || name.includes(needle) || id === needle;
+			});
+			if (!hasCursus) return false;
+		}
+
+		if (filters.achievement) {
+			const needle = filters.achievement.toLowerCase();
+			const achievements = Array.isArray(user.achievements) ? user.achievements : [];
+			const hasAchievement = achievements.some((achievement) => {
+				const name = typeof achievement.name === 'string' ? achievement.name.toLowerCase() : '';
+				const kind = typeof achievement.kind === 'string' ? achievement.kind.toLowerCase() : '';
+				const tier = typeof achievement.tier === 'string' ? achievement.tier.toLowerCase() : '';
+				return name.includes(needle) || kind === needle || tier === needle;
+			});
+			if (!hasAchievement) return false;
+		}
+
+		if (filters.project) {
+			const needle = filters.project.trim().toLowerCase();
+			const hasProject = [...UsersService.projectIndex(user.projects_users)].some(([key, label]) =>
+				key.includes(needle) || label.toLowerCase().includes(needle),
+			);
+			if (!hasProject) return false;
+		}
+
+		return true;
+	}
+
+	private mapPostToFeedDto(
+		post: UserPostEntity,
+		savedByCurrentUser = false,
+		likedByCurrentUser = false,
+		viewerProjects = new Map<string, string>(),
+		viewerId = '',
+	): IFeedPost {
+		const mainLevel = UsersService.getMainLevel(post.author);
+		const commonProjects = UsersService.commonProjectLabels(viewerProjects, post.author.projects_users, viewerId, post.author.id);
 		return {
 			id: post.id,
 			content: post.content,
@@ -470,6 +507,13 @@ export class UsersService {
 				display_name: post.author.display_name,
 				avatar_url: post.author.avatar_url,
 				correction_point: post.author.correction_point,
+				campus: post.author.campus,
+				campus_country: post.author.campus_country,
+				level: mainLevel.level,
+				cursus_grade: mainLevel.grade,
+				featured_achievement: UsersService.getFeaturedAchievement(post.author),
+				common_projects_count: commonProjects.length,
+				common_projects: commonProjects.slice(0, 3),
 				active: post.author.active,
 				last_login_at:
 					post.author.last_login_at instanceof Date
@@ -560,38 +604,29 @@ export class UsersService {
 		return UsersService.CAMPUS_COUNTRY[campus] ?? null;
 	}
 
-	async getSuggestions(userId: string, limit = 20): Promise<UserProfileEntity[]> {
-		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
-		if (!me) return [];
-
-		const relationships = await this.friendshipRepo.find({
-			where: [{ user_id: userId }, { friend_id: userId }],
-		});
-		const excludeIds = new Set<string>([userId]);
-		relationships.forEach((f) => { excludeIds.add(f.user_id); excludeIds.add(f.friend_id); });
-
-		const candidates = await this.userProfileRepo.find({
-			where: { id: Not(In([...excludeIds])) },
-			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'active'],
-			take: 300,
-		});
-
-		const myCountry = UsersService.campusToCountry(me.campus);
-		const scored = candidates.map((u) => {
-			const userCountry = UsersService.campusToCountry(u.campus);
-			let score = 0;
-			if (me.campus && u.campus && me.campus === u.campus) score = 2;
-			else if (myCountry && userCountry && myCountry === userCountry) score = 1;
-			return { u, score };
-		});
-		scored.sort((a, b) => b.score - a.score);
-		return scored.slice(0, limit).map((s) => s.u);
+	private static projectKey(projectUser: Record<string, unknown>): string | null {
+		const slug = typeof projectUser.slug === 'string' ? projectUser.slug : null;
+		const name = typeof projectUser.name === 'string' ? projectUser.name : null;
+		return (slug || name)?.trim().toLowerCase() || null;
 	}
 
-	async getDirectory(userId: string, limit = 50): Promise<IDirectoryEntry[]> {
-		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
-		if (!me) return [];
+	private static projectLabel(projectUser: Record<string, unknown>): string | null {
+		const name = typeof projectUser.name === 'string' ? projectUser.name : null;
+		const slug = typeof projectUser.slug === 'string' ? projectUser.slug : null;
+		return name || slug;
+	}
 
+	private static projectIndex(projectsUsers: Record<string, unknown>[] | null): Map<string, string> {
+		const index = new Map<string, string>();
+		for (const projectUser of projectsUsers ?? []) {
+			const key = UsersService.projectKey(projectUser);
+			const label = UsersService.projectLabel(projectUser);
+			if (key && label) index.set(key, label);
+		}
+		return index;
+	}
+
+	private async getRelationMap(userId: string): Promise<Map<string, IDirectoryRelation>> {
 		const relationships = await this.friendshipRepo.find({
 			where: [{ user_id: userId }, { friend_id: userId }],
 		});
@@ -605,29 +640,117 @@ export class UsersService {
 				relationMap.set(otherId, f.user_id === userId ? 'pending_sent' : 'pending_received');
 			}
 		}
+		return relationMap;
+	}
+
+	async getSuggestions(userId: string, limit = 20): Promise<IDirectoryEntry[]> {
+		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
+		if (!me) return [];
+
+		const relationships = await this.friendshipRepo.find({
+			where: [{ user_id: userId }, { friend_id: userId }],
+		});
+		const excludeIds = new Set<string>([userId]);
+		relationships.forEach((f) => { excludeIds.add(f.user_id); excludeIds.add(f.friend_id); });
 
 		const candidates = await this.userProfileRepo.find({
-			where: { id: Not(userId) },
-			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'active'],
+			where: { id: Not(In([...excludeIds])) },
+			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'campus_id', 'campus_country', 'campus_city', 'active', 'levels', 'achievements', 'projects_users'],
 			take: 300,
 		});
 
-		const myCountry = UsersService.campusToCountry(me.campus);
+		const myCountry = me.campus_country || UsersService.campusToCountry(me.campus);
+		const myProjects = UsersService.projectIndex(me.projects_users);
 		const scored = candidates.map((u) => {
-			const userCountry = UsersService.campusToCountry(u.campus);
+			const userCountry = u.campus_country || UsersService.campusToCountry(u.campus);
 			let score = 0;
+			let campusMatch: IDirectoryEntry['campus_match'] = 'worldwide';
 			if (me.campus && u.campus && me.campus === u.campus) score = 2;
-			else if (myCountry && userCountry && myCountry === userCountry) score = 1;
-			return { u, score, relation: (relationMap.get(u.id) ?? 'none') as IDirectoryRelation };
+			if (me.campus && u.campus && me.campus === u.campus) campusMatch = 'campus';
+			else if (myCountry && userCountry && myCountry === userCountry) {
+				score = 1;
+				campusMatch = 'country';
+			}
+
+			const commonProjectLabels = [...UsersService.projectIndex(u.projects_users)]
+				.filter(([projectKey]) => myProjects.has(projectKey))
+				.map(([, label]) => label);
+			score += Math.min(commonProjectLabels.length, 3) * 0.5;
+			return { u, score, campusMatch, commonProjectLabels };
 		});
 		scored.sort((a, b) => b.score - a.score);
-
-		return scored.slice(0, limit).map(({ u, relation }) => ({
+		return scored.slice(0, limit).map(({ u, campusMatch, commonProjectLabels }) => ({
 			id: u.id,
 			login: u.login,
 			display_name: u.display_name,
 			avatar_url: u.avatar_url,
 			campus: u.campus,
+			campus_id: u.campus_id,
+			campus_country: u.campus_country || UsersService.campusToCountry(u.campus),
+			campus_city: u.campus_city,
+			campus_match: campusMatch,
+			common_projects_count: commonProjectLabels.length,
+			common_projects: commonProjectLabels.slice(0, 3),
+			active: u.active,
+			relation: 'none',
+		}));
+	}
+
+	async getDirectory(
+		userId: string,
+		limit = 50,
+		campusScope: IDirectoryScope = 'all',
+		filters: IDirectoryFilters = {},
+	): Promise<IDirectoryEntry[]> {
+		const me = await this.userProfileRepo.findOne({ where: { id: userId } });
+		if (!me) return [];
+
+		const relationMap = await this.getRelationMap(userId);
+
+		const candidates = await this.userProfileRepo.find({
+			where: { id: Not(userId) },
+			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'campus_id', 'campus_country', 'campus_city', 'active', 'levels', 'achievements', 'projects_users'],
+			take: 300,
+		});
+
+		const myCountry = me.campus_country || UsersService.campusToCountry(me.campus);
+		const myProjects = UsersService.projectIndex(me.projects_users);
+		const scored = candidates.map((u) => {
+			const userCountry = u.campus_country || UsersService.campusToCountry(u.campus);
+			let score = 0;
+			let campusMatch: IDirectoryEntry['campus_match'] = 'worldwide';
+			if (me.campus && u.campus && me.campus === u.campus) score = 2;
+			if (me.campus && u.campus && me.campus === u.campus) campusMatch = 'campus';
+			else if (myCountry && userCountry && myCountry === userCountry) {
+				score = 1;
+				campusMatch = 'country';
+			}
+			const commonProjects = [...UsersService.projectIndex(u.projects_users)]
+				.filter(([projectKey]) => myProjects.has(projectKey))
+				.map(([, label]) => label);
+			score += Math.min(commonProjects.length, 3) * 0.5;
+			return { u, score, campusMatch, commonProjects, relation: (relationMap.get(u.id) ?? 'none') as IDirectoryRelation };
+		});
+		const filtered = scored.filter(({ campusMatch, commonProjects }) => {
+			if (campusScope === 'mine') return campusMatch === 'campus';
+			if (campusScope === 'country') return campusMatch === 'campus' || campusMatch === 'country';
+			if (campusScope === 'projects') return commonProjects.length > 0;
+			return true;
+		}).filter(({ u }) => UsersService.matchesDirectoryFilters(u, filters));
+		filtered.sort((a, b) => b.score - a.score);
+
+		return filtered.slice(0, limit).map(({ u, relation, campusMatch, commonProjects }) => ({
+			id: u.id,
+			login: u.login,
+			display_name: u.display_name,
+			avatar_url: u.avatar_url,
+			campus: u.campus,
+			campus_id: u.campus_id,
+			campus_country: u.campus_country || UsersService.campusToCountry(u.campus),
+			campus_city: u.campus_city,
+			campus_match: campusMatch,
+			common_projects_count: commonProjects.length,
+			common_projects: commonProjects.slice(0, 3),
 			active: u.active,
 			relation,
 		}));
@@ -768,7 +891,8 @@ export class UsersService {
 
 		const posts = saved.map((entry) => entry.post);
 		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true, likedIds.has(entry.post.id)));
+		const viewerProjects = await this.getViewerProjectIndex(userId);
+		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true, likedIds.has(entry.post.id), viewerProjects, userId));
 	}
 
 	/**
@@ -899,13 +1023,14 @@ export class UsersService {
 	}
 
 	async setPresence(userId: string, active: boolean): Promise<void> {
-		const values: Partial<UserProfileEntity> = { active };
+		const values: { active: boolean; last_login_at?: Date } = { active };
 		if (active) values.last_login_at = new Date();
 		await this.userProfileRepo.update({ id: userId }, values);
 	}
 
 	private mapCommentToDto(comment: UserPostCommentEntity): IPostComment {
 		const author = comment.author;
+		const mainLevel = UsersService.getMainLevel(author);
 		return {
 			id: comment.id,
 			post_id: comment.post_id,
@@ -917,6 +1042,13 @@ export class UsersService {
 				display_name: author.display_name,
 				avatar_url: author.avatar_url,
 				correction_point: author.correction_point,
+				campus: author.campus,
+				campus_country: author.campus_country,
+				level: mainLevel.level,
+				cursus_grade: mainLevel.grade,
+				featured_achievement: UsersService.getFeaturedAchievement(author),
+				common_projects_count: 0,
+				common_projects: [],
 				active: author.active,
 				last_login_at: author.last_login_at instanceof Date
 					? author.last_login_at.toISOString()

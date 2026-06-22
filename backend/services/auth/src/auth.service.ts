@@ -46,7 +46,7 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
-import { LoginDto, RegisterDto, AuthResponse, TokenPayload } from '@intragram/shared';
+import { LoginDto, RegisterDto, AuthResponse, TokenPayload, mapOAuth42MeToUpsertUser } from '@intragram/shared';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import axios from 'axios';
 
@@ -517,113 +517,8 @@ export class AuthService implements OnModuleInit {
 				headers: { Authorization: `Bearer ${access_token}` },
 			});
 
-			const user42 = userResponse.data as any;
-
-			// Step 2b: extract profile stats for persistence.
-			let skills: any[] = [];
-			let levels: any[] = [];
-			let dashesUsers: any[] = [];
-			let titles: any[] = [];
-			let projectsUsers: any[] = [];
-
-			// We only use data from the main cursus (id 21) for the ProfilePage.
-			if (Array.isArray(user42.cursus_users) && user42.cursus_users.length > 0) {
-				const cursus21 = user42.cursus_users.find(
-					(cursusUser: any) => cursusUser?.cursus_id === 21 || cursusUser?.cursus?.slug === '42cursus',
-				);
-
-				if (cursus21) {
-					if (typeof cursus21.level === 'number') {
-						levels = [
-							{
-								id: cursus21.cursus_id || 21,
-								name: cursus21.cursus?.name || '42cursus',
-								level: cursus21.level,
-							},
-						];
-					}
-
-					if (Array.isArray(cursus21.skills)) {
-						skills = cursus21.skills.map((skill: any) => ({
-							id: skill.id,
-							name: skill.name,
-							level: skill.level,
-						}));
-					}
-				}
-			}
-
-			if (Array.isArray(user42.titles)) {
-				const selectedTitleIds = new Set(
-					Array.isArray(user42.titles_users)
-						? user42.titles_users
-							.filter((titleUser: any) => titleUser?.selected)
-							.map((titleUser: any) => String(titleUser?.title_id))
-						: [],
-				);
-
-				titles = user42.titles
-					.filter((title: any) => title && title.id && title.name)
-					.map((title: any) => ({ id: title.id, name: title.name, selected: selectedTitleIds.has(String(title.id)) }));
-			}
-
-			if (Array.isArray(user42.projects_users)) {
-				projectsUsers = user42.projects_users
-					.filter((projectUser: any) => Array.isArray(projectUser?.cursus_ids) && projectUser.cursus_ids.includes(21))
-					.map((projectUser: any) => ({
-						id: projectUser.id,
-						name: projectUser?.project?.name || 'Unnamed project',
-						status: projectUser.status || 'unknown',
-						final_mark: projectUser.final_mark,
-					}));
-			}
-
-			// Check for dashes in user42
-			if (Array.isArray(user42.dashes_users)) {
-				dashesUsers = user42.dashes_users;
-			}
-
-			// Step 3: map only the fields allowed by UpsertOAuth42UserDto
-			// and sync the local profile in users-service.
-			const upsertPayload = {
-				id: user42.id,
-				login: user42.login,
-				email: user42.email,
-				first_name: user42.first_name,
-				last_name: user42.last_name,
-				displayname: user42.displayname,
-				usual_full_name: user42.usual_full_name,
-				pool_month: user42.pool_month,
-				pool_year: user42.pool_year,
-				wallet: user42.wallet,
-				correction_point: user42.correction_point,
-				location: user42.location,
-				phone: user42.phone,
-				staff: user42['staff?'] ?? user42.staff,
-				alumni: user42['alumni?'] ?? user42.alumni,
-				active: user42['active?'] ?? user42.active,
-				skills,
-				levels,
-				titles,
-				projects_users: projectsUsers,
-				dashes_users: dashesUsers,
-				image: user42.image
-					? {
-						link: user42.image.link,
-						versions: user42.image.versions
-							? {
-								large: user42.image.versions.large,
-								medium: user42.image.versions.medium,
-								small: user42.image.versions.small,
-								micro: user42.image.versions.micro,
-							}
-							: undefined,
-					}
-					: undefined,
-				campus: Array.isArray(user42.campus)
-					? user42.campus.map((c: any) => ({ name: c.name }))
-					: undefined,
-			};
+			const user42 = userResponse.data as Record<string, unknown>;
+			const upsertPayload = mapOAuth42MeToUpsertUser(user42);
 
 			const usersServiceUrl = process.env.USERS_SERVICE_URL || 'http://users-service:3006';
 			const upsertResponse = await axios.post(
@@ -635,9 +530,12 @@ export class AuthService implements OnModuleInit {
 			const profile = upsertResponse.data;
 
 			// Normalise identifiers for the internal user of the auth-service.
-			const normalizedUsername = (profile.login || user42.login || '').toLowerCase().trim();
-			const normalizedEmail = (profile.email || user42.email || `${user42.login}@intra.42`).toLowerCase().trim();
-			const displayName = profile.display_name || user42.usual_full_name || user42.login;
+			const user42Login = typeof user42.login === 'string' ? user42.login : '';
+			const user42Email = typeof user42.email === 'string' ? user42.email : '';
+			const user42FullName = typeof user42.usual_full_name === 'string' ? user42.usual_full_name : '';
+			const normalizedUsername = (profile.login || user42Login || '').toLowerCase().trim();
+			const normalizedEmail = (profile.email || user42Email || `${user42Login}@intra.42`).toLowerCase().trim();
+			const displayName = profile.display_name || user42FullName || user42Login;
 
 			// Step 4: find or create the internal user in the auth-service DB.
 			let authUser = await this.userRepo.findOne({

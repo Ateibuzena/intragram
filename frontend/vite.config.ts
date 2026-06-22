@@ -14,10 +14,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 80,
     strictPort: true,
-    origin: 'https://tt1sdrhn-8443.uks1.devtunnels.ms/',
+    origin: 'https://q8znls9b-8443.uks1.devtunnels.ms/',
     proxy: {
       '/api': {
-        target: 'https://tt1sdrhn-8443.uks1.devtunnels.ms/',
+        target: 'https://q8znls9b-8443.uks1.devtunnels.ms/',
         changeOrigin: true,
         ws: true,
         secure: false,

@@ -67,7 +67,7 @@ make up
 3. Abrir la aplicación en:
 
 ```text
-https://tt1sdrhn-8443.uks1.devtunnels.ms/
+https://q8znls9b-8443.uks1.devtunnels.ms/
 ```
 
 4. Iniciar sesión con una cuenta de 42.
@@ -84,10 +84,10 @@ make fclean
 
 ### Architecture Entry Points
 
-- Frontend servido por Nginx: `https://tt1sdrhn-8443.uks1.devtunnels.ms//`
-- API pública del gateway: `https://tt1sdrhn-8443.uks1.devtunnels.ms//api/`
-- Prometheus proxificado por Nginx: `https://tt1sdrhn-8443.uks1.devtunnels.ms//prometheus/`
-- Grafana proxificado por Nginx: `https://tt1sdrhn-8443.uks1.devtunnels.ms//grafana/`
+- Frontend servido por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//`
+- API pública del gateway: `https://q8znls9b-8443.uks1.devtunnels.ms//api/`
+- Prometheus proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/`
+- Grafana proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//grafana/`
 
 ## Team Information
 

@@ -27,7 +27,7 @@ export interface Conversation {
 	user: User;
 	lastMessage: string;
 	timestamp: string;
-	unread: boolean;
+	unread: number;
 }
 
 export type ChatTab = 'mensajes' | 'solicitudes';

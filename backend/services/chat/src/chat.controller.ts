@@ -18,7 +18,7 @@
  * - Correct HTTP codes for each error type
  */
 
-import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { ChatService } from './chat.service';
 
@@ -68,5 +68,17 @@ export class ChatController {
 		@Body() dto: SendMessageDto,
 	) {
 		return this.chatService.sendMessage(userId, conversationId, dto);
+	}
+
+	/**
+	 * Marks all messages in a conversation as read for the given user.
+	 */
+	@Post('conversations/:conversationId/read')
+	@HttpCode(204)
+	async markConversationRead(
+		@Headers('x-user-id') userId: string,
+		@Param('conversationId') conversationId: string,
+	) {
+		await this.chatService.markConversationRead(userId, conversationId);
 	}
 }

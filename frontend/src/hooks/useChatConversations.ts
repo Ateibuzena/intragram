@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { User } from '@/types/chat';
 import { buildApiUrl } from '@/utils/apiBase';
 import {
@@ -18,8 +18,11 @@ export const useChatConversations = (token: string | null, currentUserId: string
 	const [error, setError] = useState<string | null>(null);
 
 	const conversations = useMemo(
-		() => rawConversations.map((conv) => mapConversationToUI(conv, currentUserId, usersById)),
-		[rawConversations, currentUserId, usersById],
+		() => rawConversations.map((conv) => {
+			const conversation = mapConversationToUI(conv, currentUserId, usersById);
+			return conv.id === selectedChatId ? { ...conversation, unread: 0 } : conversation;
+		}),
+		[rawConversations, currentUserId, usersById, selectedChatId],
 	);
 
 	const selectedChat = useMemo(
@@ -162,6 +165,21 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		});
 	};
 
+	const markConversationRead = useCallback(async (conversationId: string): Promise<void> => {
+		if (!token) return;
+		setRawConversations((prev) => prev.map((conversation) =>
+			conversation.id === conversationId ? { ...conversation, unread_count: 0 } : conversation,
+		));
+		try {
+			await fetch(buildApiUrl(`/chat/conversations/${conversationId}/read`), {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+		} catch {
+			// Polling will reconcile the optimistic update if the request fails.
+		}
+	}, [token]);
+
 	return {
 		rawConversations,
 		conversations,
@@ -175,5 +193,6 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		updateConversationLastMessage,
 		addUser,
 		updateUserOnlineStatus,
+		markConversationRead,
 	};
 };

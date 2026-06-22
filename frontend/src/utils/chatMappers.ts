@@ -8,6 +8,7 @@ export interface BackendConversation {
 	updated_at: string;
 	last_message: string | null;
 	last_message_at: string | null;
+	unread_count: number;
 }
 
 export interface BackendMessage {
@@ -57,7 +58,7 @@ export const mapConversationToUI = (
 		user,
 		lastMessage: conversation.last_message ?? 'Sin mensajes',
 		timestamp: formatTime(conversation.last_message_at ?? conversation.updated_at),
-		unread: false,
+		unread: conversation.unread_count ?? 0,
 	};
 };
 

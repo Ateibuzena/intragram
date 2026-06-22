@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useChatConversations } from '@/hooks/useChatConversations';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { usePendingFriendRequests } from '@/hooks/usePendingFriendRequests';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { decodeTokenPayload } from '@/utils/auth';
 import { buildApiUrl } from '@/utils/apiBase';
 import { mapChatUserProfileToUser } from '@/utils/chatMappers';
@@ -20,6 +21,7 @@ const SearchIcon = () => (
 
 const ChatPage = () => {
 	const { token } = useAuth();
+	const { syncUnreadChats, currentChatRef, setUnreadRequests } = usePresenceStatus();
 
 	const currentUserId = useMemo(() => {
 		const payload = decodeTokenPayload(token);
@@ -38,6 +40,7 @@ const ChatPage = () => {
 		updateConversationLastMessage,
 		addUser,
 		updateUserOnlineStatus,
+		markConversationRead,
 	} = useChatConversations(token, currentUserId);
 
 	const {
@@ -54,6 +57,20 @@ const ChatPage = () => {
 		acceptRequest: handleAcceptRequest,
 		rejectRequest: handleRejectRequest,
 	} = usePendingFriendRequests(token);
+
+	useEffect(() => {
+		currentChatRef.current = selectedChatId;
+		return () => { currentChatRef.current = null; };
+	}, [selectedChatId, currentChatRef]);
+
+	useEffect(() => {
+		if (!selectedChatId) return;
+		void markConversationRead(selectedChatId).then(syncUnreadChats);
+	}, [selectedChatId, markConversationRead, syncUnreadChats]);
+
+	useEffect(() => {
+		setUnreadRequests(pendingRequests.length);
+	}, [pendingRequests, setUnreadRequests]);
 
 	const [creatingConversation, setCreatingConversation] = useState(false);
 	const [showUserPicker, setShowUserPicker] = useState(false);

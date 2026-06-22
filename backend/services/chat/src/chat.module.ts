@@ -14,6 +14,8 @@ import { MetricsInterceptor } from './observability/metrics/metrics.interceptor'
 import { MetricsModule } from './observability/metrics/metrics.module';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
+import { ChatConversationReadEntity } from './entities/chat-conversation-read.entity';
+import { CreateChatConversationReads1771786800000 } from './migrations/1771786800000-create-chat-conversation-reads';
 
 @Module({
 	imports: [
@@ -24,7 +26,9 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 			username: process.env.DB_USERNAME || 'chat_user',
 			password: process.env.DB_PASSWORD || 'chat_password',
 			database: process.env.DB_DATABASE || 'chat_db',
-			entities: [ChatConversationEntity, ChatMessageEntity],
+			entities: [ChatConversationEntity, ChatMessageEntity, ChatConversationReadEntity],
+			migrations: [CreateChatConversationReads1771786800000],
+			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {
@@ -33,7 +37,7 @@ import { ChatMessageEntity } from './entities/chat-message.entity';
 				statement_timeout: 10000,
 			},
 		}),
-		TypeOrmModule.forFeature([ChatConversationEntity, ChatMessageEntity]),
+		TypeOrmModule.forFeature([ChatConversationEntity, ChatMessageEntity, ChatConversationReadEntity]),
 		MetricsModule],
 	controllers: [ChatController, ChatHealthController, MetricsController],
 	providers: [ChatService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],

@@ -339,7 +339,13 @@ export class UsersController {
 	async addFriend(@Req() req: any, @Body() dto: CreateFriendDto): Promise<{ status: 'pending' | 'accepted'; friend: IUserProfile }> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.addFriend(profile.id, dto);
+			const result = await this.usersService.addFriend(profile.id, dto);
+			if (result.status === 'pending') {
+				this.realtimeService.emitToUser(result.friend.id, 'friend:request', {
+					from: { id: profile.id, login: profile.login, displayName: profile.display_name },
+				});
+			}
+			return result;
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

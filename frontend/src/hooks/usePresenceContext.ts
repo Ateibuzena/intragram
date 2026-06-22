@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { MutableRefObject } from 'react';
+import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import type { Socket } from 'socket.io-client';
 
 interface PresenceContextType {
@@ -7,16 +7,29 @@ interface PresenceContextType {
 	presenceMap: Record<string, boolean>;
 	socketRef: MutableRefObject<Socket | null>;
 	emit: (event: string, data: unknown) => void;
+	unreadChats: number;
+	setUnreadChats: Dispatch<SetStateAction<number>>;
+	syncUnreadChats: () => Promise<void>;
+	currentChatRef: MutableRefObject<string | null>;
+	unreadRequests: number;
+	setUnreadRequests: Dispatch<SetStateAction<number>>;
 }
 
 const noop = () => {};
-const defaultRef: MutableRefObject<Socket | null> = { current: null };
+const defaultSocketRef: MutableRefObject<Socket | null> = { current: null };
+const defaultChatRef: MutableRefObject<string | null> = { current: null };
 
 export const PresenceContext = createContext<PresenceContextType>({
 	connected: false,
 	presenceMap: {},
-	socketRef: defaultRef,
+	socketRef: defaultSocketRef,
 	emit: noop,
+	unreadChats: 0,
+	setUnreadChats: noop,
+	syncUnreadChats: async () => {},
+	currentChatRef: defaultChatRef,
+	unreadRequests: 0,
+	setUnreadRequests: noop,
 });
 
 export const usePresenceStatus = () => useContext(PresenceContext);

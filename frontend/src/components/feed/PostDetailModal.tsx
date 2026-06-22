@@ -144,7 +144,7 @@ export const PostDetailModal = ({
 							<p className="text-xs text-ft-muted">{post.time}</p>
 						</div>
 					</button>
-					<div className="text-sm text-ft-text leading-relaxed"><RenderedContent content={post.content} /></div>
+					<div className="text-sm text-ft-text leading-relaxed [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
 				</div>
 
 				{/* Stats */}

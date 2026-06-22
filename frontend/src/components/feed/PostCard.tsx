@@ -125,7 +125,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 					)}
 				</div>
 
-				<div className="text-sm text-ft-text leading-relaxed mb-4"><RenderedContent content={post.content} /></div>
+				<div className="text-sm text-ft-text leading-relaxed mb-4 [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
 
 				<div className="flex items-center gap-3 pt-3 border-t border-ft-border">
 					<button

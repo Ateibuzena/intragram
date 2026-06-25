@@ -77,7 +77,16 @@ export interface RadarData {
 	maxLevel: number;
 }
 
-export type ProjectStatusKind = 'validated' | 'failed' | 'in_progress' | 'unknown';
+export type ProjectStatusKind =
+	| 'validated'
+	| 'failed'
+	| 'in_progress'
+	| 'searching_group'
+	| 'creating_group'
+	| 'waiting_correction'
+	| 'waiting_registration'
+	| 'available'
+	| 'unknown';
 
 export interface ProfileSkillInsight {
 	id: number;
@@ -140,6 +149,7 @@ export interface ProfileInsights {
 	validatedProjects: number;
 	failedProjects: number;
 	inProgressProjects: number;
+	availableProjects: number;
 	averageProjectMark: number | null;
 	bestProjectMark: number | null;
 }

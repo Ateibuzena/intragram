@@ -32,21 +32,32 @@ export const splitLabel = (value: string): [string, string?, string?] => {
 	return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
 };
 
-const normalizeStatus = (status?: string | null) => (status ?? 'unknown').trim().toLowerCase();
+// Explicit mapping of every status string the 42 intranet API can return.
+// Non-terminal active statuses (not finished yet).
+const ACTIVE_STATUS_MAP: Record<string, ProjectStatusKind> = {
+	in_progress: 'in_progress',
+	searching_a_group: 'searching_group',
+	creating_group: 'creating_group',
+	waiting_for_correction: 'waiting_correction',
+	waiting_for_registration: 'waiting_registration',
+	parent: 'available',
+};
 
 export const getProjectStatusKind = (
 	status?: string | null,
 	finalMark?: number | null,
 	validated?: boolean | null,
 ): ProjectStatusKind => {
+	const normalized = (status ?? '').trim().toLowerCase();
+
+	// Active/pending statuses are unambiguous — return directly.
+	const active = ACTIVE_STATUS_MAP[normalized];
+	if (active) return active;
+
+	// Terminal status: use validated flag first, then finalMark as fallback.
 	if (typeof validated === 'boolean') return validated ? 'validated' : 'failed';
-	const normalized = normalizeStatus(status);
-	if (normalized.includes('fail') || normalized.includes('ko')) return 'failed';
-	if (normalized.includes('progress') || normalized.includes('active') || normalized.includes('searching')) return 'in_progress';
-	if (normalized.includes('finish') || normalized.includes('valid') || normalized.includes('done')) {
-		return finalMark === null || finalMark === undefined || finalMark >= 50 ? 'validated' : 'failed';
-	}
 	if (typeof finalMark === 'number') return finalMark >= 50 ? 'validated' : 'failed';
+
 	return 'unknown';
 };
 
@@ -129,7 +140,10 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 		totalProjects: projects.length,
 		validatedProjects: projects.filter((project) => project.statusKind === 'validated').length,
 		failedProjects: projects.filter((project) => project.statusKind === 'failed').length,
-		inProgressProjects: projects.filter((project) => project.statusKind === 'in_progress').length,
+		inProgressProjects: projects.filter((project) =>
+			(['in_progress', 'searching_group', 'creating_group', 'waiting_correction', 'waiting_registration'] as ProjectStatusKind[]).includes(project.statusKind),
+		).length,
+		availableProjects: projects.filter((project) => project.statusKind === 'available').length,
 		averageProjectMark: average(markedProjects),
 		bestProjectMark: markedProjects.length > 0 ? Math.max(...markedProjects) : null,
 	};

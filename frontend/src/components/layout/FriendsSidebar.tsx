@@ -51,7 +51,7 @@ export const FriendsSidebar = () => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
-	const { pendingReceived, getRelation, seedRelations, sendRequest, acceptRequest, removeFriend } =
+	const { pendingReceived, getRelation, seedRelations, sendRequest, acceptRequest, rejectRequest, removeFriend } =
 		useFriendContext();
 
 	const [entries, setEntries] = useState<DirectoryEntry[]>([]);
@@ -101,6 +101,13 @@ export const FriendsSidebar = () => {
 		if (processing.has(id)) return;
 		setProcessingId(id, true);
 		try { await acceptRequest(id); }
+		finally { setProcessingId(id, false); }
+	};
+
+	const handleReject = async (id: string) => {
+		if (processing.has(id)) return;
+		setProcessingId(id, true);
+		try { await rejectRequest(id); }
 		finally { setProcessingId(id, false); }
 	};
 
@@ -233,14 +240,24 @@ export const FriendsSidebar = () => {
 								)}
 
 								{rel === 'pending_received' && (
-									<button
-										type="button"
-										disabled={busy}
-										onClick={() => void handleAccept(entry.id)}
-										className="flex-shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
-									>
-										{busy ? '...' : 'Aceptar'}
-									</button>
+									<div className="flex gap-1 flex-shrink-0">
+										<button
+											type="button"
+											disabled={busy}
+											onClick={() => void handleAccept(entry.id)}
+											className="text-[10px] font-semibold px-2 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
+										>
+											{busy ? '...' : 'Aceptar'}
+										</button>
+										<button
+											type="button"
+											disabled={busy}
+											onClick={() => void handleReject(entry.id)}
+											className="text-[10px] font-semibold px-2 py-1 rounded-lg border border-ft-border text-ft-muted hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+										>
+											{busy ? '...' : 'Ignorar'}
+										</button>
+									</div>
 								)}
 
 								{rel === 'friends' && (

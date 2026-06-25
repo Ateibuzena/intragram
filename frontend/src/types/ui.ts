@@ -24,10 +24,6 @@ export interface ConversationListProps {
 	selectedChat: Conversation | null;
 	onSelectChat: (chat: Conversation) => void;
 	onStartNewConversation?: () => void;
-	pendingRequests?: PendingFriendRequest[];
-	pendingLoading?: boolean;
-	onAcceptRequest?: (id: string, login: string) => Promise<void>;
-	onRejectRequest?: (id: string, login: string) => Promise<void>;
 	onDeleteChat?: (convId: string) => Promise<void>;
 }
 

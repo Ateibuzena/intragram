@@ -52,12 +52,7 @@ const ChatPage = () => {
 		sendMessage,
 	} = useChatMessages(token, selectedChatId, currentUserId);
 
-	const {
-		pendingReceived,
-		getRelation,
-		acceptRequest: handleAcceptRequest,
-		rejectRequest: handleRejectRequest,
-	} = useFriendContext();
+	const { getRelation } = useFriendContext();
 
 	useEffect(() => {
 		currentChatRef.current = selectedChatId;
@@ -187,10 +182,6 @@ const ChatPage = () => {
 				selectedChat={selectedChat}
 				onSelectChat={(conv) => setSelectedChatId(String(conv.id))}
 				onStartNewConversation={handleStartNewConversation}
-				pendingRequests={pendingReceived}
-				pendingLoading={false}
-				onAcceptRequest={handleAcceptRequest}
-				onRejectRequest={handleRejectRequest}
 				onDeleteChat={handleDeleteChat}
 			/>
 			<ChatWindow

@@ -118,9 +118,9 @@ interface ProfileNameEditorProps {
 }
 
 export const ProfileNameEditor = ({ displayName, canEdit, onStartEdit }: ProfileNameEditorProps) => (
-	<div className="flex min-w-0 items-center justify-center gap-1.5 group/name md:justify-start">
+	<div className="flex min-w-0 items-center justify-center gap-1.5 group/name xl:justify-start">
 		<h2
-			className={`min-w-0 truncate text-3xl font-black text-white md:text-4xl ${canEdit ? 'cursor-pointer' : ''}`}
+			className={`min-w-0 break-words text-2xl font-black text-white xl:text-3xl ${canEdit ? 'cursor-pointer' : ''}`}
 			onClick={canEdit ? onStartEdit : undefined}
 		>
 			{displayName}

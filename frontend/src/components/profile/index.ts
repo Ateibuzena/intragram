@@ -21,6 +21,7 @@ export type {
 	ProfileSkillInsight,
 	ProfileTitleInsight,
 	ProfileAchievementInsight,
+
 	ProjectStatusKind,
 } from '@/types/profile';
 export { buildProfileInsights, cleanTitle, formatDate, splitLabel } from '@/utils/profile';

@@ -12,13 +12,12 @@ type TimelineItem = {
 	date: string;
 	title: string;
 	detail: string;
-	kind: 'cursus' | 'project' | 'risk';
+	kind: 'cursus' | 'risk';
 };
 
 const kindStyles: Record<TimelineItem['kind'], string> = {
 	cursus: 'border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan',
-	project: 'border-green-400/30 bg-green-500/10 text-green-300',
-	risk: 'border-red-400/30 bg-red-500/10 text-red-300',
+	risk:   'border-red-400/30 bg-red-500/10 text-red-300',
 };
 
 export const AcademicTimeline = ({ insights, className = '' }: AcademicTimelineProps) => {
@@ -53,20 +52,6 @@ export const AcademicTimeline = ({ insights, className = '' }: AcademicTimelineP
 			});
 		}
 
-		for (const project of insights.projects) {
-			const date = project.markedAt ?? project.createdAt;
-			if (!date) continue;
-			timeline.push({
-				id: `project-${project.id}`,
-				date,
-				title: project.name,
-				detail: project.markedAt
-					? `Corregido · ${project.finalMark ?? '-'}`
-					: `Creado · ${project.status}`,
-				kind: 'project',
-			});
-		}
-
 		return timeline
 			.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 			.slice(0, 10);
@@ -89,7 +74,7 @@ export const AcademicTimeline = ({ insights, className = '' }: AcademicTimelineP
 							<div className="min-w-0">
 								<div className="flex min-w-0 items-center gap-2">
 									<span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${kindStyles[item.kind]}`}>
-										{item.kind === 'project' ? 'Project' : item.kind === 'risk' ? 'Risk' : 'Cursus'}
+										{item.kind === 'risk' ? 'Risk' : 'Cursus'}
 									</span>
 									<p className="min-w-0 truncate text-xs font-semibold text-white" title={item.title}>
 										{item.title}

@@ -128,8 +128,8 @@ export const ProfileHeader = ({
 					</div>
 				)}
 
-				<div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 pt-32 md:pt-40">
-					<div className="flex w-full max-w-4xl flex-col items-center gap-6 md:flex-row md:justify-center">
+				<div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 pt-32 xl:pt-40">
+					<div className="flex w-full max-w-[700px] flex-col items-center gap-6 xl:flex-row xl:justify-center">
 
 						<ProfileAvatarDisplay
 							profile={profile}
@@ -140,27 +140,18 @@ export const ProfileHeader = ({
 							onStartEdit={() => setEditingAvatar(true)}
 						/>
 
-						<div className="min-w-0 text-center md:text-left">
-							<div className="flex max-w-full items-center justify-center gap-3 md:justify-start">
+						<div className="min-w-0 max-w-[500px] text-center xl:text-left">
+							<div className="flex min-w-0 items-center justify-center xl:justify-start">
 								<ProfileNameEditor
 									displayName={displayName}
 									canEdit={canEditProfile && !!onSaveDisplayName}
 									onStartEdit={() => setEditingName(true)}
 								/>
-								{insights && (
-									<div
-										className="hidden h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan shadow-ft-glow-sm md:flex"
-										title={`Nivel 42: ${insights.level}`}
-									>
-										<span className="text-[9px] font-bold uppercase leading-none text-ft-muted">lvl</span>
-										<span className="mt-0.5 text-sm font-black leading-none text-white">{insights.level}</span>
-									</div>
-								)}
 							</div>
 
 							{selectedTitle && (
 								<details className="group relative z-20 mt-2 max-w-full">
-									<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-sm font-semibold text-ft-muted transition-colors hover:text-white md:justify-start md:text-left [&::-webkit-details-marker]:hidden">
+									<summary className="flex max-w-full cursor-pointer list-none items-center justify-center gap-1.5 text-center text-sm font-semibold text-ft-muted transition-colors hover:text-white xl:justify-start xl:text-left [&::-webkit-details-marker]:hidden">
 										<span className="min-w-0 truncate">{selectedTitle.name}</span>
 										<svg
 											className="h-3.5 w-3.5 shrink-0 text-ft-muted transition-transform group-open:rotate-180 group-hover:text-white"
@@ -171,7 +162,7 @@ export const ProfileHeader = ({
 											<path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
 										</svg>
 									</summary>
-									<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-ft-cyan/30 bg-[#050816]/90 backdrop-blur-xl shadow-2xl shadow-black/60 md:left-0 md:translate-x-0">
+									<div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-72 max-w-[calc(100vw-3rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-ft-cyan/30 bg-[#050816]/90 backdrop-blur-xl shadow-2xl shadow-black/60 xl:left-0 xl:translate-x-0">
 										<div className="max-h-52 overflow-y-auto py-1">
 											{titles.map((title) => (
 												<div
@@ -191,11 +182,21 @@ export const ProfileHeader = ({
 								</details>
 							)}
 
-							<p className="mt-2 text-sm text-ft-muted">@{profileLogin}</p>
+							<p className="mt-2 flex items-center justify-center gap-2 text-sm text-ft-muted xl:justify-start">
+								<span>@{profileLogin}</span>
+								{insights && (
+									<span
+										className="rounded-full border border-ft-cyan/30 bg-ft-cyan/10 px-2 py-0.5 text-xs font-black text-ft-cyan"
+										title={`Nivel 42: ${insights.level}`}
+									>
+										lvl {insights.level}
+									</span>
+								)}
+							</p>
 							<p className="text-xs text-ft-muted">42 ID: {profile?.forty_two_id ?? 'N/A'}</p>
 
 							{insights && (
-								<div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+								<div className="mt-4 flex flex-wrap justify-center gap-2 xl:justify-start">
 									<span className="rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
 										{insights.role}
 									</span>
@@ -214,7 +215,7 @@ export const ProfileHeader = ({
 								</div>
 							)}
 
-							<div className="flex items-center gap-2 mt-4 flex-wrap justify-center md:justify-start">
+							<div className="flex items-center gap-2 mt-4 flex-wrap justify-center xl:justify-start">
 								{showFriendButton && profile && (
 									<FriendActionButton
 										relation={relation}

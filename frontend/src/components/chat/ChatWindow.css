@@ -15,7 +15,7 @@
 }
 
 .chat-input-wrapper {
-	@apply flex-1 flex items-center bg-ft-hover border border-ft-border rounded-full px-4 py-2.5 focus-within:border-ft-cyan/50 transition-colors;
+	@apply flex-1 flex items-center bg-ft-hover border border-ft-border rounded-2xl px-4 py-2.5 focus-within:border-ft-cyan/50 transition-colors overflow-hidden;
 }
 
 .chat-empty {

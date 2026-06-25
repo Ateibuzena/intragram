@@ -24,6 +24,7 @@ export const ChatWindow = ({
 	const { presenceMap, socketRef, emit, connected } = usePresenceStatus();
 	const navigate = useNavigate();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [messageText, setMessageText] = useState('');
 	const [typingLogin, setTypingLogin] = useState<string | null>(null);
 	const typingClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,11 +82,20 @@ export const ChatWindow = ({
 		}, TYPING_DEBOUNCE_MS);
 	};
 
+	useEffect(() => {
+		const el = inputRef.current;
+		if (!el) return;
+		el.style.height = 'auto';
+		el.style.height = `${el.scrollHeight}px`;
+	}, [messageText]);
+
 	const handleSend = async () => {
 		const trimmed = messageText.trim();
 		if (!trimmed || sending) return;
 		await onSendMessage(trimmed);
 		setMessageText('');
+		if (inputRef.current) inputRef.current.style.height = 'auto';
+		setTimeout(() => inputRef.current?.focus(), 0);
 	};
 
 	const handleSendCode = async () => {
@@ -235,29 +245,31 @@ export const ChatWindow = ({
 				)}
 
 				{/* Fila de input principal */}
-				<div className="flex items-center gap-3">
+				<div className="flex items-end gap-3">
 					<button
 						type="button"
 						onClick={handleToggleCode}
-						className={`p-2 rounded-lg transition-colors flex-shrink-0 ${showCodePanel ? 'bg-ft-cyan/20 text-ft-cyan' : 'hover:bg-ft-hover text-ft-cyan'}`}
+						className={`p-2 rounded-lg transition-colors flex-shrink-0 mb-0.5 ${showCodePanel ? 'bg-ft-cyan/20 text-ft-cyan' : 'hover:bg-ft-hover text-ft-cyan'}`}
 					>
 						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
 						</svg>
 					</button>
 					<div className="chat-input-wrapper">
-						<input
-							type="text"
+						<textarea
+							ref={inputRef}
+							rows={1}
 							placeholder="Envía un mensaje..."
 							value={messageText}
-							onChange={(e: ChangeEvent<HTMLInputElement>) => handleMessageChange(e.target.value)}
-							onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-								if (e.key === 'Enter') {
+							onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleMessageChange(e.target.value)}
+							onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+								if (e.key === 'Enter' && !e.shiftKey) {
+									e.preventDefault();
 									void handleSend();
 								}
 							}}
 							disabled={sending}
-							className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none"
+							className="flex-1 bg-transparent text-sm text-white placeholder-ft-muted focus:outline-none resize-none overflow-hidden max-h-32 leading-5"
 						/>
 					</div>
 					<button

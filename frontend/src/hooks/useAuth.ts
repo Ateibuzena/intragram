@@ -35,6 +35,9 @@ interface UserProfile {
 		kind?: string | null;
 		tier?: string | null;
 	}>;
+	campus?: string | null;
+	campus_country?: string | null;
+	campus_city?: string | null;
 }
 
 export type { UserProfile };

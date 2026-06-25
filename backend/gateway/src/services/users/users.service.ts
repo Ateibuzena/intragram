@@ -31,6 +31,7 @@ export interface IDirectoryEntry {
 	common_projects_count: number;
 	common_projects: string[];
 	active: boolean;
+	location: string | null;
 	relation: IDirectoryRelation;
 }
 

@@ -45,7 +45,7 @@ export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) =>
 			)}
 			<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
 				<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-500/15 border border-blue-400/30' : 'surface-glass border border-ft-border'} rounded-2xl px-4 py-2.5`}>
-					<div className={`text-sm break-words ${isMe ? 'text-white' : 'text-ft-text'}`}><RenderedContent content={message.text ?? ''} /></div>
+					<div className={`text-sm break-words whitespace-pre-wrap ${isMe ? 'text-white' : 'text-ft-text'}`}><RenderedContent content={message.text ?? ''} /></div>
 					{message.reactions && (
 						<div className="flex gap-1 mt-2">
 							{message.reactions.map((emoji, i) => (

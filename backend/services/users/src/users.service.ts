@@ -39,6 +39,7 @@ export interface IDirectoryEntry {
 	avatar_url: string | null;
 	campus: string | null;
 	active: boolean;
+	location: string | null;
 	campus_id: number | null;
 	campus_country: string | null;
 	campus_city: string | null;
@@ -709,7 +710,7 @@ export class UsersService {
 
 		const candidates = await this.userProfileRepo.find({
 			where: { id: Not(userId) },
-			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'campus_id', 'campus_country', 'campus_city', 'active', 'levels', 'achievements', 'projects_users'],
+			select: ['id', 'login', 'display_name', 'avatar_url', 'campus', 'campus_id', 'campus_country', 'campus_city', 'active', 'location', 'levels', 'achievements', 'projects_users'],
 			take: 300,
 		});
 
@@ -752,6 +753,7 @@ export class UsersService {
 			common_projects_count: commonProjects.length,
 			common_projects: commonProjects.slice(0, 3),
 			active: u.active,
+			location: u.location ?? null,
 			relation,
 		}));
 	}

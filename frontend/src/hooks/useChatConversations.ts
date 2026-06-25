@@ -138,6 +138,11 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		return () => { disposed = true; clearInterval(interval); };
 	}, [token, currentUserId, usersById]);
 
+	const removeConversation = (convId: string) => {
+		setRawConversations((prev) => prev.filter((c) => c.id !== convId));
+		setSelectedChatId((cur) => (cur === convId ? null : cur));
+	};
+
 	const addOrUpdateConversation = (conv: BackendConversation) => {
 		setRawConversations((prev) => {
 			const exists = prev.find((c) => c.id === conv.id);
@@ -190,6 +195,7 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		loading,
 		error,
 		addOrUpdateConversation,
+		removeConversation,
 		updateConversationLastMessage,
 		addUser,
 		updateUserOnlineStatus,

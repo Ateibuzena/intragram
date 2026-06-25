@@ -97,6 +97,20 @@ export class ChatService {
 	}
 
 	/**
+	 * Deletes a conversation for the user.
+	 */
+	async deleteConversation(userId: string, conversationId: string): Promise<void> {
+		try {
+			await this.httpClient.delete(
+				`${this.chatBaseUrl}/chat/conversations/${conversationId}`,
+				{ timeoutMs: 5000, headers: this.buildUserHeaders(userId) },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'eliminar conversación');
+		}
+	}
+
+	/**
 	 * Marks a conversation as read for the user.
 	 */
 	async markConversationRead(userId: string, conversationId: string): Promise<void> {

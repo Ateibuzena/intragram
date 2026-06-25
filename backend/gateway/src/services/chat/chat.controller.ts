@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { ChatService } from './chat.service';
@@ -64,6 +64,13 @@ export class ChatController {
 		}
 
 		return result;
+	}
+
+	@UseGuards(AuthGuard)
+	@Delete('conversations/:conversationId')
+	@HttpCode(204)
+	async deleteConversation(@Req() req: any, @Param('conversationId') conversationId: string) {
+		await this.chatService.deleteConversation(this.getChatUserId(req), conversationId);
 	}
 
 	@UseGuards(AuthGuard)

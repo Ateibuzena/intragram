@@ -127,6 +127,11 @@ export class ChatService {
 		return { message: savedMessage, participants: conversation.participants };
 	}
 
+	async deleteConversation(userId: string, conversationId: string): Promise<void> {
+		const conversation = await this.getAccessibleConversation(userId, conversationId);
+		await this.conversationRepo.remove(conversation);
+	}
+
 	async markConversationRead(userId: string, conversationId: string): Promise<void> {
 		await this.getAccessibleConversation(userId, conversationId);
 		await this.readRepo.upsert(

@@ -37,6 +37,7 @@ const ChatPage = () => {
 		loading: loadingConversations,
 		error: conversationsError,
 		addOrUpdateConversation,
+		removeConversation,
 		updateConversationLastMessage,
 		addUser,
 		updateUserOnlineStatus,
@@ -53,6 +54,7 @@ const ChatPage = () => {
 
 	const {
 		pendingReceived,
+		getRelation,
 		acceptRequest: handleAcceptRequest,
 		rejectRequest: handleRejectRequest,
 	} = useFriendContext();
@@ -101,6 +103,26 @@ const ChatPage = () => {
 		const interval = setInterval(() => { void refresh(); }, 30_000);
 		return () => { disposed = true; clearInterval(interval); };
 	}, [token, selectedChatId, currentUserId]);
+
+	const friendConversations = conversations.filter(
+		(c) => c.user.id && getRelation(String(c.user.id)) === 'friends',
+	);
+	const requestConversations = conversations.filter(
+		(c) => !c.user.id || getRelation(String(c.user.id)) !== 'friends',
+	);
+
+	const handleDeleteChat = async (convId: string) => {
+		if (!token) return;
+		removeConversation(convId);
+		try {
+			await fetch(buildApiUrl(`/chat/conversations/${convId}`), {
+				method: 'DELETE',
+				headers: { Authorization: `Bearer ${token}` },
+			});
+		} catch {
+			// polling will restore it if the request fails
+		}
+	};
 
 	const handleSendMessage = async (messageText: string) => {
 		await sendMessage(messageText, (raw) => {
@@ -158,7 +180,8 @@ const ChatPage = () => {
 	return (
 		<div className="flex h-full">
 			<ConversationList
-				conversations={conversations}
+				conversations={friendConversations}
+				requestConversations={requestConversations}
 				loading={loadingConversations}
 				error={conversationsError}
 				selectedChat={selectedChat}
@@ -168,6 +191,7 @@ const ChatPage = () => {
 				pendingLoading={false}
 				onAcceptRequest={handleAcceptRequest}
 				onRejectRequest={handleRejectRequest}
+				onDeleteChat={handleDeleteChat}
 			/>
 			<ChatWindow
 				selectedChat={selectedChat}

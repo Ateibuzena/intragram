@@ -18,6 +18,7 @@ export interface MessageBubbleProps {
 
 export interface ConversationListProps {
 	conversations: Conversation[];
+	requestConversations?: Conversation[];
 	loading?: boolean;
 	error?: string | null;
 	selectedChat: Conversation | null;
@@ -27,6 +28,7 @@ export interface ConversationListProps {
 	pendingLoading?: boolean;
 	onAcceptRequest?: (id: string, login: string) => Promise<void>;
 	onRejectRequest?: (id: string, login: string) => Promise<void>;
+	onDeleteChat?: (convId: string) => Promise<void>;
 }
 
 export interface ChatWindowProps {

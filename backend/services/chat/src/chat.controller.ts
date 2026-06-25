@@ -18,7 +18,7 @@
  * - Correct HTTP codes for each error type
  */
 
-import { Body, Controller, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { ChatService } from './chat.service';
 
@@ -68,6 +68,18 @@ export class ChatController {
 		@Body() dto: SendMessageDto,
 	) {
 		return this.chatService.sendMessage(userId, conversationId, dto);
+	}
+
+	/**
+	 * Deletes a conversation for the requesting user.
+	 */
+	@Delete('conversations/:conversationId')
+	@HttpCode(204)
+	async deleteConversation(
+		@Headers('x-user-id') userId: string,
+		@Param('conversationId') conversationId: string,
+	) {
+		await this.chatService.deleteConversation(userId, conversationId);
 	}
 
 	/**

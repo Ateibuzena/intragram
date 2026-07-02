@@ -358,10 +358,14 @@ export class UsersController {
 	 */
 	@UseGuards(AuthGuard)
 	@Delete('friends/me/:friendId')
-	async removeFriend(@Req() req: any, @Param('friendId') friendId: string): Promise<{ removed: boolean }> {
+	async removeFriend(@Req() req: any, @Param('friendId') friendId: string): Promise<{ removed: boolean; wasAccepted: boolean }> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.removeFriend(profile.id, friendId);
+			const result = await this.usersService.removeFriend(profile.id, friendId);
+			this.realtimeService.emitToUser(friendId, result.wasAccepted ? 'friend:removed' : 'friend:rejected', {
+				by: { id: profile.id, login: profile.login, displayName: profile.display_name },
+			});
+			return result;
 		} catch (error: any) {
 			throw new HttpException(error.message || 'Error al eliminar amigo', error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -409,7 +413,11 @@ export class UsersController {
 	async acceptFriendRequest(@Req() req: any, @Param('requesterId') requesterId: string): Promise<IUserProfile> {
 		try {
 			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.acceptFriendRequest(profile.id, requesterId);
+			const result = await this.usersService.acceptFriendRequest(profile.id, requesterId);
+			this.realtimeService.emitToUser(requesterId, 'friend:accepted', {
+				by: { id: profile.id, login: profile.login, displayName: profile.display_name },
+			});
+			return result;
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

@@ -103,7 +103,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 		return () => clearInterval(id);
 	}, [token, fetchPending]);
 
-	// ── Real-time: friend:request socket event ─────────────────────────────────
+	// ── Real-time: friend:* socket events ───────────────────────────────────────
 
 	// Re-fetch the pending list whenever a new request arrives so we get the
 	// full PendingFriendRequest object (including avatar_url) without needing
@@ -112,13 +112,35 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 		void fetchPending();
 	}, [fetchPending]);
 
+	// The other three events only ever flip a single relation, so a direct
+	// cache patch is enough — no need to re-fetch anything.
+	const handleFriendAccepted = useCallback((payload: { by: { id: string } }) => {
+		patchCache({ [payload.by.id]: 'friends' });
+	}, [patchCache]);
+
+	const handleFriendRemoved = useCallback((payload: { by: { id: string } }) => {
+		patchCache({ [payload.by.id]: 'none' });
+	}, [patchCache]);
+
+	const handleFriendRejected = useCallback((payload: { by: { id: string } }) => {
+		patchCache({ [payload.by.id]: 'none' });
+	}, [patchCache]);
+
 	useEffect(() => {
 		if (!connected) return;
 		const socket = socketRef.current;
 		if (!socket) return;
 		socket.on('friend:request', handleFriendRequest);
-		return () => { socket.off('friend:request', handleFriendRequest); };
-	}, [connected, socketRef, handleFriendRequest]);
+		socket.on('friend:accepted', handleFriendAccepted);
+		socket.on('friend:removed', handleFriendRemoved);
+		socket.on('friend:rejected', handleFriendRejected);
+		return () => {
+			socket.off('friend:request', handleFriendRequest);
+			socket.off('friend:accepted', handleFriendAccepted);
+			socket.off('friend:removed', handleFriendRemoved);
+			socket.off('friend:rejected', handleFriendRejected);
+		};
+	}, [connected, socketRef, handleFriendRequest, handleFriendAccepted, handleFriendRemoved, handleFriendRejected]);
 
 	// ── Relation fetch ─────────────────────────────────────────────────────────
 

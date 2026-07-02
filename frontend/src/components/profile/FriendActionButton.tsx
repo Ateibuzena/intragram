@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import type { FriendRelation } from '@/hooks/useFriendContext';
 
 type FriendAction = 'idle' | 'adding' | 'removing' | 'accepting';
@@ -11,6 +10,8 @@ interface FriendActionButtonProps {
 	onAcceptFriend?: () => void;
 }
 
+const pill = 'rounded-full border px-3 py-1 text-xs font-bold transition-colors';
+
 export const FriendActionButton = ({
 	relation,
 	friendAction,
@@ -19,33 +20,45 @@ export const FriendActionButton = ({
 	onAcceptFriend,
 }: FriendActionButtonProps) => {
 	if (friendAction !== 'idle') {
-		return <span className="text-[10px] text-ft-muted px-2.5 py-1">...</span>;
+		return <span className={`${pill} border-ft-border bg-ft-hover/40 text-ft-muted`}>...</span>;
 	}
 
 	switch (relation) {
 		case 'friends':
 			return (
-				<Button variant="ghost" size="sm" onClick={onRemoveFriend} className="text-[10px] px-2.5 py-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-400/30">
+				<button
+					type="button"
+					onClick={onRemoveFriend}
+					className={`${pill} border-red-400/30 bg-red-500/10 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.35)] hover:bg-red-500/20 hover:text-red-200 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]`}
+				>
 					Eliminar amigo
-				</Button>
+				</button>
 			);
 		case 'pending_sent':
 			return (
-				<span className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border border-ft-border text-ft-muted">
+				<span className={`${pill} border-amber-400/30 bg-amber-500/10 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.35)]`}>
 					Solicitud enviada
 				</span>
 			);
 		case 'pending_received':
 			return (
-				<Button variant="primary" size="sm" onClick={onAcceptFriend} className="text-[10px] px-2.5 py-1">
+				<button
+					type="button"
+					onClick={onAcceptFriend}
+					className={`${pill} border-green-400/30 bg-green-500/10 text-green-300 shadow-[0_0_15px_rgba(34,197,94,0.35)] hover:bg-green-500/20 hover:text-green-200 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]`}
+				>
 					Aceptar solicitud
-				</Button>
+				</button>
 			);
 		default:
 			return (
-				<Button variant="primary" size="sm" onClick={onAddFriend} className="text-[10px] px-2.5 py-1">
+				<button
+					type="button"
+					onClick={onAddFriend}
+					className={`${pill} border-ft-cyan/30 bg-ft-cyan/10 text-ft-cyan shadow-[0_0_15px_rgba(0,186,188,0.35)] hover:bg-ft-cyan/20 hover:shadow-[0_0_20px_rgba(0,186,188,0.5)]`}
+				>
 					Agregar amigo
-				</Button>
+				</button>
 			);
 	}
 };

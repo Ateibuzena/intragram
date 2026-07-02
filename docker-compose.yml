@@ -28,7 +28,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=15d
-      - --web.external-url=https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/
+      - --web.external-url=https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/
       - --web.route-prefix=/
     volumes:
       - prometheus-data:/prometheus
@@ -59,7 +59,7 @@ services:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
       GF_SERVER_DOMAIN: localhost
-      GF_SERVER_ROOT_URL: https://q8znls9b-8443.uks1.devtunnels.ms/grafana/
+      GF_SERVER_ROOT_URL: https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_SERVER_ENFORCE_DOMAIN: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "false"

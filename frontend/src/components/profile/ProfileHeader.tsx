@@ -212,20 +212,17 @@ export const ProfileHeader = ({
 									<span className="max-w-full truncate rounded-full border border-ft-border bg-ft-hover/40 px-3 py-1 text-xs font-bold text-white">
 										Pool {insights.pool}
 									</span>
+									{showFriendButton && profile && (
+										<FriendActionButton
+											relation={relation}
+											friendAction={friendAction}
+											onAddFriend={onAddFriend}
+											onRemoveFriend={onRemoveFriend}
+											onAcceptFriend={onAcceptFriend}
+										/>
+									)}
 								</div>
 							)}
-
-							<div className="flex items-center gap-2 mt-4 flex-wrap justify-center xl:justify-start">
-								{showFriendButton && profile && (
-									<FriendActionButton
-										relation={relation}
-										friendAction={friendAction}
-										onAddFriend={onAddFriend}
-										onRemoveFriend={onRemoveFriend}
-										onAcceptFriend={onAcceptFriend}
-									/>
-								)}
-							</div>
 
 							{loading && <p className="text-xs text-ft-muted mt-3">Cargando perfil...</p>}
 							{error && <p className="text-xs text-red-400 mt-3">{error}</p>}

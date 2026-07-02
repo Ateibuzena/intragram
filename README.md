@@ -67,11 +67,7 @@ make up
 3. Abrir la aplicación en:
 
 ```text
-<<<<<<< HEAD
-https://q8znls9b-8443.uks1.devtunnels.ms/
-=======
-https://q8znls9b-8443.uks1.devtunnels.ms/
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
+https://zhvvqwnc-8443.uks1.devtunnels.ms/
 ```
 
 4. Iniciar sesión con una cuenta de 42.
@@ -88,17 +84,10 @@ make fclean
 
 ### Architecture Entry Points
 
-<<<<<<< HEAD
-- Frontend servido por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/`
-- API pública del gateway: `https://q8znls9b-8443.uks1.devtunnels.ms/api/`
-- Prometheus proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/`
-- Grafana proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms/grafana/`
-=======
-- Frontend servido por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//`
-- API pública del gateway: `https://q8znls9b-8443.uks1.devtunnels.ms//api/`
-- Prometheus proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/`
-- Grafana proxificado por Nginx: `https://q8znls9b-8443.uks1.devtunnels.ms//grafana/`
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
+- Frontend servido por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/`
+- API pública del gateway: `https://zhvvqwnc-8443.uks1.devtunnels.ms/api/`
+- Prometheus proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/`
+- Grafana proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/`
 
 ## Team Information
 

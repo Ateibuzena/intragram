@@ -879,7 +879,7 @@ export class UsersService {
 	/**
 	 * Removes a friendship between two users.
 	 */
-	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
+	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean; wasAccepted: boolean }> {
 		const existing = await this.friendshipRepo.findOne({
 			where: [
 				{ user_id: userId, friend_id: friendId },
@@ -891,8 +891,9 @@ export class UsersService {
 			throw Object.assign(new Error('Amistad no encontrada'), { statusCode: 404 });
 		}
 
+		const wasAccepted = existing.status === 'accepted';
 		await this.friendshipRepo.remove(existing);
-		return { removed: true };
+		return { removed: true, wasAccepted };
 	}
 
 	/**

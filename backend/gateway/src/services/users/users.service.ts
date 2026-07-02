@@ -329,9 +329,9 @@ export class UsersService {
 	/**
 	 * Removes a friendship from the authenticated user.
 	 */
-	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean }> {
+	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean; wasAccepted: boolean }> {
 		try {
-			return await this.httpClient.delete<{ removed: boolean }>(`${this.usersBaseUrl}/friends/${userId}/${friendId}`, {
+			return await this.httpClient.delete<{ removed: boolean; wasAccepted: boolean }>(`${this.usersBaseUrl}/friends/${userId}/${friendId}`, {
 				timeoutMs: 5000,
 			});
 		} catch (error) {

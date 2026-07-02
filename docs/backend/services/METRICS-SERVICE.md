@@ -90,13 +90,8 @@ Eso es suficiente para que Prometheus detecte latencia, errores y disponibilidad
 
 Todo queda detrás de Nginx:
 
-<<<<<<< HEAD
-- Grafana: `https://q8znls9b-8443.uks1.devtunnels.ms/grafana/`
-- Prometheus: `https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/`
-=======
-- Grafana: `https://q8znls9b-8443.uks1.devtunnels.ms//grafana/`
-- Prometheus: `https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/`
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
+- Grafana: `https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/`
+- Prometheus: `https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/`
 
 ## Inicio rápido
 
@@ -106,13 +101,8 @@ docker compose up -d --build
 
 Después abre:
 
-<<<<<<< HEAD
-- `https://q8znls9b-8443.uks1.devtunnels.ms/grafana/`
-- `https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/`
-=======
-- `https://q8znls9b-8443.uks1.devtunnels.ms//grafana/`
-- `https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/`
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
+- `https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/`
+- `https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/`
 
 ## Qué comprobar
 
@@ -125,11 +115,7 @@ docker compose logs -f prometheus grafana node-exporter
 Comprueba que Prometheus ve los targets:
 
 ```bash
-<<<<<<< HEAD
-curl -k https://q8znls9b-8443.uks1.devtunnels.ms/prometheus/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
-=======
-curl -k https://q8znls9b-8443.uks1.devtunnels.ms//prometheus/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
->>>>>>> 5a4f62be21b7cbf35a256767916ff84e0ba9e961
+curl -k https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
 ```
 
 Comprueba que los servicios responden en `/metrics`:

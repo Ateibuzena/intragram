@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 type UserSearchResult = {
 	id: string;
@@ -54,9 +54,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 			if (!token) return;
 			setSearching(true);
 			try {
-				const res = await fetch(buildApiUrl(`/users/search?q=${encodeURIComponent(search)}&limit=8`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/users/search?q=${encodeURIComponent(search)}&limit=8`, token);
 				if (!res.ok) return;
 				const data: UserSearchResult[] = await res.json();
 				setResults(data);

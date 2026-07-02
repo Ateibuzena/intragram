@@ -11,7 +11,7 @@ import {
 	buildProfileInsights,
 	decodeTokenPayload,
 } from '@/components/profile';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 const ProfilePage = () => {
 	const { token, patchAuthProfile } = useAuth();
@@ -32,9 +32,9 @@ const ProfilePage = () => {
 
 	const patchProfile = async (body: Record<string, string>) => {
 		if (!token || !canonicalProfileId) return;
-		const res = await fetch(buildApiUrl(`/users/${canonicalProfileId}/profile`), {
+		const res = await fetchWithAuth(`/users/${canonicalProfileId}/profile`, token, {
 			method: 'PATCH',
-			headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body),
 		});
 		if (!res.ok) throw new Error('No se pudo actualizar el perfil.');

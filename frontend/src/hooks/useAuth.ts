@@ -5,6 +5,8 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { buildApiUrl } from '@/utils/apiBase';
+import { decodeTokenPayload } from '@/utils/auth';
+import { AUTH_LOGOUT_REQUIRED_EVENT, AUTH_TOKEN_REFRESHED_EVENT, fetchWithAuth, refreshAccessToken } from '@/utils/fetchWithAuth';
 
 interface AuthUser {
 	id: string;
@@ -81,11 +83,15 @@ export const useAuthState = () => {
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
 		const urlToken = params.get('token');
+		const urlRefreshToken = params.get('refresh_token');
 		const urlUser = params.get('user');
 
 		if (urlToken) {
 			localStorage.setItem('auth_token', urlToken);
 			setToken(urlToken);
+			if (urlRefreshToken) {
+				localStorage.setItem('auth_refresh_token', urlRefreshToken);
+			}
 			if (urlUser) {
 				try {
 					const parsed: AuthUser = JSON.parse(urlUser);
@@ -96,6 +102,7 @@ export const useAuthState = () => {
 				}
 			}
 			params.delete('token');
+			params.delete('refresh_token');
 			params.delete('user');
 			navigate({ pathname: ROUTES.HOME, search: params.toString() ? `?${params.toString()}` : '' }, { replace: true });
 		} else {
@@ -112,6 +119,64 @@ export const useAuthState = () => {
 		}
 	}, [location.search, navigate]);
 
+	const logout = () => {
+		const storedRefreshToken = localStorage.getItem('auth_refresh_token');
+		if (storedRefreshToken) {
+			// Best-effort server-side revocation — don't block the local logout on it.
+			void fetch(buildApiUrl('/auth/logout'), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ refresh_token: storedRefreshToken }),
+			}).catch(() => {});
+		}
+		localStorage.removeItem('auth_token');
+		localStorage.removeItem('auth_refresh_token');
+		localStorage.removeItem('auth_user');
+		setToken(null);
+		setUser(null);
+		setProfile(null);
+	};
+
+	// ── Cross-tab / cross-module sync ──────────────────────────────────────────
+	// fetchWithAuth() runs outside React (shared by 17+ call sites) and refreshes
+	// the token directly in localStorage; mirror that into state here so every
+	// consumer (including the presence socket) picks up the fresh token.
+	useEffect(() => {
+		const handleRefreshed = (event: Event) => {
+			const newToken = (event as CustomEvent<string>).detail;
+			setToken(newToken);
+		};
+		const handleLogoutRequired = () => {
+			logout();
+			navigate(`${ROUTES.LOGIN}?reason=expired`);
+		};
+		window.addEventListener(AUTH_TOKEN_REFRESHED_EVENT, handleRefreshed);
+		window.addEventListener(AUTH_LOGOUT_REQUIRED_EVENT, handleLogoutRequired);
+		return () => {
+			window.removeEventListener(AUTH_TOKEN_REFRESHED_EVENT, handleRefreshed);
+			window.removeEventListener(AUTH_LOGOUT_REQUIRED_EVENT, handleLogoutRequired);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [navigate]);
+
+	// ── Silent refresh ───────────────────────────────────────────────────────
+	// Proactively renew the access token before it expires so an active user
+	// never actually hits a 401 in normal usage.
+	useEffect(() => {
+		if (!token) return;
+		const exp = decodeTokenPayload(token)?.exp;
+		if (!exp) return;
+
+		const msUntilExpiry = exp * 1000 - Date.now();
+		const msUntilRefresh = Math.max(msUntilExpiry * 0.8, 5_000);
+
+		const id = setTimeout(() => {
+			void refreshAccessToken();
+		}, msUntilRefresh);
+
+		return () => clearTimeout(id);
+	}, [token]);
+
 	useEffect(() => {
 		if (!token || !user || profile || fetchingProfileRef.current) return;
 
@@ -120,11 +185,7 @@ export const useAuthState = () => {
 		const fetchProfile = async () => {
 			try {
 				setLoadingProfile(true);
-				const url = buildApiUrl(`/users/login/${encodeURIComponent(user.username.toLowerCase())}`);
-				const res = await fetch(url, {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
+				const res = await fetchWithAuth(`/users/login/${encodeURIComponent(user.username.toLowerCase())}`, token, {
 					signal: controller.signal,
 				});
 				if (!res.ok) return;
@@ -144,14 +205,6 @@ export const useAuthState = () => {
 			fetchingProfileRef.current = false;
 		};
 	}, [token, user, profile]);
-
-	const logout = () => {
-		localStorage.removeItem('auth_token');
-		localStorage.removeItem('auth_user');
-		setToken(null);
-		setUser(null);
-		setProfile(null);
-	};
 
 	const patchAuthProfile = (partial: Partial<UserProfile>) => {
 		setProfile((prev) => prev ? { ...prev, ...partial } : prev);

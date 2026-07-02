@@ -199,7 +199,7 @@ export class AuthController {
 		try {
 			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
 
-			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&refresh_token=${authResponse.refresh_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
 			return res.redirect(redirectUrl);
 		} catch (error: any) {
 			return res.redirect(`${this.frontendUrl}?error=auth_failed`);

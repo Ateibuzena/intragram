@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProfileInsights, ProjectStatusKind } from '@/types/profile';
 import { formatDate } from '@/utils/profile';
 import { useAuth } from '@/hooks/useAuth';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 interface ProjectsCardProps {
 	insights: ProfileInsights;
@@ -105,9 +105,7 @@ export const ProjectsCard = ({ insights, className = '' }: ProjectsCardProps) =>
 		setPeersLoading(true);
 		try {
 			const params = new URLSearchParams({ project: projectKey });
-			const res = await fetch(buildApiUrl(`/users/directory?${params.toString()}`), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/directory?${params.toString()}`, token);
 			if (!res.ok) return;
 			const data = await res.json() as ProjectPeer[];
 			setPeers(data.slice(0, 6));

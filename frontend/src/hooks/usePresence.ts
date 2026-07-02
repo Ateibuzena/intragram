@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useAuth } from './useAuth';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 export const usePresence = () => {
 	const { token } = useAuth();
@@ -18,9 +18,7 @@ export const usePresence = () => {
 			return;
 		}
 		try {
-			const response = await fetch(buildApiUrl('/chat/conversations'), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const response = await fetchWithAuth('/chat/conversations', token);
 			if (!response.ok) return;
 			const conversations = await response.json() as Array<{ unread_count?: number }>;
 			setUnreadChats(conversations.filter((conversation) => (conversation.unread_count ?? 0) > 0).length);
@@ -78,10 +76,7 @@ export const usePresence = () => {
 				void syncUnreadChats();
 			} else {
 				// User is viewing this chat: keep last_read_at current so polling stays clean
-				void fetch(buildApiUrl(`/chat/conversations/${conversationId}/read`), {
-					method: 'POST',
-					headers: { Authorization: `Bearer ${token}` },
-				}).catch(() => {});
+				void fetchWithAuth(`/chat/conversations/${conversationId}/read`, token, { method: 'POST' }).catch(() => {});
 			}
 		});
 

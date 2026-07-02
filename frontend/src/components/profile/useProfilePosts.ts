@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
 import type { Post } from '@/types/feed';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { mapApiPostToPost } from '@/utils/postMappers';
 
@@ -27,10 +27,7 @@ export const useProfilePosts = (username: string | null | undefined): UseProfile
 				setLoading(true);
 				setError(null);
 
-				const res = await fetch(buildApiUrl('/users/feed'), {
-					headers: { Authorization: `Bearer ${token}` },
-					signal: controller.signal,
-				});
+				const res = await fetchWithAuth('/users/feed', token, { signal: controller.signal });
 
 				if (!res.ok) {
 					setItems([]);

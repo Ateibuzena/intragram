@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
-import { ROUTES } from '@/constants/routes';
 import { LANGUAGES } from '@/constants/languages';
 
 interface CreatePostProps {
@@ -19,9 +17,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [showCodePanel, setShowCodePanel] = useState(false);
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
-	const { token, user, profile, logout } = useAuth();
+	const { token, user, profile } = useAuth();
 	const { connected } = usePresenceStatus();
-	const navigate = useNavigate();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 	const avatarUrl = profile?.avatar_url ?? null;
 
@@ -43,22 +40,16 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 		try {
 			setIsSubmitting(true);
 			setError(null);
-			const res = await fetch(buildApiUrl('/users/feed'), {
+			const res = await fetchWithAuth('/users/feed', token, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`,
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ content }),
 			});
 			if (!res.ok) {
 				const message = await res.text().catch(() => '');
 				console.error('Error al publicar en el feed', res.status, message);
-				if (res.status === 401) {
-					logout();
-					navigate(ROUTES.LOGIN + '?reason=expired');
-					return;
-				}
+				// A 401 here means fetchWithAuth already tried (and failed) to refresh —
+				// the global auth:logout-required listener in useAuth handles the redirect.
 				setError('No se pudo publicar tu actualización. Inténtalo de nuevo más tarde.');
 				return;
 			}

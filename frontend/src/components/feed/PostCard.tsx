@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { usePost } from '@/hooks/usePost';
 import { useAuth } from '@/hooks/useAuth';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { RenderedContent } from '@/components/content/RenderedContent';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { PostDetailModal } from './PostDetailModal';
@@ -38,10 +38,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const toggleLike = async () => {
 		if (!token) { handleLike(); return; }
 		try {
-			await fetch(buildApiUrl(`/users/feed/like/${post.id}`), {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			await fetchWithAuth(`/users/feed/like/${post.id}`, token, { method: 'POST' });
 		} catch {
 			// keep optimistic toggle on error
 		} finally {
@@ -53,10 +50,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 		handleSave();
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl(`/users/feed/favorites/${post.id}`), {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/feed/favorites/${post.id}`, token, { method: 'POST' });
 			if (!res.ok) handleSave(); // revert optimistic toggle
 		} catch {
 			handleSave(); // revert optimistic toggle
@@ -67,10 +61,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 		if (!token) return;
 		setMenuOpen(false);
 		try {
-			const res = await fetch(buildApiUrl(`/users/feed/post/${post.id}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/feed/post/${post.id}`, token, { method: 'DELETE' });
 			if (res.ok) onDelete?.(String(post.id));
 		} catch {
 			// ignore

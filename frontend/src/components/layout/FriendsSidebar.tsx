@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useFriendContext, type FriendRelation } from '@/hooks/useFriendContext';
@@ -66,9 +66,7 @@ export const FriendsSidebar = () => {
 		if (!token) return;
 		setLoading(true);
 		try {
-			const res = await fetch(buildApiUrl('/users/directory'), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth('/users/directory', token);
 			if (!res.ok) return;
 			const data: DirectoryEntry[] = await res.json();
 			setEntries(data);

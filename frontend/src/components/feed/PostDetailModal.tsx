@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { RenderedContent } from '@/components/content/RenderedContent';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
@@ -40,9 +40,7 @@ export const PostDetailModal = ({
 		if (!token) return;
 		const fetchComments = async () => {
 			try {
-				const res = await fetch(buildApiUrl(`/users/feed/post/${post.id}/comments`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments`, token);
 				if (res.ok) setComments((await res.json()) as PostComment[]);
 			} catch {
 				// silently fail
@@ -69,9 +67,9 @@ export const PostDetailModal = ({
 		if (!content || !token || submitting) return;
 		setSubmitting(true);
 		try {
-			const res = await fetch(buildApiUrl(`/users/feed/post/${post.id}/comments`), {
+			const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments`, token, {
 				method: 'POST',
-				headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ content }),
 			});
 			if (res.ok) {
@@ -90,10 +88,7 @@ export const PostDetailModal = ({
 	const deleteComment = async (commentId: string) => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl(`/users/feed/post/${post.id}/comments/${commentId}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments/${commentId}`, token, { method: 'DELETE' });
 			if (res.ok) {
 				setComments((prev) => prev.filter((c) => c.id !== commentId));
 				onCommentCountChange(-1);

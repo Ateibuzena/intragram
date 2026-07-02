@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useFriend } from '@/hooks/useFriend';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { Navbar } from '@/components/layout/Navbar';
 import { ROUTES } from '@/constants/routes';
 import {
@@ -45,9 +45,7 @@ const UserProfilePage = () => {
 			setLoading(true);
 			setError(null);
 			try {
-				const res = await fetch(buildApiUrl(`/users/login/${encodeURIComponent(login)}`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/users/login/${encodeURIComponent(login)}`, token);
 				if (!res.ok) throw new Error('Profile not found');
 				const data = (await res.json()) as UserProfileEntityDto;
 				if (!cancelled) setProfile(data);

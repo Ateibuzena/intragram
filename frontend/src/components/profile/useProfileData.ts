@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import type { UserProfileEntityDto } from '@/types/profile';
 import { decodeTokenPayload } from '@/utils/auth';
 
@@ -16,11 +16,7 @@ const fetchProfileFromBackend = async (
 	].filter(Boolean) as string[];
 
 	for (const endpoint of endpoints) {
-		const response = await fetch(buildApiUrl(endpoint), {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
+		const response = await fetchWithAuth(endpoint, token);
 
 		if (response.ok) {
 			return (await response.json()) as UserProfileEntityDto;

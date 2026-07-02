@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { User } from '@/types/chat';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import {
 	type BackendConversation,
 	type ChatUserProfile,
@@ -46,9 +46,7 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		const results = await Promise.all(
 			missingIds.map(async (pid) => {
 				try {
-					const res = await fetch(buildApiUrl(`/users/${pid}`), {
-						headers: { Authorization: `Bearer ${token}` },
-					});
+					const res = await fetchWithAuth(`/users/${pid}`, token);
 					if (!res.ok) throw new Error();
 					const profile = await res.json() as ChatUserProfile;
 					return { pid, user: mapChatUserProfileToUser(profile) };
@@ -94,9 +92,7 @@ export const useChatConversations = (token: string | null, currentUserId: string
 			setLoading(true);
 			setError(null);
 			try {
-				const res = await fetch(buildApiUrl('/chat/conversations'), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth('/chat/conversations', token);
 				if (!res.ok) throw new Error('No se pudieron cargar las conversaciones');
 				const list = await res.json() as BackendConversation[];
 				if (cancelled) return;
@@ -120,9 +116,7 @@ export const useChatConversations = (token: string | null, currentUserId: string
 
 		const poll = async () => {
 			try {
-				const res = await fetch(buildApiUrl('/chat/conversations'), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth('/chat/conversations', token);
 				if (!res.ok || disposed) return;
 				const list = await res.json() as BackendConversation[];
 				if (disposed) return;
@@ -176,10 +170,7 @@ export const useChatConversations = (token: string | null, currentUserId: string
 			conversation.id === conversationId ? { ...conversation, unread_count: 0 } : conversation,
 		));
 		try {
-			await fetch(buildApiUrl(`/chat/conversations/${conversationId}/read`), {
-				method: 'POST',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			await fetchWithAuth(`/chat/conversations/${conversationId}/read`, token, { method: 'POST' });
 		} catch {
 			// Polling will reconcile the optimistic update if the request fails.
 		}

@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
 import type { FilterKey, Post } from '@/types/feed';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 
-import { ROUTES } from '@/constants/routes';
 import { mapApiPostToPost } from '@/utils/postMappers';
 import { CreatePost } from './CreatePost';
 import { PostCard } from './PostCard';
@@ -19,7 +17,7 @@ interface FeedProps {
 }
 
 export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
-	const { token, logout, profile: authProfile } = useAuth();
+	const { token, profile: authProfile } = useAuth();
 	const { socketRef, connected } = usePresenceStatus();
 	const [items, setItems] = useState<Post[]>([]);
 	const [pendingCount, setPendingCount] = useState(0);
@@ -31,7 +29,6 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 	// IDs to highlight after publish-triggered refresh
 	const pendingIdsOnPublishRef = useRef<Set<Post['id']>>(new Set());
 	const [error, setError] = useState<string | null>(null);
-	const navigate = useNavigate();
 	const activeFilterRef = useRef(activeFilter);
 	const myLoginRef = useRef<string | null>(authProfile?.login ?? null);
 
@@ -63,19 +60,13 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 					path = '/users/feed/trending';
 				}
 
-				const res = await fetch(buildApiUrl(path), {
-					headers: { Authorization: `Bearer ${token}` },
-					signal: controller.signal,
-				});
+				const res = await fetchWithAuth(path, token, { signal: controller.signal });
 				if (!res.ok) {
 					const message = await res.text().catch(() => '');
 					console.error('Error al cargar el feed', res.status, message);
 					setItems([]);
-					if (res.status === 401) {
-						logout();
-						navigate(ROUTES.LOGIN + '?reason=expired');
-						return;
-					}
+					// A 401 here means fetchWithAuth already tried (and failed) to refresh —
+					// the global auth:logout-required listener in useAuth handles the redirect.
 					setError('No se pudo cargar el feed. Inténtalo de nuevo más tarde.');
 					return;
 				}

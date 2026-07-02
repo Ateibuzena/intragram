@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Message } from '@/types/chat';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { type BackendMessage, mapMessageToUI } from '@/utils/chatMappers';
 
 const MESSAGES_POLL_INTERVAL_MS = 2000;
@@ -27,9 +27,7 @@ export const useChatMessages = (
 			setLoading(true);
 			setError(null);
 			try {
-				const res = await fetch(buildApiUrl(`/chat/conversations/${selectedChatId}/messages`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token);
 				if (!res.ok) throw new Error('No se pudieron cargar los mensajes');
 				const raw = await res.json() as BackendMessage[];
 				if (!cancelled) setMessages(raw.map((m) => mapMessageToUI(m, currentUserId)));
@@ -50,9 +48,7 @@ export const useChatMessages = (
 
 		const poll = async () => {
 			try {
-				const res = await fetch(buildApiUrl(`/chat/conversations/${selectedChatId}/messages`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token);
 				if (!res.ok || disposed) return;
 				const raw = await res.json() as BackendMessage[];
 				if (disposed) return;
@@ -74,12 +70,9 @@ export const useChatMessages = (
 		setSending(true);
 		setError(null);
 		try {
-			const res = await fetch(buildApiUrl(`/chat/conversations/${selectedChatId}/messages`), {
+			const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`,
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ message: messageText, attachments: [] }),
 			});
 			if (!res.ok) throw new Error('No se pudo enviar el mensaje');

@@ -9,7 +9,7 @@ import { useChatMessages } from '@/hooks/useChatMessages';
 import { useFriendContext } from '@/hooks/useFriendContext';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { decodeTokenPayload } from '@/utils/auth';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { mapChatUserProfileToUser } from '@/utils/chatMappers';
 import type { ChatUserProfile, BackendConversation } from '@/utils/chatMappers';
 
@@ -83,9 +83,7 @@ const ChatPage = () => {
 
 		const refresh = async () => {
 			try {
-				const res = await fetch(buildApiUrl(`/users/${otherId}`), {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetchWithAuth(`/users/${otherId}`, token);
 				if (!res.ok || disposed) return;
 				const profile = await res.json() as ChatUserProfile;
 				if (!disposed) updateUserOnlineStatus(otherId, profile.active ?? false);
@@ -110,10 +108,7 @@ const ChatPage = () => {
 		if (!token) return;
 		removeConversation(convId);
 		try {
-			await fetch(buildApiUrl(`/chat/conversations/${convId}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			await fetchWithAuth(`/chat/conversations/${convId}`, token, { method: 'DELETE' });
 		} catch {
 			// polling will restore it if the request fails
 		}
@@ -130,9 +125,7 @@ const ChatPage = () => {
 		setSearchLoading(true);
 		setSearchError(null);
 		try {
-			const res = await fetch(buildApiUrl(`/users/search?q=${encodeURIComponent(query)}&limit=20`), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/search?q=${encodeURIComponent(query)}&limit=20`, token);
 			if (!res.ok) throw new Error('No se pudo buscar usuarios');
 			const profiles = await res.json() as ChatUserProfile[];
 			setSearchResults(profiles.filter((p) => p.id !== currentUserId));
@@ -154,9 +147,9 @@ const ChatPage = () => {
 		setCreatingConversation(true);
 		setCreateError(null);
 		try {
-			const res = await fetch(buildApiUrl('/chat/conversations'), {
+			const res = await fetchWithAuth('/chat/conversations', token, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ recipientId: profile.id }),
 			});
 			if (!res.ok) throw new Error('No se pudo crear la conversación');

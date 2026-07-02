@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
-import { buildApiUrl } from '@/utils/apiBase';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import type { PendingFriendRequest } from '@/types/chat';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -75,9 +75,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const fetchPending = useCallback(async () => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl('/users/friends/pending'), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth('/users/friends/pending', token);
 			if (!res.ok) return;
 			const data = (await res.json()) as PendingFriendRequest[];
 			setPendingReceived(data);
@@ -147,9 +145,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const fetchRelation = useCallback(async (userId: string): Promise<FriendRelation> => {
 		if (!token) return 'none';
 		try {
-			const res = await fetch(buildApiUrl(`/users/friends/status/${userId}`), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/friends/status/${userId}`, token);
 			if (!res.ok) return 'none';
 			const data = (await res.json()) as { relation: FriendRelation };
 			patchCache({ [userId]: data.relation });
@@ -164,9 +160,9 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const sendRequest = useCallback(async (userId: string, login: string) => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl('/users/friends/me'), {
+			const res = await fetchWithAuth('/users/friends/me', token, {
 				method: 'POST',
-				headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ friend_login: login }),
 			});
 			if (!res.ok) return;
@@ -180,10 +176,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const acceptRequest = useCallback(async (requesterId: string) => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${requesterId}/accept`), {
-				method: 'PATCH',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/friends/me/${requesterId}/accept`, token, { method: 'PATCH' });
 			if (!res.ok) return;
 			setPendingReceived((prev) => prev.filter((r) => r.id !== requesterId));
 			patchCache({ [requesterId]: 'friends' });
@@ -195,10 +188,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const rejectRequest = useCallback(async (requesterId: string) => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${requesterId}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/friends/me/${requesterId}`, token, { method: 'DELETE' });
 			if (!res.ok) return;
 			setPendingReceived((prev) => prev.filter((r) => r.id !== requesterId));
 			patchCache({ [requesterId]: 'none' });
@@ -210,10 +200,7 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const removeFriend = useCallback(async (friendId: string) => {
 		if (!token) return;
 		try {
-			const res = await fetch(buildApiUrl(`/users/friends/me/${friendId}`), {
-				method: 'DELETE',
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await fetchWithAuth(`/users/friends/me/${friendId}`, token, { method: 'DELETE' });
 			if (!res.ok) return;
 			patchCache({ [friendId]: 'none' });
 		} catch {

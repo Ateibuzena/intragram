@@ -1,11 +1,13 @@
 /**
  * Users Service of the Gateway
- * Forwards operations to the users-service and normalises its responses.
+ * Forwards profile and friendship operations to users-service.
+ * Forwards feed and post interactions to posts-service.
  */
 
 import { Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/posts';
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
 
@@ -39,6 +41,8 @@ export interface IDirectoryEntry {
 export class UsersService {
 	// Base URL of the users microservice.
 	private readonly usersBaseUrl = SERVICE_URLS.users;
+	// Base URL of the posts microservice.
+	private readonly postsBaseUrl = SERVICE_URLS.posts;
 
 	constructor(private readonly httpClient: GatewayHttpClientService) {}
 
@@ -142,7 +146,7 @@ export class UsersService {
 	 */
 	async getRecentFeed(userId: string): Promise<IFeedPost[]> {
 		try {
-			return await this.httpClient.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/recent/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IFeedPost[]>(`${this.postsBaseUrl}/posts/feed/recent/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed reciente');
 		}
@@ -153,7 +157,7 @@ export class UsersService {
 	 */
 	async getMyFeed(userId: string): Promise<IFeedPost[]> {
 		try {
-			return await this.httpClient.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/user/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IFeedPost[]>(`${this.postsBaseUrl}/posts/feed/user/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed del usuario');
 		}
@@ -164,7 +168,7 @@ export class UsersService {
 	 */
 	async getFriendsFeed(userId: string): Promise<IFeedPost[]> {
 		try {
-			return await this.httpClient.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/friends/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IFeedPost[]>(`${this.postsBaseUrl}/posts/feed/friends/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed de amigos');
 		}
@@ -175,7 +179,7 @@ export class UsersService {
 	 */
 	async getTrendingFeed(userId: string): Promise<IFeedPost[]> {
 		try {
-			return await this.httpClient.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/trending/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IFeedPost[]>(`${this.postsBaseUrl}/posts/feed/trending/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed de tendencias');
 		}
@@ -186,7 +190,7 @@ export class UsersService {
 	 */
 	async getFavoritesFeed(userId: string): Promise<IFeedPost[]> {
 		try {
-			return await this.httpClient.get<IFeedPost[]>(`${this.usersBaseUrl}/feed/favorites/${userId}`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IFeedPost[]>(`${this.postsBaseUrl}/posts/feed/favorites/${userId}`, { timeoutMs: 5000 });
 		} catch (error) {
 			this.handleHttpError(error, 'obtener feed de favoritos');
 		}
@@ -198,7 +202,7 @@ export class UsersService {
 	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
 		try {
 			const response = await this.httpClient.post<{ saved: boolean }, { postId: string }>(
-				`${this.usersBaseUrl}/feed/favorites/${userId}`,
+				`${this.postsBaseUrl}/posts/feed/favorites/${userId}`,
 				{ postId },
 				{ timeoutMs: 5000 },
 			);
@@ -214,7 +218,7 @@ export class UsersService {
 	async createPost(userId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
 		try {
 			return await this.httpClient.post<IFeedPost, CreateFeedPostDto>(
-				`${this.usersBaseUrl}/feed/user/${userId}`,
+				`${this.postsBaseUrl}/posts/feed/user/${userId}`,
 				dto,
 				{ timeoutMs: 5000 },
 			);
@@ -317,7 +321,7 @@ export class UsersService {
 	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
 		try {
 			return await this.httpClient.post<{ liked: boolean; likes_count: number }, { postId: string }>(
-				`${this.usersBaseUrl}/feed/like/${userId}`,
+				`${this.postsBaseUrl}/posts/feed/like/${userId}`,
 				{ postId },
 				{ timeoutMs: 5000 },
 			);
@@ -342,9 +346,12 @@ export class UsersService {
 	/**
 	 * Returns all comments for a post.
 	 */
-	async getPostComments(postId: string): Promise<IPostComment[]> {
+	async getPostComments(postId: string, userId: string): Promise<IPostComment[]> {
 		try {
-			return await this.httpClient.get<IPostComment[]>(`${this.usersBaseUrl}/feed/post/${postId}/comments`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IPostComment[]>(`${this.postsBaseUrl}/posts/feed/post/${postId}/comments`, {
+				timeoutMs: 5000,
+				params: { userId },
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'get comments');
 		}
@@ -372,7 +379,7 @@ export class UsersService {
 	async addComment(postId: string, userId: string, content: string): Promise<IPostComment> {
 		try {
 			return await this.httpClient.post<IPostComment, { authorId: string; content: string }>(
-				`${this.usersBaseUrl}/feed/post/${postId}/comments`,
+				`${this.postsBaseUrl}/posts/feed/post/${postId}/comments`,
 				{ authorId: userId, content },
 				{ timeoutMs: 5000 },
 			);
@@ -387,7 +394,7 @@ export class UsersService {
 	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
 		try {
 			return await this.httpClient.delete<{ deleted: boolean }>(
-				`${this.usersBaseUrl}/feed/post/comments/${commentId}/by/${userId}`,
+					`${this.postsBaseUrl}/posts/feed/post/comments/${commentId}/by/${userId}`,
 				{ timeoutMs: 5000 },
 			);
 		} catch (error) {
@@ -398,7 +405,7 @@ export class UsersService {
 	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
 		try {
 			return await this.httpClient.get<IFeedPost>(
-				`${this.usersBaseUrl}/feed/post/${postId}?userId=${encodeURIComponent(userId)}`,
+				`${this.postsBaseUrl}/posts/feed/post/${postId}?userId=${encodeURIComponent(userId)}`,
 				{ timeoutMs: 5000 },
 			);
 		} catch (error) {
@@ -409,7 +416,7 @@ export class UsersService {
 	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
 		try {
 			return await this.httpClient.delete<{ deleted: boolean }>(
-				`${this.usersBaseUrl}/feed/post/${postId}/by/${userId}`,
+				`${this.postsBaseUrl}/posts/feed/post/${postId}/by/${userId}`,
 				{ timeoutMs: 5000 },
 			);
 		} catch (error) {
@@ -430,7 +437,7 @@ export class UsersService {
 		}
 
 		throw Object.assign(
-			new Error(`Error de conexion al ${action} en users-service: ${axiosError.message}`),
+			new Error(`Error de conexion al ${action} en el microservicio: ${axiosError.message}`),
 			{ statusCode: 503 },
 		);
 	}

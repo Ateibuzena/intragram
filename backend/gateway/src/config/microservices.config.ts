@@ -14,6 +14,10 @@ export const SERVICE_URLS = {
 		process.env.USERS_SERVICE_URL ||
 			`http://${process.env.USERS_SERVICE_HOST || 'users-service'}:${process.env.USERS_SERVICE_PORT || '3006'}`,
 	),
+	posts: normalizeUrl(
+		process.env.POSTS_SERVICE_URL ||
+			`http://${process.env.POSTS_SERVICE_HOST || 'posts-service'}:${process.env.POSTS_SERVICE_PORT || '3007'}`,
+	),
 	chat: normalizeUrl(
 		process.env.CHAT_SERVICE_URL ||
 			`http://${process.env.CHAT_SERVICE_HOST || 'chat-service'}:${process.env.CHAT_SERVICE_PORT || '3009'}`,

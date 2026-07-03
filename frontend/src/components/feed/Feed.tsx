@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
+import type { IFeedPost } from '@intragram/shared/posts';
 import type { FilterKey, Post } from '@/types/feed';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
@@ -49,15 +49,15 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 			try {
 				setLoadingFeed(true);
 				setError(null);
-				let path = '/users/feed';
+				let path = '/posts/feed';
 				if (activeFilter === 'perfil') {
-					path = '/users/feed/me';
+					path = '/posts/feed/me';
 				} else if (activeFilter === 'amigos') {
-					path = '/users/feed/friends';
+					path = '/posts/feed/friends';
 				} else if (activeFilter === 'favoritos') {
-					path = '/users/feed/favorites';
+					path = '/posts/feed/favorites';
 				} else if (activeFilter === 'trending') {
-					path = '/users/feed/trending';
+					path = '/posts/feed/trending';
 				}
 
 				const res = await fetchWithAuth(path, token, { signal: controller.signal });

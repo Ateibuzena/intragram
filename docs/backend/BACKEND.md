@@ -2,7 +2,7 @@
 
 ## Overview
 
-El backend de Intragram sigue una arquitectura de microservicios HTTP sobre NestJS. Hay un `gateway` como punto de entrada público y tres servicios de dominio: autenticación, usuarios y chat. Cada dominio persiste sus propios datos en PostgreSQL y la plataforma se completa con Nginx, Prometheus y Grafana.
+El backend de Intragram sigue una arquitectura de microservicios HTTP sobre NestJS. Hay un `gateway` como punto de entrada público y cuatro servicios de dominio: autenticación, usuarios, publicaciones y chat. Cada dominio persiste sus propios datos en PostgreSQL y la plataforma se completa con Nginx, Prometheus y Grafana.
 
 ## Services
 
@@ -13,7 +13,9 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
 - `auth-service`
   - Gestiona login, tokens, refresh tokens y OAuth 42.
 - `users-service`
-  - Gestiona perfiles, posts, amistades y favoritos.
+  - Gestiona perfiles, amistades y presencia.
+- `posts-service`
+  - Gestiona publicaciones, likes, comentarios y favoritos.
 - `chat-service`
   - Gestiona conversaciones y mensajes.
 - `nginx`
@@ -26,7 +28,7 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
 - Nginx recibe el tráfico HTTPS.
 - `/` se reenvía al frontend.
 - `/api/` se reenvía al gateway.
-- El gateway habla por HTTP con `auth-service`, `users-service` y `chat-service`.
+- El gateway habla por HTTP con `auth-service`, `users-service`, `posts-service` y `chat-service`.
 - Cada servicio usa su propia base de datos PostgreSQL.
 
 ## Shared Package
@@ -75,10 +77,11 @@ Tambien expone cabeceras de control de cuota:
 
 ## Persistence
 
-Se usan tres instancias separadas de PostgreSQL:
+Se usan cuatro instancias separadas de PostgreSQL:
 
 - `auth-db`
 - `users-db`
+- `posts-db`
 - `chat-db`
 
 Cada servicio usa TypeORM con `synchronize` activado fuera de producción.
@@ -115,9 +118,9 @@ Scripts destacados en `backend/package.json`:
 - OAuth 42 y gestión de sesión.
 - Validación de JWT en gateway.
 - Sincronización de perfiles de usuario.
-- Feed con varias vistas (reciente, amigos, trending, favoritos, perfil).
-- Creación de publicaciones con soporte de bloques de código.
-- Likes persistidos en base de datos con contador en el post.
+- Feed con varias vistas (reciente, amigos, trending, favoritos, perfil) ya reubicado en `posts-service`.
+- Creación de publicaciones con soporte de bloques de código en `posts-service`.
+- Likes persistidos en base de datos con contador en el post dentro de `posts-service`.
 - Comentarios persistidos en base de datos con contador en el post.
 - Favoritos.
 - Lista de amigos con solicitudes pendientes, aceptar y rechazar.

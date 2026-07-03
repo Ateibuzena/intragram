@@ -50,13 +50,17 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 ## Data Flow With Backend
 
 - Feed
-  - `GET /users/feed`
-  - `GET /users/feed/me`
-  - `GET /users/feed/friends`
-  - `GET /users/feed/favorites`
-  - `GET /users/feed/trending`
-  - `POST /users/feed`
-  - `POST /users/feed/favorites/:postId`
+  - `GET /posts/feed`
+  - `GET /posts/feed/me`
+  - `GET /posts/feed/friends`
+  - `GET /posts/feed/favorites`
+  - `GET /posts/feed/trending`
+  - `GET /posts/feed/post/:postId`
+  - `GET /posts/feed/post/:postId/comments`
+  - `POST /posts/feed`
+  - `POST /posts/feed/post/:postId/comments`
+  - `POST /posts/feed/favorites/:postId`
+  - `POST /posts/feed/like/:postId`
 - Usuarios
   - `GET /users/login/:login`
   - `GET /users/:id`
@@ -104,7 +108,7 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 - `ProfilePage` no está conectada a datos reales.
 - `NotificationsPage` es estática.
 - El buscador del navbar todavía no dispara una búsqueda real.
-- Los likes y comentarios siguen siendo locales o pendientes.
+- Los likes y comentarios del feed ya se persisten en backend, aunque todavía faltan mejoras de integridad y UX.
 - Los adjuntos de posts y chat todavía no están implementados.
 
 ## How To Run Frontend In Context
@@ -112,7 +116,7 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 El frontend está pensado para ejecutarse dentro del stack completo con Docker Compose, detrás de Nginx. El punto de acceso esperado es:
 
 ```text
-https://zhvvqwnc-8443.uks1.devtunnels.ms/
+https://localhost:8443/
 ```
 
 ## Related Documentation

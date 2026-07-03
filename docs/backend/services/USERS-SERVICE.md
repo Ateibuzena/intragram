@@ -2,19 +2,17 @@
 
 ## Purpose
 
-`users-service` concentra el dominio social de Intragram: perfiles, publicaciones, amistades, favoritos, likes y comentarios.
+`users-service` concentra el dominio de identidad y relaciones de Intragram: perfiles, sincronización OAuth 42, amistades y presencia.
 
 ## Main Responsibilities
 
 - Crear o actualizar perfiles a partir de OAuth 42.
 - Buscar perfiles por id interno, id de 42 o login.
 - Permitir actualizaciones de perfil local.
-- Construir distintos feeds.
-- Crear publicaciones.
-- Gestionar likes con persistencia y contador.
-- Gestionar comentarios con persistencia y contador.
 - Devolver amistades aceptadas y solicitudes pendientes.
-- Guardar y desguardar publicaciones favoritas.
+- Mantener el estado de presencia.
+
+> Nota: el dominio de publicaciones, likes, comentarios y favoritos ya vive en `posts-service`. El gateway sigue exponiendo las rutas públicas de feed por compatibilidad durante la transición.
 
 ## Exposed Endpoints
 
@@ -28,23 +26,6 @@
 - `GET /users/login/:login`
 - `PATCH /users/:id/profile`
 - `GET /health`
-
-### Feed
-
-- `GET /feed/recent/:id`
-- `GET /feed/user/:id`
-- `POST /feed/user/:id`
-- `GET /feed/friends/:id`
-- `GET /feed/trending/:id`
-- `GET /feed/favorites/:id`
-- `POST /feed/favorites/:id`
-- `POST /feed/like/:id` — body: `{ postId }` — toggle like, devuelve `{ liked, likes_count }`
-
-### Comments
-
-- `GET /feed/post/:postId/comments` — lista de comentarios del post, ordenados por fecha
-- `POST /feed/post/:postId/comments` — body: `{ authorId, content }` — añade comentario
-- `DELETE /feed/post/comments/:commentId/by/:userId` — elimina comentario (solo el autor)
 
 ### Friends
 
@@ -134,21 +115,13 @@ Comportamiento:
 
 Respuesta: `{ status: 'pending' | 'accepted', friend: IUserProfile }`
 
-## Comments
+## Posts Domain
 
-Los comentarios están modelados como entidad propia (`user_post_comments`). Cada operación actualiza `comments_count` en el post correspondiente.
+El dominio de publicaciones ya no pertenece a `users-service`.
 
-### `GET /feed/post/:postId/comments`
-
-Devuelve todos los comentarios del post ordenados por `created_at ASC`. Cada comentario incluye el perfil resumido del autor.
-
-### `POST /feed/post/:postId/comments`
-
-Crea un comentario. Requiere `authorId` y `content` en el body. Incrementa `comments_count` en el post.
-
-### `DELETE /feed/post/comments/:commentId/by/:userId`
-
-Elimina un comentario. Responde `403` si `userId` no es el autor. Decrementa `comments_count` en el post.
+- Publicaciones, likes, comentarios y favoritos viven en `posts-service`.
+- El gateway sigue aceptando las rutas históricas de feed para mantener compatibilidad mientras dura la transición.
+- `users-service` sigue siendo la fuente de verdad de perfiles y amistades para que `posts-service` pueda tomar snapshots del autor.
 
 ## Domain Model
 
@@ -165,16 +138,6 @@ Guarda la identidad social y académica sincronizada desde 42:
 - `campus`
 - `raw_profile`
 
-### `user_posts`
-
-Guarda publicaciones del feed:
-
-- autor,
-- contenido,
-- visibilidad,
-- `likes_count` — actualizado por `user_post_likes`,
-- `comments_count` — actualizado por `user_post_comments`.
-
 ### `user_friendships`
 
 Guarda relaciones entre usuarios con estado:
@@ -183,55 +146,11 @@ Guarda relaciones entre usuarios con estado:
 - `accepted`
 - `blocked`
 
-### `user_saved_posts`
-
-Modela favoritos por usuario.
-
-### `user_post_likes`
-
-Rastrea qué usuario ha dado like a qué post. Restricción única `(user_id, post_id)`. Las operaciones de toggle sobre esta tabla actualizan `likes_count` en `user_posts`.
-
-### `user_post_comments`
-
-Guarda comentarios de publicaciones:
-
-- `post_id`
-- `author_id`
-- `content`
-- `created_at`
-
-Las operaciones de inserción y borrado actualizan `comments_count` en `user_posts`.
-
-## Feed Logic
-
-### Recent Feed
-
-- publicaciones propias,
-- publicaciones de amigos aceptados.
-
-### My Feed
-
-- solo publicaciones del usuario.
-
-### Friends Feed
-
-- solo publicaciones de amigos aceptados.
-
-### Trending Feed
-
-- publicaciones públicas,
-- excluye las del propio usuario,
-- ordena por `likes_count` y fecha.
-
-### Favorites Feed
-
-- publicaciones guardadas por el usuario.
-
 ## Relationship With Other Services
 
 - `auth-service` lo usa para sincronizar perfiles derivados de 42.
 - El `gateway` lo usa para exponer API pública protegida.
-- El frontend obtiene de aquí perfiles, feeds y amigos.
+- El frontend obtiene de aquí perfiles y amigos.
 
 ## Operational Notes
 
@@ -241,7 +160,6 @@ Las operaciones de inserción y borrado actualizan `comments_count` en `user_pos
 
 ## Current Limitations
 
-- No hay paginación en feeds ni en comentarios (se devuelven todos los registros).
 - No hay notificaciones al recibir un comentario, like o solicitud de amistad.
 - El perfil editable existe en backend pero el frontend lo explota de forma básica.
 
@@ -250,8 +168,4 @@ Las operaciones de inserción y borrado actualizan `comments_count` en `user_pos
 - `backend/services/users/src/users.controller.ts`
 - `backend/services/users/src/users.service.ts`
 - `backend/services/users/src/entities/user-profile.entity.ts`
-- `backend/services/users/src/entities/user-post.entity.ts`
 - `backend/services/users/src/entities/user-friendship.entity.ts`
-- `backend/services/users/src/entities/user-saved-post.entity.ts`
-- `backend/services/users/src/entities/user-post-like.entity.ts`
-- `backend/services/users/src/entities/user-post-comment.entity.ts`

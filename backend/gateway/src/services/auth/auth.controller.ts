@@ -38,7 +38,7 @@ import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guar
 
 @Controller('auth')
 export class AuthController {
-	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://zhvvqwnc-8443.uks1.devtunnels.ms/';
+	private readonly frontendUrl = process.env.FRONTEND_URL ?? 'https://localhost:8443/';
 
 	constructor(private readonly authService: AuthService) {}
 
@@ -156,10 +156,11 @@ export class AuthController {
 	@Get('42')
 	@UseGuards(PublicRateLimitGuard)
 	@PublicRateLimit(30, 60_000, 'auth:42')
-	async oauth42Login(@Res() res: any) {
+	async oauth42Login(@Query('state') state: string, @Res() res: any) {
 		try {
 			const { url } = await this.authService.getOAuth42AuthUrl();
-			return res.redirect(url);
+			const finalUrl = state ? `${url}&state=${encodeURIComponent(state)}` : url;
+			return res.redirect(finalUrl);
 		} catch (error: any) {
 			return res.redirect(`${this.frontendUrl}?error=oauth_init_failed`);
 		}
@@ -176,6 +177,7 @@ export class AuthController {
 		@Query('code') code: string,
 		@Query('error') oauthError: string,
 		@Query('error_description') oauthErrorDescription: string,
+		@Query('state') state: string,
 		@Ip() ip: string,
 		@Headers('user-agent') userAgent: string,
 		@Res() res: any,
@@ -199,7 +201,7 @@ export class AuthController {
 		try {
 			const authResponse = await this.authService.handleOAuth42Callback(code, ip, userAgent);
 
-			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&refresh_token=${authResponse.refresh_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}`;
+			const redirectUrl = `${this.frontendUrl}?token=${authResponse.access_token}&refresh_token=${authResponse.refresh_token}&user=${encodeURIComponent(JSON.stringify(authResponse.user))}${state ? `&${state}` : ''}`;
 			return res.redirect(redirectUrl);
 		} catch (error: any) {
 			return res.redirect(`${this.frontendUrl}?error=auth_failed`);

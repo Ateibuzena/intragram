@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
+import type { IFeedPost } from '@intragram/shared/posts';
 import type { Post } from '@/types/feed';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +27,7 @@ export const useProfilePosts = (username: string | null | undefined): UseProfile
 				setLoading(true);
 				setError(null);
 
-				const res = await fetchWithAuth('/users/feed', token, { signal: controller.signal });
+				const res = await fetchWithAuth('/posts/feed/me', token, { signal: controller.signal });
 
 				if (!res.ok) {
 					setItems([]);

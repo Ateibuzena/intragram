@@ -40,7 +40,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 		try {
 			setIsSubmitting(true);
 			setError(null);
-			const res = await fetchWithAuth('/users/feed', token, {
+			const res = await fetchWithAuth('/posts/feed', token, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ content }),

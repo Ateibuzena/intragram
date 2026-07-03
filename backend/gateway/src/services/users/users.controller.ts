@@ -36,7 +36,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import type { IDirectoryEntry, IDirectoryFilters, IDirectoryScope } from './users.service';
-import { IUserProfile, IPostComment, IFeedPost, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { IPostComment, IFeedPost, CreateFeedPostDto } from '@intragram/shared/posts';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
@@ -469,9 +470,10 @@ export class UsersController {
 
 	@UseGuards(AuthGuard)
 	@Get('feed/post/:postId/comments')
-	async getPostComments(@Param('postId') postId: string): Promise<IPostComment[]> {
+	async getPostComments(@Param('postId') postId: string, @Req() req: any): Promise<IPostComment[]> {
 		try {
-			return await this.usersService.getPostComments(postId);
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getPostComments(postId, profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

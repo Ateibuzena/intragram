@@ -28,7 +28,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=15d
-      - --web.external-url=https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/
+      - --web.external-url=https://localhost:8443/prometheus/
       - --web.route-prefix=/
     volumes:
       - prometheus-data:/prometheus
@@ -59,7 +59,7 @@ services:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_HTTP_PORT: 3001
       GF_SERVER_DOMAIN: localhost
-      GF_SERVER_ROOT_URL: https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/
+      GF_SERVER_ROOT_URL: https://localhost:8443/grafana/
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_SERVER_ENFORCE_DOMAIN: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
@@ -120,6 +120,25 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  posts-db:
+    container_name: posts-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTS_DB_USER}
+      POSTGRES_PASSWORD: ${POSTS_DB_PASSWORD}
+      POSTGRES_DB: ${POSTS_DB_NAME}
+    volumes:
+      - posts-db-data:/var/lib/postgresql/data
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTS_DB_USER} -d ${POSTS_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
   chat-db:
     container_name: chat-db
     image: postgres:16-alpine
@@ -170,6 +189,37 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
+
+  posts-service:
+    container_name: posts-service
+    build:
+      context: ./backend
+      dockerfile: services/posts/Dockerfile.dev
+    environment:
+      PORT: 3007
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: posts-db
+      DB_PORT: 5432
+      DB_USERNAME: ${POSTS_DB_USER}
+      DB_PASSWORD: ${POSTS_DB_PASSWORD}
+      DB_DATABASE: ${POSTS_DB_NAME}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL}
+    volumes:
+      - ./backend/services/posts/src:/app/services/posts/src
+      - ./backend/shared:/app/shared
+      - posts-service-node-modules:/app/node_modules
+    networks:
+      - service-net
+    depends_on:
+      posts-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://posts-service:3007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     restart: unless-stopped
 
   auth-service:
@@ -253,6 +303,7 @@ services:
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       USERS_SERVICE_URL: ${USERS_SERVICE_URL}
+      POSTS_SERVICE_URL: ${POSTS_SERVICE_URL}
       CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       GRAFANA_URL: ${GRAFANA_URL}
     volumes:
@@ -266,6 +317,7 @@ services:
       - auth-service
       - users-service
       - chat-service
+      - posts-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/health"]
       interval: 30s
@@ -325,10 +377,14 @@ volumes:
     name: users-service-node-modules
   chat-service-node-modules:
     name: chat-service-node-modules
+  posts-service-node-modules:
+    name: posts-service-node-modules
   auth-db-data:
     name: auth-db-data
   users-db-data:
     name: users-db-data
+  posts-db-data:
+    name: posts-db-data
   chat-db-data:
     name: chat-db-data
   grafana-data:

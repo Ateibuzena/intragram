@@ -10,6 +10,7 @@ import { AppLoggerModule } from './observability/logger/logger.module';
 import { GatewayHttpModule } from './common/http/gateway-http.module';
 import { AuthModule } from './services/auth/auth.module';
 import { UsersModule } from './services/users/users.module';
+import { PostsModule } from './services/posts/posts.module';
 import { ChatModule } from './services/chat/chat.module';
 import { PresenceModule } from './services/presence/presence.module';
 
@@ -19,6 +20,7 @@ import { PresenceModule } from './services/presence/presence.module';
 		GatewayHttpModule,
 		AuthModule,
 		UsersModule,
+		PostsModule,
 		ChatModule,
 		PresenceModule,
 	],

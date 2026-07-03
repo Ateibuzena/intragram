@@ -67,7 +67,7 @@ make up
 3. Abrir la aplicación en:
 
 ```text
-https://zhvvqwnc-8443.uks1.devtunnels.ms/
+https://localhost:8443/
 ```
 
 4. Iniciar sesión con una cuenta de 42.
@@ -84,10 +84,10 @@ make fclean
 
 ### Architecture Entry Points
 
-- Frontend servido por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/`
-- API pública del gateway: `https://zhvvqwnc-8443.uks1.devtunnels.ms/api/`
-- Prometheus proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/`
-- Grafana proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/`
+- Frontend servido por Nginx: `https://localhost:8443/`
+- API pública del gateway: `https://localhost:8443/api/`
+- Prometheus proxificado por Nginx: `https://localhost:8443/prometheus/`
+- Grafana proxificado por Nginx: `https://localhost:8443/grafana/`
 
 ## Team Information
 
@@ -115,7 +115,7 @@ La siguiente información mezcla evidencia verificable del repositorio con una i
 
 ### Work Organization
 
-- Trabajo dividido por áreas: frontend, autenticación, users/feed, chat y observabilidad.
+- Trabajo dividido por áreas: frontend, autenticación, profiles, posts/feed, chat y observabilidad.
 - Desarrollo por ramas temáticas visibles en Git:
   - `feature/auth-service`
   - `feature/users`
@@ -217,7 +217,7 @@ Relación principal:
   - `correction_point: int`
   - `last_login_at: timestamp | null`
   - `raw_profile: jsonb | null`
-- `user_posts`
+- `posts`
   - `id: uuid`
   - `author_id: uuid`
   - `content: text`
@@ -229,15 +229,13 @@ Relación principal:
   - `user_id: uuid`
   - `friend_id: uuid`
   - `status: pending | accepted | blocked`
-- `user_saved_posts`
+- `post_saves`
   - `id: uuid`
   - `user_id: uuid`
   - `post_id: uuid`
 
 Relaciones principales:
-- `user_posts.author_id -> user_profiles.id`
-- `user_saved_posts.user_id -> user_profiles.id`
-- `user_saved_posts.post_id -> user_posts.id`
+- `post_saves.post_id -> posts.id`
 - `user_friendships` modela relaciones entre perfiles.
 
 ### Chat Database
@@ -277,10 +275,13 @@ Relación principal:
   - Consulta de publicaciones recientes, de amigos, favoritas, trending y propias.
   - Team members: Ateibuzena, Mariano Fernández Rodero
 - **Create post**
-  - Publicación persistida desde frontend hacia users-service.
+  - Publicación persistida desde frontend hacia posts-service.
   - Team members: Ateibuzena
 - **Favorites**
   - Guardado y desguardado de publicaciones.
+  - Team members: Ateibuzena
+- **Post reactions and comments**
+  - Likes y comentarios persistidos con contadores sincronizados y acceso validado por visibilidad.
   - Team members: Ateibuzena
 - **Friends list**
   - Consulta de amigos aceptados desde el backend.
@@ -302,7 +303,7 @@ Relación principal:
 
 - Perfil frontend todavía es una vista placeholder.
 - Notificaciones es una vista estática.
-- Likes y comentarios no están persistidos.
+- El feed ya vive en `posts-service`; queda la validación runtime completa en Docker y la posible evolución de contrato/UX.
 - Búsqueda global del navbar todavía no dispara consultas reales.
 - Adjuntos del chat y del creador de publicaciones siguen preparados solo a nivel de interfaz.
 
@@ -320,7 +321,7 @@ El repositorio no contiene una matriz oficial de módulos `Major/Minor` cerrada 
 - **User management and social feed**
   - Proposed weight: Major = 2 pts
   - Justification: concentra perfiles, posts, favoritos y relaciones.
-  - Implementation: `users-service`, filtros de feed y creación de posts.
+  - Implementation: `users-service` para perfiles/amistades y `posts-service` para el feed.
   - Team members: Ateibuzena, Mariano Fernández Rodero
 - **Private messaging**
   - Proposed weight: Major = 2 pts

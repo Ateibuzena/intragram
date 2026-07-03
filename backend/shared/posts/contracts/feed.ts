@@ -25,14 +25,7 @@ export interface IFeedPost {
 	created_at: string;
 	updated_at: string;
 	author: IFeedPostAuthorSummary;
-	/**
-	 * Indicates whether the authenticated user has saved this post as a favourite.
-	 * Optional to maintain compatibility with feeds that do not depend on the user.
-	 */
 	saved_by_current_user?: boolean;
-	/**
-	 * Indicates whether the authenticated user has liked this post.
-	 */
 	liked_by_current_user?: boolean;
 }
 

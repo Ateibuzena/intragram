@@ -11,6 +11,19 @@ export const cleanTitle = (name: string, login: string) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
+const FORTY_TWO_CDN_BASE = 'https://cdn.intra.42.fr';
+
+// 42's API sends achievement images as a relative path prefixed with
+// "/uploads" (e.g. "/uploads/achievement/image/41/SCO001.svg"), but the real
+// asset lives at cdn.intra.42.fr WITHOUT that prefix — confirmed by testing
+// against the live CDN (the /uploads path 404s even with a logged-in session).
+const resolveAchievementImageUrl = (image: string | null | undefined): string | null => {
+	if (!image) return null;
+	if (/^https?:\/\//i.test(image)) return image;
+	const path = image.replace(/^\/?uploads\//, '/');
+	return `${FORTY_TWO_CDN_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+};
+
 export const formatDate = (value: string | null) => {
 	if (!value) return 'N/A';
 	const date = new Date(value);
@@ -134,7 +147,7 @@ export const buildProfileInsights = (profile: UserProfileEntityDto | null): Prof
 				description: achievement.description ?? null,
 				kind: achievement.kind ?? null,
 				tier: achievement.tier ?? null,
-				image: achievement.image ?? null,
+				image: resolveAchievementImageUrl(achievement.image),
 			}))
 			.filter((achievement) => achievement.name),
 		totalProjects: projects.length,

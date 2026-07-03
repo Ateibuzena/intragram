@@ -8,6 +8,26 @@ interface AchievementsCardProps {
 
 const PREVIEW_COUNT = 6;
 
+const FallbackBadge = () => (
+	<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-ft-cyan/20 bg-ft-cyan/10 text-xs font-black text-ft-cyan">
+		42
+	</div>
+);
+
+const AchievementIcon = ({ image }: { image: string | null }) => {
+	const [failed, setFailed] = useState(false);
+	if (!image || failed) return <FallbackBadge />;
+	return (
+		<img
+			src={image}
+			alt=""
+			className="h-9 w-9 shrink-0 rounded-md object-cover"
+			loading="lazy"
+			onError={() => setFailed(true)}
+		/>
+	);
+};
+
 export const AchievementsCard = ({ insights, className = '' }: AchievementsCardProps) => {
 	const [expanded, setExpanded] = useState(false);
 	const achievements = insights.achievements;
@@ -16,18 +36,7 @@ export const AchievementsCard = ({ insights, className = '' }: AchievementsCardP
 
 	const renderAchievement = (achievement: ProfileInsights['achievements'][number]) => (
 		<div key={achievement.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-ft-border bg-ft-hover/20 p-2.5 transition-colors hover:border-ft-cyan/30 hover:bg-ft-hover/40">
-			{achievement.image ? (
-				<img
-					src={achievement.image}
-					alt=""
-					className="h-9 w-9 shrink-0 rounded-md object-cover"
-					loading="lazy"
-				/>
-			) : (
-				<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-ft-cyan/20 bg-ft-cyan/10 text-xs font-black text-ft-cyan">
-					42
-				</div>
-			)}
+			<AchievementIcon image={achievement.image} />
 			<div className="min-w-0">
 				<p className="truncate text-xs font-semibold text-white" title={achievement.name}>
 					{achievement.name}

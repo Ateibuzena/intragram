@@ -11,15 +11,11 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, DataSource, EntityManager, In, Not, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import axios from 'axios';
 import { UserProfileEntity } from './entities/user-profile.entity';
-import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
-import { UserSavedPostEntity } from './entities/user-saved-post.entity';
-import { UserPostLikeEntity } from './entities/user-post-like.entity';
-import { UserPostCommentEntity } from './entities/user-post-comment.entity';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, IFeedPost, IPostComment, CreateFeedPostDto, mapOAuth42MeToUpsertUser } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, mapOAuth42MeToUpsertUser } from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
@@ -56,19 +52,10 @@ const asJsonArray = <T extends object>(value?: T[]): Record<string, unknown>[] |
 export class UsersService {
 	// TypeORM repository for the local user profile.
 	constructor(
-		private readonly dataSource: DataSource,
 		@InjectRepository(UserProfileEntity)
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
-		@InjectRepository(UserPostEntity)
-		private readonly userPostRepo: Repository<UserPostEntity>,
 		@InjectRepository(UserFriendshipEntity)
 		private readonly friendshipRepo: Repository<UserFriendshipEntity>,
-		@InjectRepository(UserSavedPostEntity)
-		private readonly savedPostRepo: Repository<UserSavedPostEntity>,
-		@InjectRepository(UserPostLikeEntity)
-		private readonly postLikeRepo: Repository<UserPostLikeEntity>,
-		@InjectRepository(UserPostCommentEntity)
-		private readonly commentRepo: Repository<UserPostCommentEntity>,
 	) {}
 
 	/**
@@ -80,63 +67,6 @@ export class UsersService {
 		});
 
 		return friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
-	}
-
-	private async canViewPost(post: UserPostEntity, viewerId: string): Promise<boolean> {
-		if (post.author_id === viewerId) return true;
-		if (post.visibility === 'public') return true;
-		if (post.visibility !== 'friends') return false;
-
-		const friendIds = await this.getFriendIds(post.author_id);
-		return friendIds.includes(viewerId);
-	}
-
-	private async findAccessiblePost(postId: string, viewerId: string): Promise<UserPostEntity> {
-		const post = await this.userPostRepo.findOne({
-			where: { id: postId },
-			relations: ['author'],
-		});
-
-		if (!post) {
-			throw Object.assign(new Error('Post not found'), { statusCode: 404 });
-		}
-
-		if (!(await this.canViewPost(post, viewerId))) {
-			throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
-		}
-
-		return post;
-	}
-
-	private async lockPostForUpdate(manager: EntityManager, postId: string): Promise<UserPostEntity> {
-		const post = await manager
-			.getRepository(UserPostEntity)
-			.createQueryBuilder('post')
-			.leftJoinAndSelect('post.author', 'author')
-			.setLock('pessimistic_write')
-			.where('post.id = :postId', { postId })
-			.getOne();
-
-		if (!post) {
-			throw Object.assign(new Error('Post not found'), { statusCode: 404 });
-		}
-
-		return post;
-	}
-
-	private async lockCommentForUpdate(manager: EntityManager, commentId: string): Promise<UserPostCommentEntity> {
-		const comment = await manager
-			.getRepository(UserPostCommentEntity)
-			.createQueryBuilder('comment')
-			.setLock('pessimistic_write')
-			.where('comment.id = :commentId', { commentId })
-			.getOne();
-
-		if (!comment) {
-			throw Object.assign(new Error('Comment not found'), { statusCode: 404 });
-		}
-
-		return comment;
 	}
 
 	/**
@@ -350,154 +280,14 @@ export class UsersService {
 		return createHealthResponse('users');
 	}
 
-	/**
-	 * Returns the user's personal "Recent" feed:
-	 * - Own posts in any visibility
-	 * - Public posts from accepted friends
-	 * - Friends-only posts from accepted friends
-	 */
-	async getRecentFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const friendIds = await this.getFriendIds(userId);
-		const qb = this.userPostRepo
-			.createQueryBuilder('post')
-			.leftJoinAndSelect('post.author', 'author')
-			.orderBy('post.created_at', 'DESC')
-			.take(limit)
-			.where('post.author_id = :userId', { userId });
-
-		if (friendIds.length > 0) {
-			qb.orWhere(new Brackets((friendQb) => {
-				friendQb
-					.where('post.author_id IN (:...friendIds)', { friendIds })
-					.andWhere('post.visibility IN (:...friendVisibilities)', { friendVisibilities: ['public', 'friends'] });
-			}));
-		}
-
-		const posts = await qb.getMany();
-		const postIds = posts.map((p) => p.id);
-		const [likedIds, savedIds] = await Promise.all([
-			this.getLikedPostIds(userId, postIds),
-			this.getSavedPostIds(userId, postIds),
-		]);
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
-	}
-
-	/**
-	 * Returns the posts of the authenticated user themselves.
-	 */
-	async getUserFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const posts = await this.userPostRepo.find({
-			where: { author_id: userId },
-			order: { created_at: 'DESC' },
-			take: limit,
-			relations: ['author'],
-		});
-		const postIds = posts.map((p) => p.id);
-		const [likedIds, savedIds] = await Promise.all([
-			this.getLikedPostIds(userId, postIds),
-			this.getSavedPostIds(userId, postIds),
-		]);
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
-	}
-
-	/**
-	 * Returns posts from the user's accepted friends.
-	 */
-	async getFriendsFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const friendIds = await this.getFriendIds(userId);
-		if (!friendIds.length) return [];
-
-		const posts = await this.userPostRepo.find({
-			where: [
-				{ author_id: In(friendIds), visibility: 'public' },
-				{ author_id: In(friendIds), visibility: 'friends' },
-			],
-			order: { created_at: 'DESC' },
-			take: limit,
-			relations: ['author'],
-		});
-		const postIds = posts.map((p) => p.id);
-		const [likedIds, savedIds] = await Promise.all([
-			this.getLikedPostIds(userId, postIds),
-			this.getSavedPostIds(userId, postIds),
-		]);
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
-	}
-
-	/**
-	 * Returns the "Trending" feed for a user:
-	 * - Public posts from the whole platform
-	 * - Excludes the user's own posts
-	 * - Ordered by likes (desc) then date (desc)
-	 */
-	async getTrendingFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const posts = await this.userPostRepo
-			.createQueryBuilder('post')
-			.leftJoinAndSelect('post.author', 'author')
-			.where('post.visibility = :visibility', { visibility: 'public' })
-			.andWhere('post.author_id != :userId', { userId })
-			.orderBy('post.likes_count', 'DESC')
-			.addOrderBy('post.created_at', 'DESC')
-			.take(limit)
-			.getMany();
-
-		const postIds = posts.map((p) => p.id);
-		const [likedIds, savedIds] = await Promise.all([
-			this.getLikedPostIds(userId, postIds),
-			this.getSavedPostIds(userId, postIds),
-		]);
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return posts.map((post) => this.mapPostToFeedDto(post, savedIds.has(post.id), likedIds.has(post.id), viewerProjects, userId));
-	}
-
-	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
-		const post = await this.findAccessiblePost(postId, userId);
-
-		const [savedResult, likedIds] = await Promise.all([
-			this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } }),
-			this.getLikedPostIds(userId, [postId]),
-		]);
-
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return this.mapPostToFeedDto(post, !!savedResult, likedIds.has(postId), viewerProjects, userId);
-	}
-
-	private async getViewerProjectIndex(userId: string): Promise<Map<string, string>> {
-		const viewer = await this.userProfileRepo.findOne({
-			where: { id: userId },
-			select: ['id', 'projects_users'],
-		});
-		return UsersService.projectIndex(viewer?.projects_users ?? null);
-	}
-
-	private static getMainLevel(user: UserProfileEntity): { level: number | null; grade: string | null } {
-		const levels = Array.isArray(user.levels) ? user.levels : [];
-		const mainLevel = levels.find((level) => level.id === 21 || level.slug === '42cursus') ?? levels[0];
-		return {
-			level: typeof mainLevel?.level === 'number' ? Math.round(mainLevel.level * 100) / 100 : null,
-			grade: typeof mainLevel?.grade === 'string' ? mainLevel.grade : null,
-		};
-	}
-
-	private static commonProjectLabels(
-		viewerProjects: Map<string, string>,
-		authorProjects: Record<string, unknown>[] | null,
-		viewerId: string,
-		authorId: string,
-	): string[] {
-		if (viewerId === authorId) return [];
-		return [...UsersService.projectIndex(authorProjects)]
-			.filter(([projectKey]) => viewerProjects.has(projectKey))
-			.map(([, label]) => label);
-	}
-
 	private static matchesDirectoryFilters(user: UserProfileEntity, filters: IDirectoryFilters): boolean {
-		const mainLevel = UsersService.getMainLevel(user).level;
-		if (typeof filters.minLevel === 'number' && (mainLevel === null || mainLevel < filters.minLevel)) return false;
-		if (typeof filters.maxLevel === 'number' && (mainLevel === null || mainLevel > filters.maxLevel)) return false;
+		if (typeof filters.minLevel === 'number' || typeof filters.maxLevel === 'number') {
+			const levels = Array.isArray(user.levels) ? user.levels : [];
+			const mainLevel = levels.find((level) => level.id === 21 || level.slug === '42cursus') ?? levels[0];
+			const value = typeof mainLevel?.level === 'number' ? Math.round(mainLevel.level * 100) / 100 : null;
+			if (typeof filters.minLevel === 'number' && (value === null || value < filters.minLevel)) return false;
+			if (typeof filters.maxLevel === 'number' && (value === null || value > filters.maxLevel)) return false;
+		}
 
 		if (filters.cursus) {
 			const needle = filters.cursus.toLowerCase();
@@ -532,58 +322,6 @@ export class UsersService {
 		}
 
 		return true;
-	}
-
-	private mapPostToFeedDto(
-		post: UserPostEntity,
-		savedByCurrentUser = false,
-		likedByCurrentUser = false,
-		viewerProjects = new Map<string, string>(),
-		viewerId = '',
-	): IFeedPost {
-		const mainLevel = UsersService.getMainLevel(post.author);
-		const commonProjects = UsersService.commonProjectLabels(viewerProjects, post.author.projects_users, viewerId, post.author.id);
-		return {
-			id: post.id,
-			content: post.content,
-			visibility: post.visibility as IFeedPost['visibility'],
-			likes_count: post.likes_count,
-			comments_count: post.comments_count,
-			created_at: post.created_at instanceof Date ? post.created_at.toISOString() : (post.created_at as unknown as string),
-			updated_at: post.updated_at instanceof Date ? post.updated_at.toISOString() : (post.updated_at as unknown as string),
-			author: {
-				id: post.author.id,
-				login: post.author.login,
-				display_name: post.author.display_name,
-				avatar_url: post.author.avatar_url,
-				correction_point: post.author.correction_point,
-				campus: post.author.campus,
-				campus_country: post.author.campus_country,
-				level: mainLevel.level,
-				cursus_grade: mainLevel.grade,
-				common_projects_count: commonProjects.length,
-				common_projects: commonProjects.slice(0, 3),
-				active: post.author.active,
-				last_login_at:
-					post.author.last_login_at instanceof Date
-							? post.author.last_login_at.toISOString()
-							: (post.author.last_login_at as unknown as string | null),
-			},
-			saved_by_current_user: savedByCurrentUser,
-			liked_by_current_user: likedByCurrentUser,
-		};
-	}
-
-	private async getLikedPostIds(userId: string, postIds: string[]): Promise<Set<string>> {
-		if (!postIds.length) return new Set();
-		const likes = await this.postLikeRepo.find({ where: { user_id: userId, post_id: In(postIds) } });
-		return new Set(likes.map((l) => l.post_id));
-	}
-
-	private async getSavedPostIds(userId: string, postIds: string[]): Promise<Set<string>> {
-		if (!postIds.length) return new Set();
-		const saved = await this.savedPostRepo.find({ where: { user_id: userId, post_id: In(postIds) } });
-		return new Set(saved.map((s) => s.post_id));
 	}
 
 	/**
@@ -900,35 +638,6 @@ export class UsersService {
 	}
 
 	/**
-	 * Toggles a user's like on a post. Updates likes_count on the post.
-	 */
-	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
-		return this.dataSource.transaction(async (manager) => {
-			const postRepo = manager.getRepository(UserPostEntity);
-			const likeRepo = manager.getRepository(UserPostLikeEntity);
-			const post = await this.lockPostForUpdate(manager, postId);
-			if (!(await this.canViewPost(post, userId))) {
-				throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
-			}
-
-			const existing = await likeRepo.findOne({ where: { user_id: userId, post_id: postId } });
-
-			if (existing) {
-				await likeRepo.remove(existing);
-				post.likes_count = Math.max(0, post.likes_count - 1);
-				await postRepo.save(post);
-				return { liked: false, likes_count: post.likes_count };
-			}
-
-			const like = likeRepo.create({ user_id: userId, post_id: postId });
-			await likeRepo.save(like);
-			post.likes_count = post.likes_count + 1;
-			await postRepo.save(post);
-			return { liked: true, likes_count: post.likes_count };
-		});
-	}
-
-	/**
 	 * Removes a friendship between two users.
 	 */
 	async removeFriend(userId: string, friendId: string): Promise<{ removed: boolean; wasAccepted: boolean }> {
@@ -948,189 +657,9 @@ export class UsersService {
 		return { removed: true, wasAccepted };
 	}
 
-	/**
-	 * Returns the feed of posts saved (favourited) by the user.
-	 */
-	async getFavoritesFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const saved = await this.savedPostRepo.find({
-			where: { user_id: userId },
-			order: { created_at: 'DESC' },
-			relations: ['post', 'post.author'],
-			take: limit,
-		});
-
-		const posts = saved.map((entry) => entry.post);
-		const likedIds = await this.getLikedPostIds(userId, posts.map((p) => p.id));
-		const viewerProjects = await this.getViewerProjectIndex(userId);
-		return saved.map((entry) => this.mapPostToFeedDto(entry.post, true, likedIds.has(entry.post.id), viewerProjects, userId));
-	}
-
-	/**
-	 * Toggles the saved state of a post for a user.
-	 * Returns true if it ends up saved, false if the save is undone.
-	 */
-	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {
-		const existing = await this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } });
-		if (existing) {
-			await this.savedPostRepo.remove(existing);
-			return false;
-		}
-
-		const post = await this.userPostRepo.findOne({ where: { id: postId } });
-		if (!post) {
-			throw Object.assign(new Error('Publicacion no encontrada'), { statusCode: 404 });
-		}
-
-		const entity = this.savedPostRepo.create({ user_id: userId, post_id: postId });
-		await this.savedPostRepo.save(entity);
-		return true;
-	}
-
-	/**
-	 * Creates a new post in the feed for the specified user.
-	 */
-	async createPost(authorId: string, dto: CreateFeedPostDto): Promise<IFeedPost> {
-		const author = await this.userProfileRepo.findOne({ where: { id: authorId } });
-		if (!author) {
-			throw Object.assign(new Error(`Usuario con id ${authorId} no encontrado`), { statusCode: 404 });
-		}
-
-		const visibility = dto.visibility ?? 'public';
-		const trimmedContent = dto.content.trim();
-		if (!trimmedContent) {
-			throw Object.assign(new Error('El contenido de la publicacion no puede estar vacio'), { statusCode: 400 });
-		}
-
-		const entity = this.userPostRepo.create({
-			author_id: authorId,
-			content: trimmedContent,
-			visibility,
-			likes_count: 0,
-			comments_count: 0,
-		});
-
-		const saved = await this.userPostRepo.save(entity);
-		const full = await this.userPostRepo.findOne({
-			where: { id: saved.id },
-			relations: ['author'],
-		});
-		if (!full) {
-			throw Object.assign(new Error('No se pudo recuperar la publicacion creada'), { statusCode: 500 });
-		}
-
-		return this.mapPostToFeedDto(full);
-	}
-
-	/**
-	 * Returns all comments for a given post, ordered oldest-first.
-	 */
-	async getPostComments(postId: string, userId: string): Promise<IPostComment[]> {
-		await this.findAccessiblePost(postId, userId);
-
-		const comments = await this.commentRepo.find({
-			where: { post_id: postId },
-			order: { created_at: 'ASC' },
-			relations: ['author'],
-		});
-		return comments.map((c) => this.mapCommentToDto(c));
-	}
-
-	/**
-	 * Adds a comment to a post and increments the post's comments_count.
-	 */
-	async addComment(postId: string, authorId: string, content: string): Promise<IPostComment> {
-		const trimmed = content.trim();
-		if (!trimmed) {
-			throw Object.assign(new Error('Comment content cannot be empty'), { statusCode: 400 });
-		}
-
-		return this.dataSource.transaction(async (manager) => {
-			const postRepo = manager.getRepository(UserPostEntity);
-			const commentRepo = manager.getRepository(UserPostCommentEntity);
-			const userRepo = manager.getRepository(UserProfileEntity);
-			const [post, author] = await Promise.all([
-				this.lockPostForUpdate(manager, postId),
-				userRepo.findOne({ where: { id: authorId } }),
-			]);
-
-			if (!author) throw Object.assign(new Error('User not found'), { statusCode: 404 });
-			if (!(await this.canViewPost(post, authorId))) {
-				throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
-			}
-
-			const comment = commentRepo.create({ post_id: postId, author_id: authorId, content: trimmed });
-			await commentRepo.save(comment);
-
-			post.comments_count = post.comments_count + 1;
-			await postRepo.save(post);
-
-			comment.author = author;
-			return this.mapCommentToDto(comment);
-		});
-	}
-
-	/**
-	 * Deletes a comment by its owner and decrements the post's comments_count.
-	 */
-	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
-		return this.dataSource.transaction(async (manager) => {
-			const commentRepo = manager.getRepository(UserPostCommentEntity);
-			const postRepo = manager.getRepository(UserPostEntity);
-			const comment = await this.lockCommentForUpdate(manager, commentId);
-			if (comment.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
-
-			const post = await this.lockPostForUpdate(manager, comment.post_id);
-			await commentRepo.remove(comment);
-
-			post.comments_count = Math.max(0, post.comments_count - 1);
-			await postRepo.save(post);
-
-			return { deleted: true };
-		});
-	}
-
-	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
-		return this.dataSource.transaction(async (manager) => {
-			const postRepo = manager.getRepository(UserPostEntity);
-			const post = await this.lockPostForUpdate(manager, postId);
-			if (post.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
-
-			await postRepo.remove(post);
-			return { deleted: true };
-		});
-	}
-
 	async setPresence(userId: string, active: boolean): Promise<void> {
 		const values: { active: boolean; last_login_at?: Date } = { active };
 		if (active) values.last_login_at = new Date();
 		await this.userProfileRepo.update({ id: userId }, values);
-	}
-
-	private mapCommentToDto(comment: UserPostCommentEntity): IPostComment {
-		const author = comment.author;
-		const mainLevel = UsersService.getMainLevel(author);
-		return {
-			id: comment.id,
-			post_id: comment.post_id,
-			content: comment.content,
-			created_at: comment.created_at instanceof Date ? comment.created_at.toISOString() : (comment.created_at as unknown as string),
-			author: {
-				id: author.id,
-				login: author.login,
-				display_name: author.display_name,
-				avatar_url: author.avatar_url,
-				correction_point: author.correction_point,
-				campus: author.campus,
-				campus_country: author.campus_country,
-				level: mainLevel.level,
-				cursus_grade: mainLevel.grade,
-				common_projects_count: 0,
-				common_projects: [],
-				active: author.active,
-				last_login_at: author.last_login_at instanceof Date
-					? author.last_login_at.toISOString()
-					: (author.last_login_at as unknown as string | null),
-			},
-		};
 	}
 }

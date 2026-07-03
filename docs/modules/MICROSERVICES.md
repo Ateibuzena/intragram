@@ -1,9 +1,9 @@
 # Backend como Microservicios
 
 ## Resumen
-El backend se divide en cuatro servicios: gateway, auth, users y chat. Esta estructura reduce el acoplamiento entre dominios, mantiene cada base de código centrada en una sola responsabilidad y facilita el mantenimiento y la evaluación del proyecto.
+El backend se divide en cinco servicios: gateway, auth, users, posts y chat. Esta estructura reduce el acoplamiento entre dominios, mantiene cada base de código centrada en una sola responsabilidad y facilita el mantenimiento y la evaluación del proyecto.
 
-Cada servicio expone una interfaz HTTP clara y es propietario de su propio modelo de datos. El servicio auth gestiona autenticación y validación de tokens, el servicio users administra perfiles y funciones sociales, y el servicio chat gestiona conversaciones y mensajes. El gateway actúa como punto de entrada para el frontend y coordina las peticiones entre servicios.
+Cada servicio expone una interfaz HTTP clara y es propietario de su propio modelo de datos. El servicio auth gestiona autenticación y validación de tokens, el servicio users administra perfiles y relaciones sociales, el servicio posts administra publicaciones y reacciones, y el servicio chat gestiona conversaciones y mensajes. El gateway actúa como punto de entrada para el frontend y coordina las peticiones entre servicios.
 
 Este diseño sigue el principio de responsabilidad única a nivel de servicio. También mantiene explícitos los contratos internos: los servicios se comunican mediante endpoints REST definidos y DTOs/shared contracts, en lugar de acceder directamente a la base de datos de otros servicios o compartir lógica de persistencia.
 
@@ -14,10 +14,12 @@ flowchart LR
 
     GW --> AUTH[Auth Service]
     GW --> USERS[Users Service]
+    GW --> POSTS[Posts Service]
     GW --> CHAT[Chat Service]
 
     AUTH --> AUTHDB[(auth_db)]
     USERS --> USERSDB[(users_db)]
+    POSTS --> POSTSDB[(posts_db)]
     CHAT --> CHATDB[(chat_db)]
 ```
 
@@ -26,7 +28,9 @@ El gateway es el punto de entrada público. Expone la superficie HTTP principal 
 
 El servicio auth es propietario de la autenticación: registro, inicio de sesión, cierre de sesión, refresh tokens, validación de tokens y el flujo de OAuth 42. Expone rutas como `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/validate`, `/auth/42`, `/auth/42/callback` y `/health`. Su base de datos almacena los usuarios y refresh tokens necesarios para autenticación.
 
-El servicio users es propietario de los datos de perfil y sociales. Gestiona perfiles de usuario, sincronización de perfiles mediante OAuth, feeds, posts guardados y amistades. Expone rutas como `/users/*`, `/feed/*`, `/friends/*` y `/health`. Su base de datos almacena la información necesaria para la identidad del usuario y las funcionalidades de perfil.
+El servicio users es propietario de los datos de perfil y sociales. Gestiona perfiles de usuario, sincronización de perfiles mediante OAuth y amistades. Expone rutas como `/users/*`, `/friends/*` y `/health`. Su base de datos almacena la información necesaria para la identidad del usuario y las funcionalidades de perfil.
+
+El servicio posts es propietario de las publicaciones y sus interacciones. Gestiona el feed, publicaciones, favoritos, likes y comentarios. Expone rutas como `/posts/*` y `/health`. Su base de datos almacena el contenido social y snapshots mínimos del autor.
 
 El servicio chat es propietario del comportamiento de mensajería. Gestiona conversaciones y mensajes a través de rutas como `/chat/conversations`, `/chat/conversations/:conversationId/messages` y `/chat/health`. Su base de datos almacena conversaciones y mensajes del chat.
 
@@ -43,7 +47,8 @@ El gateway usa un cliente HTTP centralizado con timeouts de petición y reintent
 | Servicio | Responsabilidad | Base de datos | Interfaz |
 |----------|----------------|---------------|----------|
 | auth | Autenticación, ciclo de vida de tokens, OAuth 42, validación de tokens | `auth_db` | REST |
-| users | Perfiles, feeds, amistades, sincronización de perfil por OAuth | `users_db` | REST |
+| users | Perfiles, amistades, sincronización de perfil por OAuth | `users_db` | REST |
+| posts | Publicaciones, feed, favoritos, likes, comentarios | `posts_db` | REST |
 | chat | Conversaciones y mensajes | `chat_db` | REST |
 
 ## Mejoras de Resiliencia

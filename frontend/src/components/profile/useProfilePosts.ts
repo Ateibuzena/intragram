@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { IFeedPost } from '@intragram/shared/users/contracts/feed';
+import type { IFeedPost } from '@intragram/shared/posts';
 import type { Post } from '@/types/feed';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';

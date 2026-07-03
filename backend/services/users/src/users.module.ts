@@ -12,11 +12,7 @@ import { MetricsController } from './metrics.controller';
 import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
 import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserProfileEntity } from './entities/user-profile.entity';
-import { UserPostEntity } from './entities/user-post.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
-import { UserSavedPostEntity } from './entities/user-saved-post.entity';
-import { UserPostLikeEntity } from './entities/user-post-like.entity';
-import { UserPostCommentEntity } from './entities/user-post-comment.entity';
 
 @Module({
 	imports: [
@@ -27,7 +23,7 @@ import { UserPostCommentEntity } from './entities/user-post-comment.entity';
 			username: process.env.DB_USERNAME || 'users_user',
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
-			entities: [UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity, UserPostCommentEntity],
+			entities: [UserProfileEntity, UserFriendshipEntity],
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {
@@ -36,7 +32,7 @@ import { UserPostCommentEntity } from './entities/user-post-comment.entity';
 				statement_timeout: 10000,
 			},
 		}),
-		TypeOrmModule.forFeature([UserProfileEntity, UserPostEntity, UserFriendshipEntity, UserSavedPostEntity, UserPostLikeEntity, UserPostCommentEntity]),
+		TypeOrmModule.forFeature([UserProfileEntity, UserFriendshipEntity]),
 		MetricsModule,
 	],
 	controllers: [UsersController, MetricsController],

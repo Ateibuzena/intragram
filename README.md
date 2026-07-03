@@ -303,7 +303,7 @@ Relación principal:
 
 - Perfil frontend todavía es una vista placeholder.
 - Notificaciones es una vista estática.
-- El feed ya empieza a vivir en `posts-service`, pero aún queda la limpieza del dominio antiguo en `users-service`.
+- El feed ya vive en `posts-service`; queda la validación runtime completa en Docker y la posible evolución de contrato/UX.
 - Búsqueda global del navbar todavía no dispara consultas reales.
 - Adjuntos del chat y del creador de publicaciones siguen preparados solo a nivel de interfaz.
 

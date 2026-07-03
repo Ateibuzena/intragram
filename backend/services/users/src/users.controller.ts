@@ -33,7 +33,7 @@ import {
 	Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -163,66 +163,6 @@ export class UsersController {
 	}
 
 	/**
-	 * Returns the user's personalised "Recent" feed.
-	 */
-	@Get('feed/recent/:id')
-	async getRecentFeed(@Param('id') id: string) {
-		return this.usersService.getRecentFeed(id);
-	}
-
-	/**
-	 * Returns the user's own posts.
-	 */
-	@Get('feed/user/:id')
-	async getUserFeed(@Param('id') id: string) {
-		return this.usersService.getUserFeed(id);
-	}
-
-	/**
-	 * Creates a new post for the specified user.
-	 */
-	@Post('feed/user/:id')
-	async createUserPost(@Param('id') id: string, @Body() dto: CreateFeedPostDto) {
-		return this.usersService.createPost(id, dto);
-	}
-
-	/**
-	 * Returns posts from a user's friends.
-	 */
-	@Get('feed/friends/:id')
-	async getFriendsFeed(@Param('id') id: string) {
-		return this.usersService.getFriendsFeed(id);
-	}
-
-	/**
-	 * Returns the "Trending" feed for a user (excluding their own posts).
-	 */
-	@Get('feed/trending/:id')
-	async getTrendingFeed(@Param('id') id: string) {
-		return this.usersService.getTrendingFeed(id);
-	}
-
-	/**
-	 * Returns the feed of saved (favourite) posts of a user.
-	 */
-	@Get('feed/favorites/:id')
-	async getFavoritesFeed(@Param('id') id: string) {
-		return this.usersService.getFavoritesFeed(id);
-	}
-
-	/**
-	 * Toggles the saved state of a post for a user.
-	 */
-	@Post('feed/favorites/:id')
-	async toggleFavorite(
-		@Param('id') id: string,
-		@Body('postId') postId: string,
-	) {
-		const saved = await this.usersService.toggleFavoritePost(id, postId);
-		return { saved };
-	}
-
-	/**
 	 * Returns the list of accepted friends of a user.
 	 */
 	@Get('friends/suggestions/:id')
@@ -319,87 +259,6 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(
 				error.message || 'Error al aceptar solicitud',
-				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
-
-	/**
-	 * Toggles a user's like on a post.
-	 */
-	@Post('feed/like/:id')
-	async toggleLike(@Param('id') id: string, @Body('postId') postId: string) {
-		try {
-			return await this.usersService.toggleLikePost(id, postId);
-		} catch (error: any) {
-			throw new HttpException(
-				error.message || 'Error al actualizar like',
-				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
-
-	/**
-	 * Returns all comments for a post.
-	 */
-	@Get('feed/post/:postId')
-	async getPostById(@Param('postId') postId: string, @Query('userId') userId: string) {
-		try {
-			return await this.usersService.getPostById(postId, userId);
-		} catch (error: any) {
-			throw new HttpException(
-				error.message || 'Error fetching post',
-				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
-
-	@Get('feed/post/:postId/comments')
-	async getPostComments(@Param('postId') postId: string, @Query('userId') userId: string) {
-		return this.usersService.getPostComments(postId, userId);
-	}
-
-	/**
-	 * Adds a comment to a post.
-	 */
-	@Post('feed/post/:postId/comments')
-	async addComment(
-		@Param('postId') postId: string,
-		@Body('authorId') authorId: string,
-		@Body('content') content: string,
-	) {
-		try {
-			return await this.usersService.addComment(postId, authorId, content);
-		} catch (error: any) {
-			throw new HttpException(
-				error.message || 'Error adding comment',
-				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
-
-	/**
-	 * Deletes a comment by its owner.
-	 */
-	@Delete('feed/post/comments/:commentId/by/:userId')
-	async deleteComment(@Param('commentId') commentId: string, @Param('userId') userId: string) {
-		try {
-			return await this.usersService.deleteComment(commentId, userId);
-		} catch (error: any) {
-			throw new HttpException(
-				error.message || 'Error deleting comment',
-				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
-
-	@Delete('feed/post/:postId/by/:userId')
-	async deletePost(@Param('postId') postId: string, @Param('userId') userId: string) {
-		try {
-			return await this.usersService.deletePost(postId, userId);
-		} catch (error: any) {
-			throw new HttpException(
-				error.message || 'Error deleting post',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}

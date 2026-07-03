@@ -12,11 +12,13 @@
     "dev:users":   "npm run start:watch -w services/users",
     "dev:chat":    "npm run start:watch -w services/chat",
     "dev:posts":   "npm run start:watch -w services/posts",
-    "build:gateway": "npm run build -w gateway",
-    "build:auth":    "npm run build -w services/auth",
-    "build:users":   "npm run build -w services/users",
-    "build:chat":    "npm run build -w services/chat",
-    "build:posts":   "npm run build -w services/posts"
+    "build:shared":  "npm run build -w shared",
+    "build:gateway": "npm run build:shared && npm run build -w gateway",
+    "build:auth":    "npm run build:shared && npm run build -w services/auth",
+    "build:users":   "npm run build:shared && npm run build -w services/users",
+    "build:chat":    "npm run build:shared && npm run build -w services/chat",
+    "build:posts":   "npm run build:shared && npm run build -w services/posts",
+    "build":         "npm run build:gateway && npm run build:auth && npm run build:users && npm run build:chat && npm run build:posts"
   },
   "dependencies": {
     "@nestjs/common":           "^11.1.14",

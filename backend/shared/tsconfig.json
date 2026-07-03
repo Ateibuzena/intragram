@@ -17,6 +17,6 @@
     "ignoreDeprecations": "5.0",
     "moduleResolution": "node16",
   },
-  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "health/**/*", "types/**/*", "users/**/*", "chat/**/*"],
+  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "health/**/*", "types/**/*", "users/**/*", "chat/**/*", "posts/**/*"],
   "exclude": ["dist", "node_modules"]
 }

@@ -36,7 +36,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import type { IDirectoryEntry, IDirectoryFilters, IDirectoryScope } from './users.service';
-import { IUserProfile, IPostComment, IFeedPost, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFeedPostDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { IPostComment, IFeedPost, CreateFeedPostDto } from '@intragram/shared/posts';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';

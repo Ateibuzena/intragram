@@ -5,3 +5,4 @@ export * from './health';
 export * from './types';
 export * from './users';
 export * from './chat';
+export * from './posts';

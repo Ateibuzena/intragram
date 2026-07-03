@@ -36,6 +36,10 @@
     "./chat": {
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
+    },
+    "./posts": {
+      "types": "./dist/posts/index.d.ts",
+      "default": "./dist/posts/index.js"
     }
   },
   "files": [

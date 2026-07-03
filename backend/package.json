@@ -11,10 +11,12 @@
     "dev:auth":    "npm run start:watch -w services/auth",
     "dev:users":   "npm run start:watch -w services/users",
     "dev:chat":    "npm run start:watch -w services/chat",
+    "dev:posts":   "npm run start:watch -w services/posts",
     "build:gateway": "npm run build -w gateway",
     "build:auth":    "npm run build -w services/auth",
     "build:users":   "npm run build -w services/users",
-    "build:chat":    "npm run build -w services/chat"
+    "build:chat":    "npm run build -w services/chat",
+    "build:posts":   "npm run build -w services/posts"
   },
   "dependencies": {
     "@nestjs/common":           "^11.1.14",

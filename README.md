@@ -67,7 +67,7 @@ make up
 3. Abrir la aplicación en:
 
 ```text
-https://zhvvqwnc-8443.uks1.devtunnels.ms/
+https://localhost:8443/
 ```
 
 4. Iniciar sesión con una cuenta de 42.
@@ -84,10 +84,10 @@ make fclean
 
 ### Architecture Entry Points
 
-- Frontend servido por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/`
-- API pública del gateway: `https://zhvvqwnc-8443.uks1.devtunnels.ms/api/`
-- Prometheus proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/prometheus/`
-- Grafana proxificado por Nginx: `https://zhvvqwnc-8443.uks1.devtunnels.ms/grafana/`
+- Frontend servido por Nginx: `https://localhost:8443/`
+- API pública del gateway: `https://localhost:8443/api/`
+- Prometheus proxificado por Nginx: `https://localhost:8443/prometheus/`
+- Grafana proxificado por Nginx: `https://localhost:8443/grafana/`
 
 ## Team Information
 

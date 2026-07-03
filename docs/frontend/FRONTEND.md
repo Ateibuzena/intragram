@@ -55,7 +55,10 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
   - `GET /users/feed/friends`
   - `GET /users/feed/favorites`
   - `GET /users/feed/trending`
+  - `GET /users/feed/post/:postId`
+  - `GET /users/feed/post/:postId/comments`
   - `POST /users/feed`
+  - `POST /users/feed/post/:postId/comments`
   - `POST /users/feed/favorites/:postId`
 - Usuarios
   - `GET /users/login/:login`
@@ -104,7 +107,7 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 - `ProfilePage` no está conectada a datos reales.
 - `NotificationsPage` es estática.
 - El buscador del navbar todavía no dispara una búsqueda real.
-- Los likes y comentarios siguen siendo locales o pendientes.
+- Los likes y comentarios del feed ya se persisten en backend, aunque todavía faltan mejoras de integridad y UX.
 - Los adjuntos de posts y chat todavía no están implementados.
 
 ## How To Run Frontend In Context

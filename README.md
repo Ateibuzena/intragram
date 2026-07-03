@@ -282,6 +282,9 @@ Relación principal:
 - **Favorites**
   - Guardado y desguardado de publicaciones.
   - Team members: Ateibuzena
+- **Post reactions and comments**
+  - Likes y comentarios persistidos con contadores sincronizados y acceso validado por visibilidad.
+  - Team members: Ateibuzena
 - **Friends list**
   - Consulta de amigos aceptados desde el backend.
   - Team members: Ateibuzena
@@ -302,7 +305,7 @@ Relación principal:
 
 - Perfil frontend todavía es una vista placeholder.
 - Notificaciones es una vista estática.
-- Likes y comentarios no están persistidos.
+- Likes y comentarios del feed están persistidos en `users-service`, pero aún faltan mejoras de integridad y transacciones.
 - Búsqueda global del navbar todavía no dispara consultas reales.
 - Adjuntos del chat y del creador de publicaciones siguen preparados solo a nivel de interfaz.
 

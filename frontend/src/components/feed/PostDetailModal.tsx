@@ -33,17 +33,36 @@ export const PostDetailModal = ({
 	const [loading, setLoading] = useState(true);
 	const [newComment, setNewComment] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const commentsEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		if (!token) return;
+		if (!token) {
+			setLoading(false);
+			return;
+		}
 		const fetchComments = async () => {
 			try {
+				setError(null);
 				const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments`, token);
-				if (res.ok) setComments((await res.json()) as PostComment[]);
+				if (res.ok) {
+					setComments((await res.json()) as PostComment[]);
+					return;
+				}
+
+				const message = await res.text().catch(() => '');
+				if (res.status === 403 || res.status === 404) {
+					setComments([]);
+					setError(message || 'No tienes acceso a esta publicación.');
+					return;
+				}
+
+				setComments([]);
+				setError('No se pudieron cargar los comentarios.');
 			} catch {
-				// silently fail
+				setComments([]);
+				setError('No se pudieron cargar los comentarios por un problema de red.');
 			} finally {
 				setLoading(false);
 			}
@@ -77,9 +96,12 @@ export const PostDetailModal = ({
 				setComments((prev) => [...prev, comment]);
 				setNewComment('');
 				onCommentCountChange(1);
+			} else {
+				const message = await res.text().catch(() => '');
+				setError(message || 'No se pudo publicar el comentario.');
 			}
 		} catch {
-			// silently ignore
+			setError('No se pudo publicar el comentario por un problema de red.');
 		} finally {
 			setSubmitting(false);
 		}
@@ -92,9 +114,12 @@ export const PostDetailModal = ({
 			if (res.ok) {
 				setComments((prev) => prev.filter((c) => c.id !== commentId));
 				onCommentCountChange(-1);
+			} else {
+				const message = await res.text().catch(() => '');
+				setError(message || 'No se pudo eliminar el comentario.');
 			}
 		} catch {
-			// silently ignore
+			setError('No se pudo eliminar el comentario por un problema de red.');
 		}
 	};
 
@@ -159,10 +184,13 @@ export const PostDetailModal = ({
 				</div>
 
 				{/* Comments scroll */}
-				<div className="flex-1 overflow-y-auto px-5 py-3 space-y-3 min-h-0">
-					{loading && (
-						<p className="text-xs text-ft-muted text-center py-4">Cargando comentarios...</p>
-					)}
+					<div className="flex-1 overflow-y-auto px-5 py-3 space-y-3 min-h-0">
+						{error && (
+							<p className="text-xs text-red-400 text-center py-2">{error}</p>
+						)}
+						{loading && (
+							<p className="text-xs text-ft-muted text-center py-4">Cargando comentarios...</p>
+						)}
 					{!loading && comments.length === 0 && (
 						<p className="text-xs text-ft-muted text-center py-4">
 							No hay comentarios aún. ¡Sé el primero!

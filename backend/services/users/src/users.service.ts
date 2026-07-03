@@ -11,7 +11,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { Brackets, DataSource, EntityManager, In, Not, Repository } from 'typeorm';
 import axios from 'axios';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserPostEntity } from './entities/user-post.entity';
@@ -56,6 +56,7 @@ const asJsonArray = <T extends object>(value?: T[]): Record<string, unknown>[] |
 export class UsersService {
 	// TypeORM repository for the local user profile.
 	constructor(
+		private readonly dataSource: DataSource,
 		@InjectRepository(UserProfileEntity)
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
 		@InjectRepository(UserPostEntity)
@@ -79,6 +80,63 @@ export class UsersService {
 		});
 
 		return friendships.map((f) => (f.user_id === userId ? f.friend_id : f.user_id));
+	}
+
+	private async canViewPost(post: UserPostEntity, viewerId: string): Promise<boolean> {
+		if (post.author_id === viewerId) return true;
+		if (post.visibility === 'public') return true;
+		if (post.visibility !== 'friends') return false;
+
+		const friendIds = await this.getFriendIds(post.author_id);
+		return friendIds.includes(viewerId);
+	}
+
+	private async findAccessiblePost(postId: string, viewerId: string): Promise<UserPostEntity> {
+		const post = await this.userPostRepo.findOne({
+			where: { id: postId },
+			relations: ['author'],
+		});
+
+		if (!post) {
+			throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+		}
+
+		if (!(await this.canViewPost(post, viewerId))) {
+			throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+		}
+
+		return post;
+	}
+
+	private async lockPostForUpdate(manager: EntityManager, postId: string): Promise<UserPostEntity> {
+		const post = await manager
+			.getRepository(UserPostEntity)
+			.createQueryBuilder('post')
+			.leftJoinAndSelect('post.author', 'author')
+			.setLock('pessimistic_write')
+			.where('post.id = :postId', { postId })
+			.getOne();
+
+		if (!post) {
+			throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+		}
+
+		return post;
+	}
+
+	private async lockCommentForUpdate(manager: EntityManager, commentId: string): Promise<UserPostCommentEntity> {
+		const comment = await manager
+			.getRepository(UserPostCommentEntity)
+			.createQueryBuilder('comment')
+			.setLock('pessimistic_write')
+			.where('comment.id = :commentId', { commentId })
+			.getOne();
+
+		if (!comment) {
+			throw Object.assign(new Error('Comment not found'), { statusCode: 404 });
+		}
+
+		return comment;
 	}
 
 	/**
@@ -294,19 +352,28 @@ export class UsersService {
 
 	/**
 	 * Returns the user's personal "Recent" feed:
-	 * - Own posts
-	 * - Posts from accepted friends (people you follow and who follow you)
+	 * - Own posts in any visibility
+	 * - Public posts from accepted friends
+	 * - Friends-only posts from accepted friends
 	 */
 	async getRecentFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
 		const friendIds = await this.getFriendIds(userId);
-		const authorIds = [userId, ...friendIds];
+		const qb = this.userPostRepo
+			.createQueryBuilder('post')
+			.leftJoinAndSelect('post.author', 'author')
+			.orderBy('post.created_at', 'DESC')
+			.take(limit)
+			.where('post.author_id = :userId', { userId });
 
-		const posts = await this.userPostRepo.find({
-			where: { author_id: In(authorIds), visibility: 'public' },
-			order: { created_at: 'DESC' },
-			take: limit,
-			relations: ['author'],
-		});
+		if (friendIds.length > 0) {
+			qb.orWhere(new Brackets((friendQb) => {
+				friendQb
+					.where('post.author_id IN (:...friendIds)', { friendIds })
+					.andWhere('post.visibility IN (:...friendVisibilities)', { friendVisibilities: ['public', 'friends'] });
+			}));
+		}
+
+		const posts = await qb.getMany();
 		const postIds = posts.map((p) => p.id);
 		const [likedIds, savedIds] = await Promise.all([
 			this.getLikedPostIds(userId, postIds),
@@ -362,23 +429,20 @@ export class UsersService {
 
 	/**
 	 * Returns the "Trending" feed for a user:
-	 * - Only posts from accepted friends (excluding own posts)
-	 * - Includes public and friends-visibility posts
+	 * - Public posts from the whole platform
+	 * - Excludes the user's own posts
 	 * - Ordered by likes (desc) then date (desc)
 	 */
 	async getTrendingFeed(userId: string, limit = 50): Promise<IFeedPost[]> {
-		const friendIds = await this.getFriendIds(userId);
-		if (!friendIds.length) return [];
-
-		const posts = await this.userPostRepo.find({
-			where: [
-				{ author_id: In(friendIds), visibility: 'public' },
-				{ author_id: In(friendIds), visibility: 'friends' },
-			],
-			order: { likes_count: 'DESC', created_at: 'DESC' },
-			take: limit,
-			relations: ['author'],
-		});
+		const posts = await this.userPostRepo
+			.createQueryBuilder('post')
+			.leftJoinAndSelect('post.author', 'author')
+			.where('post.visibility = :visibility', { visibility: 'public' })
+			.andWhere('post.author_id != :userId', { userId })
+			.orderBy('post.likes_count', 'DESC')
+			.addOrderBy('post.created_at', 'DESC')
+			.take(limit)
+			.getMany();
 
 		const postIds = posts.map((p) => p.id);
 		const [likedIds, savedIds] = await Promise.all([
@@ -390,8 +454,7 @@ export class UsersService {
 	}
 
 	async getPostById(postId: string, userId: string): Promise<IFeedPost> {
-		const post = await this.userPostRepo.findOne({ where: { id: postId }, relations: ['author'] });
-		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
+		const post = await this.findAccessiblePost(postId, userId);
 
 		const [savedResult, likedIds] = await Promise.all([
 			this.savedPostRepo.findOne({ where: { user_id: userId, post_id: postId } }),
@@ -840,25 +903,29 @@ export class UsersService {
 	 * Toggles a user's like on a post. Updates likes_count on the post.
 	 */
 	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
-		const post = await this.userPostRepo.findOne({ where: { id: postId } });
-		if (!post) {
-			throw Object.assign(new Error('Publicacion no encontrada'), { statusCode: 404 });
-		}
+		return this.dataSource.transaction(async (manager) => {
+			const postRepo = manager.getRepository(UserPostEntity);
+			const likeRepo = manager.getRepository(UserPostLikeEntity);
+			const post = await this.lockPostForUpdate(manager, postId);
+			if (!(await this.canViewPost(post, userId))) {
+				throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+			}
 
-		const existing = await this.postLikeRepo.findOne({ where: { user_id: userId, post_id: postId } });
+			const existing = await likeRepo.findOne({ where: { user_id: userId, post_id: postId } });
 
-		if (existing) {
-			await this.postLikeRepo.remove(existing);
-			post.likes_count = Math.max(0, post.likes_count - 1);
-			await this.userPostRepo.save(post);
-			return { liked: false, likes_count: post.likes_count };
-		}
+			if (existing) {
+				await likeRepo.remove(existing);
+				post.likes_count = Math.max(0, post.likes_count - 1);
+				await postRepo.save(post);
+				return { liked: false, likes_count: post.likes_count };
+			}
 
-		const like = this.postLikeRepo.create({ user_id: userId, post_id: postId });
-		await this.postLikeRepo.save(like);
-		post.likes_count = post.likes_count + 1;
-		await this.userPostRepo.save(post);
-		return { liked: true, likes_count: post.likes_count };
+			const like = likeRepo.create({ user_id: userId, post_id: postId });
+			await likeRepo.save(like);
+			post.likes_count = post.likes_count + 1;
+			await postRepo.save(post);
+			return { liked: true, likes_count: post.likes_count };
+		});
 	}
 
 	/**
@@ -957,7 +1024,9 @@ export class UsersService {
 	/**
 	 * Returns all comments for a given post, ordered oldest-first.
 	 */
-	async getPostComments(postId: string): Promise<IPostComment[]> {
+	async getPostComments(postId: string, userId: string): Promise<IPostComment[]> {
+		await this.findAccessiblePost(postId, userId);
+
 		const comments = await this.commentRepo.find({
 			where: { post_id: postId },
 			order: { created_at: 'ASC' },
@@ -975,54 +1044,60 @@ export class UsersService {
 			throw Object.assign(new Error('Comment content cannot be empty'), { statusCode: 400 });
 		}
 
-		const [post, author] = await Promise.all([
-			this.userPostRepo.findOne({ where: { id: postId } }),
-			this.userProfileRepo.findOne({ where: { id: authorId } }),
-		]);
+		return this.dataSource.transaction(async (manager) => {
+			const postRepo = manager.getRepository(UserPostEntity);
+			const commentRepo = manager.getRepository(UserPostCommentEntity);
+			const userRepo = manager.getRepository(UserProfileEntity);
+			const [post, author] = await Promise.all([
+				this.lockPostForUpdate(manager, postId),
+				userRepo.findOne({ where: { id: authorId } }),
+			]);
 
-		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
-		if (!author) throw Object.assign(new Error('User not found'), { statusCode: 404 });
+			if (!author) throw Object.assign(new Error('User not found'), { statusCode: 404 });
+			if (!(await this.canViewPost(post, authorId))) {
+				throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+			}
 
-		const comment = this.commentRepo.create({ post_id: postId, author_id: authorId, content: trimmed });
-		await this.commentRepo.save(comment);
+			const comment = commentRepo.create({ post_id: postId, author_id: authorId, content: trimmed });
+			await commentRepo.save(comment);
 
-		post.comments_count = post.comments_count + 1;
-		await this.userPostRepo.save(post);
+			post.comments_count = post.comments_count + 1;
+			await postRepo.save(post);
 
-		comment.author = author;
-		return this.mapCommentToDto(comment);
+			comment.author = author;
+			return this.mapCommentToDto(comment);
+		});
 	}
 
 	/**
 	 * Deletes a comment by its owner and decrements the post's comments_count.
 	 */
 	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
-		const comment = await this.commentRepo.findOne({ where: { id: commentId } });
-		if (!comment) throw Object.assign(new Error('Comment not found'), { statusCode: 404 });
-		if (comment.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+		return this.dataSource.transaction(async (manager) => {
+			const commentRepo = manager.getRepository(UserPostCommentEntity);
+			const postRepo = manager.getRepository(UserPostEntity);
+			const comment = await this.lockCommentForUpdate(manager, commentId);
+			if (comment.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
 
-		const postId = comment.post_id;
-		await this.commentRepo.remove(comment);
+			const post = await this.lockPostForUpdate(manager, comment.post_id);
+			await commentRepo.remove(comment);
 
-		const post = await this.userPostRepo.findOne({ where: { id: postId } });
-		if (post) {
 			post.comments_count = Math.max(0, post.comments_count - 1);
-			await this.userPostRepo.save(post);
-		}
+			await postRepo.save(post);
 
-		return { deleted: true };
+			return { deleted: true };
+		});
 	}
 
 	async deletePost(postId: string, userId: string): Promise<{ deleted: boolean }> {
-		const post = await this.userPostRepo.findOne({ where: { id: postId } });
-		if (!post) throw Object.assign(new Error('Post not found'), { statusCode: 404 });
-		if (post.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
+		return this.dataSource.transaction(async (manager) => {
+			const postRepo = manager.getRepository(UserPostEntity);
+			const post = await this.lockPostForUpdate(manager, postId);
+			if (post.author_id !== userId) throw Object.assign(new Error('Forbidden'), { statusCode: 403 });
 
-		await this.commentRepo.delete({ post_id: postId });
-		await this.postLikeRepo.delete({ post_id: postId });
-		await this.userPostRepo.remove(post);
-
-		return { deleted: true };
+			await postRepo.remove(post);
+			return { deleted: true };
+		});
 	}
 
 	async setPresence(userId: string, active: boolean): Promise<void> {

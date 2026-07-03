@@ -141,6 +141,7 @@ Los comentarios están modelados como entidad propia (`user_post_comments`). Cad
 ### `GET /feed/post/:postId/comments`
 
 Devuelve todos los comentarios del post ordenados por `created_at ASC`. Cada comentario incluye el perfil resumido del autor.
+En esta capa interna se valida el acceso con `userId` en query para respetar la visibilidad del post.
 
 ### `POST /feed/post/:postId/comments`
 
@@ -189,7 +190,7 @@ Modela favoritos por usuario.
 
 ### `user_post_likes`
 
-Rastrea qué usuario ha dado like a qué post. Restricción única `(user_id, post_id)`. Las operaciones de toggle sobre esta tabla actualizan `likes_count` en `user_posts`.
+Rastrea qué usuario ha dado like a qué post. Restricción única `(user_id, post_id)`. La relación con `user_posts` tiene borrado en cascada y las operaciones de toggle se ejecutan dentro de transacción para mantener `likes_count` sincronizado.
 
 ### `user_post_comments`
 
@@ -200,14 +201,15 @@ Guarda comentarios de publicaciones:
 - `content`
 - `created_at`
 
-Las operaciones de inserción y borrado actualizan `comments_count` en `user_posts`.
+La relación con `user_posts` tiene borrado en cascada y las operaciones de inserción y borrado se ejecutan dentro de transacción para mantener `comments_count` sincronizado.
 
 ## Feed Logic
 
 ### Recent Feed
 
-- publicaciones propias,
-- publicaciones de amigos aceptados.
+- publicaciones propias en cualquier visibilidad,
+- publicaciones públicas de amigos aceptados,
+- publicaciones de amigos aceptados visibles solo para amigos.
 
 ### My Feed
 
@@ -219,7 +221,7 @@ Las operaciones de inserción y borrado actualizan `comments_count` en `user_pos
 
 ### Trending Feed
 
-- publicaciones públicas,
+- publicaciones públicas de toda la plataforma,
 - excluye las del propio usuario,
 - ordena por `likes_count` y fecha.
 

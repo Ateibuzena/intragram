@@ -355,8 +355,8 @@ export class UsersController {
 	}
 
 	@Get('feed/post/:postId/comments')
-	async getPostComments(@Param('postId') postId: string) {
-		return this.usersService.getPostComments(postId);
+	async getPostComments(@Param('postId') postId: string, @Query('userId') userId: string) {
+		return this.usersService.getPostComments(postId, userId);
 	}
 
 	/**

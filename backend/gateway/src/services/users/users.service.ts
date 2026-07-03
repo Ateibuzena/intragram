@@ -342,9 +342,12 @@ export class UsersService {
 	/**
 	 * Returns all comments for a post.
 	 */
-	async getPostComments(postId: string): Promise<IPostComment[]> {
+	async getPostComments(postId: string, userId: string): Promise<IPostComment[]> {
 		try {
-			return await this.httpClient.get<IPostComment[]>(`${this.usersBaseUrl}/feed/post/${postId}/comments`, { timeoutMs: 5000 });
+			return await this.httpClient.get<IPostComment[]>(`${this.usersBaseUrl}/feed/post/${postId}/comments`, {
+				timeoutMs: 5000,
+				params: { userId },
+			});
 		} catch (error) {
 			this.handleHttpError(error, 'get comments');
 		}

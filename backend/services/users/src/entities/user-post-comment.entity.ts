@@ -12,11 +12,16 @@ import {
 	Index,
 } from 'typeorm';
 import { UserProfileEntity } from './user-profile.entity';
+import { UserPostEntity } from './user-post.entity';
 
 @Entity('user_post_comments')
 export class UserPostCommentEntity {
 	@PrimaryGeneratedColumn('uuid')
 	id!: string;
+
+	@ManyToOne(() => UserPostEntity, { nullable: false, onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'post_id' })
+	post!: UserPostEntity;
 
 	@Index('IDX_POST_COMMENT_POST')
 	@Column({ type: 'uuid' })

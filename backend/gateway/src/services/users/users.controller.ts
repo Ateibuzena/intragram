@@ -469,9 +469,10 @@ export class UsersController {
 
 	@UseGuards(AuthGuard)
 	@Get('feed/post/:postId/comments')
-	async getPostComments(@Param('postId') postId: string): Promise<IPostComment[]> {
+	async getPostComments(@Param('postId') postId: string, @Req() req: any): Promise<IPostComment[]> {
 		try {
-			return await this.usersService.getPostComments(postId);
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getPostComments(postId, profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

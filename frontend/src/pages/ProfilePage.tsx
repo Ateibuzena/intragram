@@ -66,7 +66,7 @@ const ProfilePage = () => {
 
 	return (
 		<div className="w-full px-3 md:px-6 lg:px-8">
-			<section className="mb-6 space-y-5">
+			<section className="mx-auto mb-6 max-w-5xl space-y-5">
 				<ProfileHeader
 					profile={profile}
 					displayName={displayName}
@@ -85,11 +85,11 @@ const ProfilePage = () => {
 					className="min-h-[36rem]"
 				/>
 
-				<div className="grid grid-cols-1 justify-items-center gap-4">
-					<SkillsRadar skills={insights.topSkills} className="w-full max-w-[76rem] min-h-[38rem]" />
-					<AchievementsCard insights={insights} className="w-full max-w-[76rem]" />
-					<AcademicTimeline insights={insights} className="w-full max-w-[76rem]" />
-					<ProjectsCard insights={insights} className="w-full max-w-[76rem] min-h-[38rem]" />
+				<div className="grid grid-cols-1 gap-4">
+					<SkillsRadar skills={insights.topSkills} className="w-full min-h-[38rem]" />
+					<AchievementsCard insights={insights} className="w-full" />
+					<AcademicTimeline insights={insights} className="w-full" />
+					<ProjectsCard insights={insights} className="w-full min-h-[38rem]" />
 				</div>
 
 				<ProfileDetails profile={profile} insights={insights} />

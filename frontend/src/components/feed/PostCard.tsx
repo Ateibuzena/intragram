@@ -37,7 +37,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const toggleLike = async () => {
 		if (!token) { handleLike(); return; }
 		try {
-			await fetchWithAuth(`/users/feed/like/${post.id}`, token, { method: 'POST' });
+			await fetchWithAuth(`/posts/feed/like/${post.id}`, token, { method: 'POST' });
 		} catch {
 			// keep optimistic toggle on error
 		} finally {
@@ -49,7 +49,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 		handleSave();
 		if (!token) return;
 		try {
-			const res = await fetchWithAuth(`/users/feed/favorites/${post.id}`, token, { method: 'POST' });
+			const res = await fetchWithAuth(`/posts/feed/favorites/${post.id}`, token, { method: 'POST' });
 			if (!res.ok) handleSave(); // revert optimistic toggle
 		} catch {
 			handleSave(); // revert optimistic toggle
@@ -60,7 +60,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 		if (!token) return;
 		setMenuOpen(false);
 		try {
-			const res = await fetchWithAuth(`/users/feed/post/${post.id}`, token, { method: 'DELETE' });
+			const res = await fetchWithAuth(`/posts/feed/post/${post.id}`, token, { method: 'DELETE' });
 			if (res.ok) onDelete?.(String(post.id));
 		} catch {
 			// ignore

@@ -45,7 +45,7 @@ export const PostDetailModal = ({
 		const fetchComments = async () => {
 			try {
 				setError(null);
-				const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments`, token);
+				const res = await fetchWithAuth(`/posts/feed/post/${post.id}/comments`, token);
 				if (res.ok) {
 					setComments((await res.json()) as PostComment[]);
 					return;
@@ -86,7 +86,7 @@ export const PostDetailModal = ({
 		if (!content || !token || submitting) return;
 		setSubmitting(true);
 		try {
-			const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments`, token, {
+			const res = await fetchWithAuth(`/posts/feed/post/${post.id}/comments`, token, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ content }),
@@ -110,7 +110,7 @@ export const PostDetailModal = ({
 	const deleteComment = async (commentId: string) => {
 		if (!token) return;
 		try {
-			const res = await fetchWithAuth(`/users/feed/post/${post.id}/comments/${commentId}`, token, { method: 'DELETE' });
+			const res = await fetchWithAuth(`/posts/feed/post/${post.id}/comments/${commentId}`, token, { method: 'DELETE' });
 			if (res.ok) {
 				setComments((prev) => prev.filter((c) => c.id !== commentId));
 				onCommentCountChange(-1);

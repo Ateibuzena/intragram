@@ -50,16 +50,17 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 ## Data Flow With Backend
 
 - Feed
-  - `GET /users/feed`
-  - `GET /users/feed/me`
-  - `GET /users/feed/friends`
-  - `GET /users/feed/favorites`
-  - `GET /users/feed/trending`
-  - `GET /users/feed/post/:postId`
-  - `GET /users/feed/post/:postId/comments`
-  - `POST /users/feed`
-  - `POST /users/feed/post/:postId/comments`
-  - `POST /users/feed/favorites/:postId`
+  - `GET /posts/feed`
+  - `GET /posts/feed/me`
+  - `GET /posts/feed/friends`
+  - `GET /posts/feed/favorites`
+  - `GET /posts/feed/trending`
+  - `GET /posts/feed/post/:postId`
+  - `GET /posts/feed/post/:postId/comments`
+  - `POST /posts/feed`
+  - `POST /posts/feed/post/:postId/comments`
+  - `POST /posts/feed/favorites/:postId`
+  - `POST /posts/feed/like/:postId`
 - Usuarios
   - `GET /users/login/:login`
   - `GET /users/:id`

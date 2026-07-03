@@ -27,7 +27,7 @@ export const useProfilePosts = (username: string | null | undefined): UseProfile
 				setLoading(true);
 				setError(null);
 
-				const res = await fetchWithAuth('/users/feed', token, { signal: controller.signal });
+				const res = await fetchWithAuth('/posts/feed/me', token, { signal: controller.signal });
 
 				if (!res.ok) {
 					setItems([]);

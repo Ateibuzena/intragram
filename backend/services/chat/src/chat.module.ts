@@ -15,7 +15,6 @@ import { MetricsModule } from './observability/metrics/metrics.module';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatConversationReadEntity } from './entities/chat-conversation-read.entity';
-import { CreateChatConversationReads1771786800000 } from './migrations/1771786800000-create-chat-conversation-reads';
 
 @Module({
 	imports: [

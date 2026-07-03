@@ -477,7 +477,7 @@ export class AuthService implements OnModuleInit {
 	 */
 	getOAuth42AuthUrl(): string {
 		const clientId = process.env.OAUTH_42_CLIENT_ID;
-		const redirectUri = process.env.OAUTH_42_REDIRECT_URI || 'http://localhost:3000/auth/42/callback';
+		const redirectUri = process.env.OAUTH_42_REDIRECT_URI || 'https://localhost:8443/api/auth/42/callback';
 
 		if (!clientId) {
 			throw new Error('OAUTH_42_CLIENT_ID no configurado');

@@ -22,7 +22,6 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 	const isAuthor = !!profile?.login && profile.login === post.user.login;
-	const achievement = post.user.featuredAchievement;
 	const commonProjects = post.user.commonProjects ?? [];
 	const commonProjectsCount = post.user.commonProjectsCount ?? commonProjects.length;
 
@@ -133,19 +132,11 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 
 				<div className="text-sm text-ft-text leading-relaxed mb-4 [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
 
-				{(achievement || commonProjectsCount > 0) && (
+				{commonProjectsCount > 0 && (
 					<div className="mb-4 flex flex-wrap items-center gap-2">
-						{achievement && (
-							<span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200" title={achievement.name}>
-								{achievement.image && <img src={achievement.image} alt="" className="h-4 w-4 rounded object-cover" loading="lazy" />}
-								<span className="truncate">{achievement.name}</span>
-							</span>
-						)}
-						{commonProjectsCount > 0 && (
-							<span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ft-cyan/25 bg-ft-cyan/10 px-2.5 py-1 text-[10px] font-semibold text-ft-cyan" title={commonProjects.join(', ')}>
-								{commonProjectsCount} proyecto{commonProjectsCount === 1 ? '' : 's'} en comun
-							</span>
-						)}
+						<span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ft-cyan/25 bg-ft-cyan/10 px-2.5 py-1 text-[10px] font-semibold text-ft-cyan" title={commonProjects.join(', ')}>
+							{commonProjectsCount} proyecto{commonProjectsCount === 1 ? '' : 's'} en comun
+						</span>
 					</div>
 				)}
 

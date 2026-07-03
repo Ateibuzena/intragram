@@ -13,7 +13,6 @@ export const mapApiPostToPost = (api: IFeedPost): Post => ({
 		campus: api.author?.campus ?? null,
 		campusCountry: api.author?.campus_country ?? null,
 		cursusGrade: api.author?.cursus_grade ?? null,
-		featuredAchievement: api.author?.featured_achievement ?? null,
 		commonProjectsCount: api.author?.common_projects_count ?? 0,
 		commonProjects: api.author?.common_projects ?? [],
 	},

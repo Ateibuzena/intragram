@@ -419,20 +419,6 @@ export class UsersService {
 		};
 	}
 
-	private static getFeaturedAchievement(user: UserProfileEntity): IFeedPost['author']['featured_achievement'] {
-		const achievements = Array.isArray(user.achievements) ? user.achievements : [];
-		const visible = achievements.filter((achievement) => achievement.visible !== false);
-		const featured = visible.find((achievement) => achievement.tier) ?? visible[0];
-		if (!featured) return null;
-		return {
-			id: typeof featured.id === 'number' ? featured.id : 0,
-			name: typeof featured.name === 'string' ? featured.name : 'Achievement',
-			kind: typeof featured.kind === 'string' ? featured.kind : null,
-			tier: typeof featured.tier === 'string' ? featured.tier : null,
-			image: typeof featured.image === 'string' ? featured.image : null,
-		};
-	}
-
 	private static commonProjectLabels(
 		viewerProjects: Map<string, string>,
 		authorProjects: Record<string, unknown>[] | null,
@@ -512,7 +498,6 @@ export class UsersService {
 				campus_country: post.author.campus_country,
 				level: mainLevel.level,
 				cursus_grade: mainLevel.grade,
-				featured_achievement: UsersService.getFeaturedAchievement(post.author),
 				common_projects_count: commonProjects.length,
 				common_projects: commonProjects.slice(0, 3),
 				active: post.author.active,
@@ -1064,7 +1049,6 @@ export class UsersService {
 				campus_country: author.campus_country,
 				level: mainLevel.level,
 				cursus_grade: mainLevel.grade,
-				featured_achievement: UsersService.getFeaturedAchievement(author),
 				common_projects_count: 0,
 				common_projects: [],
 				active: author.active,

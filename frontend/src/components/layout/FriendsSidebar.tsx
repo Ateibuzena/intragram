@@ -227,7 +227,7 @@ export const FriendsSidebar = () => {
 						{filter === 'online'
 						? 'No hay usuarios online'
 						: filter === 'campus_location'
-							? `Nadie de ${myCampus} está en campus ahora`
+							? `Nadie de intragram está en tu campus ahora`
 							: 'No hay usuarios disponibles'}
 					</p>
 				</div>

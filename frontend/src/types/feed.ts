@@ -9,13 +9,6 @@ export interface Post {
 		campus?: string | null;
 		campusCountry?: string | null;
 		cursusGrade?: string | null;
-		featuredAchievement?: {
-			id: number;
-			name: string;
-			kind?: string | null;
-			tier?: string | null;
-			image?: string | null;
-		} | null;
 		commonProjectsCount?: number;
 		commonProjects?: string[];
 	};

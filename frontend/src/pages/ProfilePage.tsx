@@ -56,6 +56,12 @@ const ProfilePage = () => {
 		await patchProfile({ background_theme: theme });
 	};
 
+	const handleRefreshFromOAuth42 = () => {
+		// Re-runs the OAuth42 flow (already authorized, so it round-trips almost
+		// instantly) to re-sync fresh 42 stats — state carries us back to this tab.
+		window.location.href = `/api/auth/42?state=${encodeURIComponent('nav=profile')}`;
+	};
+
 	const insights = buildProfileInsights(profile);
 
 	return (
@@ -75,6 +81,7 @@ const ProfilePage = () => {
 					onSaveDisplayName={handleSaveDisplayName}
 					onSaveAvatarUrl={handleSaveAvatarUrl}
 					onSaveBackground={handleSaveBackground}
+					onRefreshProfile={handleRefreshFromOAuth42}
 					className="min-h-[36rem]"
 				/>
 

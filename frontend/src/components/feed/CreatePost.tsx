@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { LANGUAGES } from '@/constants/languages';
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 interface CreatePostProps {
 	onPostCreated?: () => void;
@@ -17,14 +20,50 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const [showCodePanel, setShowCodePanel] = useState(false);
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+	const imageInputRef = useRef<HTMLInputElement>(null);
 	const { token, user, profile } = useAuth();
 	const { connected } = usePresenceStatus();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
 	const avatarUrl = profile?.avatar_url ?? null;
 
+	// Revoke the preview object URL whenever it's replaced or the component unmounts.
+	useEffect(() => {
+		return () => {
+			if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		};
+	}, [imagePreviewUrl]);
+
 	const handleToggleCodePanel = () => {
 		setShowCodePanel((v) => !v);
 		if (showCodePanel) setCodeSnippet('');
+	};
+
+	const handleSelectImage = (e: ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		e.target.value = '';
+		if (!file) return;
+
+		if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+			setError('Formato de imagen no soportado (usa JPEG, PNG, WebP o GIF).');
+			return;
+		}
+		if (file.size > MAX_IMAGE_BYTES) {
+			setError('La imagen supera el tamaño máximo permitido (8MB).');
+			return;
+		}
+
+		setError(null);
+		if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		setImageFile(file);
+		setImagePreviewUrl(URL.createObjectURL(file));
+	};
+
+	const handleRemoveImage = () => {
+		if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		setImageFile(null);
+		setImagePreviewUrl(null);
 	};
 
 	const handlePublish = async () => {
@@ -40,10 +79,15 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 		try {
 			setIsSubmitting(true);
 			setError(null);
+			// Always multipart: the endpoint is wrapped in a FileInterceptor on the
+			// gateway, which only parses multipart/form-data bodies.
+			const formData = new FormData();
+			formData.append('content', content);
+			if (imageFile) formData.append('image', imageFile);
+
 			const res = await fetchWithAuth('/posts/feed', token, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content }),
+				body: formData,
 			});
 			if (!res.ok) {
 				const message = await res.text().catch(() => '');
@@ -56,6 +100,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 			setPostText('');
 			setCodeSnippet('');
 			setShowCodePanel(false);
+			handleRemoveImage();
 			onPostCreated?.();
 		} finally {
 			setIsSubmitting(false);
@@ -118,6 +163,21 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 				</div>
 			)}
 
+			{/* Preview de imagen */}
+			{imagePreviewUrl && (
+				<div className="mt-3 relative inline-block">
+					<img src={imagePreviewUrl} alt="" className="max-h-48 rounded-xl border border-ft-border object-cover" />
+					<button
+						type="button"
+						onClick={handleRemoveImage}
+						title="Quitar imagen"
+						className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-ft-bg border border-ft-border text-ft-muted hover:text-red-400 hover:border-red-400/40 transition-colors"
+					>
+						✕
+					</button>
+				</div>
+			)}
+
 			<div className="flex items-center justify-between mt-3 pt-3 border-t border-ft-border">
 				<div className="flex space-x-1">
 					<button
@@ -131,6 +191,25 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 					>
 						<span>💻</span>
 						<span className="hidden sm:inline">Código</span>
+					</button>
+					<input
+						ref={imageInputRef}
+						type="file"
+						accept="image/jpeg,image/png,image/webp,image/gif"
+						onChange={handleSelectImage}
+						className="hidden"
+					/>
+					<button
+						type="button"
+						onClick={() => imageInputRef.current?.click()}
+						className={`flex items-center space-x-1.5 text-xs px-2 py-1.5 rounded-lg border transition-all duration-150 active:scale-95 ${
+							imageFile
+								? 'text-ft-cyan border-ft-cyan/40 bg-ft-cyan/10'
+								: 'text-ft-muted hover:text-ft-cyan border-transparent hover:border-ft-cyan/20 hover:bg-ft-cyan/5'
+						}`}
+					>
+						<span>🖼️</span>
+						<span className="hidden sm:inline">Foto</span>
 					</button>
 				</div>
 				<Button

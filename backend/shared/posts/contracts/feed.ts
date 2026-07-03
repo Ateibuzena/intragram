@@ -27,6 +27,8 @@ export interface IFeedPost {
 	author: IFeedPostAuthorSummary;
 	saved_by_current_user?: boolean;
 	liked_by_current_user?: boolean;
+	/** Relative API path to fetch the post's image, or null if it has none. */
+	image_url?: string | null;
 }
 
 export interface IPostComment {

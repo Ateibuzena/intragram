@@ -22,4 +22,5 @@ export const mapApiPostToPost = (api: IFeedPost): Post => ({
 	comments: api.comments_count ?? 0,
 	liked: api.liked_by_current_user ?? false,
 	saved: api.saved_by_current_user ?? false,
+	imageUrl: api.image_url ?? null,
 });

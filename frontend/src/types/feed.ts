@@ -18,6 +18,8 @@ export interface Post {
 	comments: number;
 	liked: boolean;
 	saved?: boolean;
+	/** Relative API path to fetch this post's image, or null/undefined if it has none. */
+	imageUrl?: string | null;
 }
 
 export interface PostComment {

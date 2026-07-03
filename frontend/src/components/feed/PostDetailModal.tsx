@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { RenderedContent } from '@/components/content/RenderedContent';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthenticatedImage } from '@/hooks/useAuthenticatedImage';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import type { Post, PostComment } from '@/types/feed';
 
@@ -28,6 +29,7 @@ export const PostDetailModal = ({
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
+	const imageObjectUrl = useAuthenticatedImage(post.imageUrl);
 
 	const [comments, setComments] = useState<PostComment[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -165,6 +167,11 @@ export const PostDetailModal = ({
 						</div>
 					</button>
 					<div className="text-sm text-ft-text leading-relaxed [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
+					{imageObjectUrl && (
+						<div className="mt-3 overflow-hidden rounded-xl border border-ft-border">
+							<img src={imageObjectUrl} alt="" className="max-h-[28rem] w-full object-cover" loading="lazy" />
+						</div>
+					)}
 				</div>
 
 				{/* Stats */}

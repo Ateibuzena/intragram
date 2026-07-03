@@ -9,4 +9,13 @@ export class CreateFeedPostDto {
 	@IsOptional()
 	@IsIn(['public', 'friends', 'private'])
 	visibility?: FeedVisibility;
+
+	/**
+	 * Base64-encoded image bytes, set by the gateway after it parses the
+	 * client's multipart upload — never sent directly by a browser client.
+	 */
+	@IsOptional()
+	@IsString()
+	@MaxLength(11_000_000)
+	image_base64?: string;
 }

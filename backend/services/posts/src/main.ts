@@ -1,9 +1,14 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { json } from 'express';
 import { PostsModule } from './posts.module';
 
 async function bootstrap() {
 	const app = await NestFactory.create(PostsModule);
+
+	// Post images arrive base64-encoded from the gateway inside the JSON body —
+	// default Express limit (~100kb) is far too small for that.
+	app.use(json({ limit: '12mb' }));
 
 	app.useGlobalPipes(
 		new ValidationPipe({

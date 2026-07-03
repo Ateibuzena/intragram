@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, DataSource, EntityManager, In, Repository } from 'typeorm';
+import sharp from 'sharp';
+import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 import { CreateFeedPostDto, FeedVisibility, IFeedPost, IPostComment } from '@intragram/shared/posts';
 import { IUserProfile } from '@intragram/shared/users';
@@ -8,6 +10,10 @@ import { PostCommentEntity } from './entities/post-comment.entity';
 import { PostEntity } from './entities/post.entity';
 import { PostLikeEntity } from './entities/post-like.entity';
 import { PostSaveEntity } from './entities/post-save.entity';
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const IMAGE_MAX_DIMENSION = 1600;
 
 interface AuthorSnapshot {
 	id: string;
@@ -205,6 +211,38 @@ export class PostsService {
 		return value === 'public' || value === 'friends' || value === 'private';
 	}
 
+	/**
+	 * Validates and processes an uploaded image before it's persisted:
+	 * - sniffs the real file type from magic bytes (never trusts a declared
+	 *   Content-Type, which is trivial to spoof) against a strict allowlist
+	 *   that explicitly excludes SVG (a classic stored-XSS vector).
+	 * - re-encodes to WebP, capped at IMAGE_MAX_DIMENSION, which both bounds
+	 *   storage/bandwidth and strips EXIF metadata (privacy — many photos
+	 *   embed GPS coordinates).
+	 */
+	private async processImage(base64: string): Promise<{ data: Buffer; mimeType: string }> {
+		const raw = Buffer.from(base64, 'base64');
+		if (raw.length === 0) {
+			throw Object.assign(new Error('Imagen vacía'), { statusCode: 400 });
+		}
+		if (raw.length > MAX_IMAGE_BYTES) {
+			throw Object.assign(new Error('La imagen supera el tamaño máximo permitido (8MB)'), { statusCode: 400 });
+		}
+
+		const detected = await fileTypeFromBuffer(raw);
+		if (!detected || !ALLOWED_IMAGE_MIME_TYPES.has(detected.mime)) {
+			throw Object.assign(new Error('Formato de imagen no soportado'), { statusCode: 400 });
+		}
+
+		const data = await sharp(raw)
+			.rotate()
+			.resize({ width: IMAGE_MAX_DIMENSION, height: IMAGE_MAX_DIMENSION, fit: 'inside', withoutEnlargement: true })
+			.webp({ quality: 82 })
+			.toBuffer();
+
+		return { data, mimeType: 'image/webp' };
+	}
+
 	private async mapPostToFeedDto(
 		post: PostEntity,
 		viewerId: string,
@@ -252,6 +290,7 @@ export class PostsService {
 			},
 			saved_by_current_user: savedByCurrentUser,
 			liked_by_current_user: likedByCurrentUser,
+			image_url: post.image_mime_type ? `/posts/feed/post/${post.id}/image` : null,
 		};
 	}
 
@@ -349,6 +388,7 @@ export class PostsService {
 					},
 					saved_by_current_user: savedIds.has(post.id),
 					liked_by_current_user: likedIds.has(post.id),
+					image_url: post.image_mime_type ? `/posts/feed/post/${post.id}/image` : null,
 				} as IFeedPost;
 			}
 		}));
@@ -454,6 +494,8 @@ export class PostsService {
 			throw Object.assign(new Error('Visibilidad inválida'), { statusCode: 400 });
 		}
 
+		const image = dto.image_base64 ? await this.processImage(dto.image_base64) : null;
+
 		const entity = this.postRepo.create({
 			author_id: author.id,
 			author_login: author.login,
@@ -470,10 +512,29 @@ export class PostsService {
 			visibility,
 			likes_count: 0,
 			comments_count: 0,
+			image_data: image?.data ?? null,
+			image_mime_type: image?.mimeType ?? null,
 		});
 
 		const saved = await this.postRepo.save(entity);
 		return this.mapPostToFeedDto(saved, authorId, false, false, author, author);
+	}
+
+	async getPostImage(postId: string, viewerId: string): Promise<{ data: Buffer; mimeType: string }> {
+		const post = await this.findAccessiblePost(postId, viewerId);
+		if (!post.image_mime_type) {
+			throw Object.assign(new Error('Este post no tiene imagen'), { statusCode: 404 });
+		}
+
+		const withImage = await this.postRepo.findOne({
+			where: { id: postId },
+			select: ['id', 'image_data', 'image_mime_type'],
+		});
+		if (!withImage?.image_data) {
+			throw Object.assign(new Error('Este post no tiene imagen'), { statusCode: 404 });
+		}
+
+		return { data: withImage.image_data, mimeType: withImage.image_mime_type! };
 	}
 
 	async toggleFavoritePost(userId: string, postId: string): Promise<boolean> {

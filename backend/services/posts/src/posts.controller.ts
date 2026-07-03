@@ -8,7 +8,9 @@ import {
 	Param,
 	Post,
 	Query,
+	Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { PostsService } from './posts.service';
 import { CreateFeedPostDto, IFeedPost, IPostComment } from '@intragram/shared/posts';
 
@@ -76,6 +78,23 @@ export class PostsController {
 	async getPostById(@Param('postId') postId: string, @Query('userId') userId?: string): Promise<IFeedPost> {
 		const viewerId = userId ?? '';
 		return this.run(() => this.postsService.getPostById(postId, viewerId), 'Error fetching post');
+	}
+
+	@Get('posts/feed/post/:postId/image')
+	async getPostImage(
+		@Param('postId') postId: string,
+		@Query('userId') userId: string | undefined,
+		@Res() res: Response,
+	): Promise<void> {
+		const { data, mimeType } = await this.run(
+			() => this.postsService.getPostImage(postId, userId ?? ''),
+			'Error fetching image',
+		);
+		res.set({
+			'Content-Type': mimeType,
+			'Cache-Control': 'public, max-age=31536000, immutable',
+		});
+		res.send(data);
 	}
 
 	@Get('posts/feed/post/:postId/comments')

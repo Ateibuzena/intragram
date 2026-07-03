@@ -228,6 +228,22 @@ export class UsersService {
 	}
 
 	/**
+	 * Fetches a post's image bytes from posts-service. Always WebP (posts-service
+	 * re-encodes every upload), so the caller can set Content-Type without
+	 * needing to inspect a header here.
+	 */
+	async getPostImage(postId: string, userId: string): Promise<Buffer> {
+		try {
+			return await this.httpClient.get<Buffer>(
+				`${this.postsBaseUrl}/posts/feed/post/${postId}/image?userId=${encodeURIComponent(userId)}`,
+				{ timeoutMs: 5000, responseType: 'arraybuffer' },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'obtener imagen del post');
+		}
+	}
+
+	/**
 	 * Returns friend suggestions for the authenticated user (campus → country → worldwide).
 	 */
 	async getSuggestions(userId: string): Promise<IDirectoryEntry[]> {

@@ -8,12 +8,19 @@ import {
 	Param,
 	Post,
 	Req,
+	Res,
+	UploadedFile,
 	UseGuards,
+	UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { UsersService } from '../users/users.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { RealtimeService } from '../realtime/realtime.service';
 import { CreateFeedPostDto, IFeedPost, IPostComment } from '@intragram/shared/posts';
+
+const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 @Controller('posts')
 export class PostsController {
@@ -82,13 +89,37 @@ export class PostsController {
 
 	@UseGuards(AuthGuard)
 	@Post('feed')
-	async createPost(@Body() dto: CreateFeedPostDto, @Req() req: any): Promise<IFeedPost> {
+	@UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_UPLOAD_BYTES } }))
+	async createPost(
+		@Body() dto: CreateFeedPostDto,
+		@UploadedFile() image: Express.Multer.File | undefined,
+		@Req() req: any,
+	): Promise<IFeedPost> {
 		return this.run(async () => {
+			// Gateway stays a thin proxy: it only base64-encodes the raw bytes for
+			// the internal hop — all real validation/processing happens in posts-service.
+			if (image) {
+				dto.image_base64 = image.buffer.toString('base64');
+			}
 			const profile = await this.usersService.findByLogin(req.user.username);
 			const post = await this.usersService.createPost(profile.id, dto);
 			this.realtimeService.emitToAll('feed:new-post', post);
 			return post;
 		}, 'Error al crear publicación');
+	}
+
+	@UseGuards(AuthGuard)
+	@Get('feed/post/:postId/image')
+	async getPostImage(@Param('postId') postId: string, @Req() req: any, @Res() res: Response): Promise<void> {
+		const buffer = await this.run(
+			async () => this.usersService.getPostImage(postId, await this.resolveProfileId(req)),
+			'Error fetching image',
+		);
+		res.set({
+			'Content-Type': 'image/webp',
+			'Cache-Control': 'public, max-age=31536000, immutable',
+		});
+		res.send(buffer);
 	}
 
 	@UseGuards(AuthGuard)

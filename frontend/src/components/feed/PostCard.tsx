@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { usePost } from '@/hooks/usePost';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthenticatedImage } from '@/hooks/useAuthenticatedImage';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { RenderedContent } from '@/components/content/RenderedContent';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
@@ -23,6 +24,7 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const isAuthor = !!profile?.login && profile.login === post.user.login;
 	const commonProjects = post.user.commonProjects ?? [];
+	const imageObjectUrl = useAuthenticatedImage(post.imageUrl);
 	const commonProjectsCount = post.user.commonProjectsCount ?? commonProjects.length;
 
 	useEffect(() => {
@@ -131,6 +133,12 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 				</div>
 
 				<div className="text-sm text-ft-text leading-relaxed mb-4 [overflow-wrap:anywhere]"><RenderedContent content={post.content} /></div>
+
+				{imageObjectUrl && (
+					<div className="mb-4 overflow-hidden rounded-xl border border-ft-border">
+						<img src={imageObjectUrl} alt="" className="max-h-[32rem] w-full object-cover" loading="lazy" />
+					</div>
+				)}
 
 				{commonProjectsCount > 0 && (
 					<div className="mb-4 flex flex-wrap items-center gap-2">

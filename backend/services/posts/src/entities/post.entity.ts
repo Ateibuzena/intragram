@@ -58,6 +58,15 @@ export class PostEntity {
 	@Column({ type: 'int', default: 0 })
 	comments_count!: number;
 
+	// Excluded from default SELECTs (select: false) so listing the feed never
+	// pulls image bytes for every post — only the dedicated image endpoint
+	// queries this column explicitly.
+	@Column({ type: 'bytea', nullable: true, select: false })
+	image_data!: Buffer | null;
+
+	@Column({ type: 'varchar', length: 100, nullable: true })
+	image_mime_type!: string | null;
+
 	@CreateDateColumn({ type: 'timestamp' })
 	created_at!: Date;
 

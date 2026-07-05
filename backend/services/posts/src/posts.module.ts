@@ -3,6 +3,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
+import { MetricsController } from './metrics.controller';
 import { PostEntity } from './entities/post.entity';
 import { PostCommentEntity } from './entities/post-comment.entity';
 import { PostLikeEntity } from './entities/post-like.entity';
@@ -34,7 +35,7 @@ import { InitPostsSchema1710000003000 } from './migrations/1710000003000-InitPos
 		TypeOrmModule.forFeature([PostEntity, PostCommentEntity, PostLikeEntity, PostSaveEntity]),
 		MetricsModule,
 	],
-	controllers: [PostsController],
+	controllers: [PostsController, MetricsController],
 	providers: [PostsService, { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor }],
 })
 export class PostsModule {}

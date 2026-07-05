@@ -37,7 +37,7 @@ El servicio chat es propietario del comportamiento de mensajería. Gestiona conv
 Esta separación mejora el mantenimiento porque los cambios en un dominio no requieren cambios coordinados en dominios no relacionados.
 
 ## Comunicación entre Servicios
-La comunicación entre servicios se realiza mediante APIs REST. El gateway orquesta las peticiones hacia los servicios auth, users y chat usando llamadas HTTP síncronas. Los DTOs y contratos compartidos en `backend/shared` definen los datos intercambiados entre fronteras de servicio y mantienen consistentes las estructuras de request y response.
+La comunicación entre servicios se realiza mediante APIs REST. El gateway orquesta las peticiones hacia los servicios auth, users, posts y chat usando llamadas HTTP síncronas. Los DTOs y contratos compartidos en `backend/shared` definen los datos intercambiados entre fronteras de servicio y mantienen consistentes las estructuras de request y response.
 
 La arquitectura actual satisface el requisito del módulo de usar APIs REST o colas de mensajes para la comunicación. Actualmente usamos APIs REST e intencionalmente no usamos un message broker porque nuestros casos de uso actuales son síncronos.
 
@@ -57,7 +57,7 @@ El gateway incluye manejo centralizado de timeouts HTTP y reintentos con backoff
 Los endpoints de health también forman parte de la capa de resiliencia. Cada servicio expone `GET /health`, y el gateway expone `GET /health` y `GET /health/services` para recopilar el estado de los servicios en un solo punto.
 
 ## Monitoreo de Salud
-Cada servicio del backend expone `GET /health` para monitoreo directo. El gateway expone `GET /health` para su propio estado y `GET /health/services` para agregar el estado de auth, users y chat. Esto ofrece a evaluadores y operadores un único endpoint para verificar la disponibilidad del sistema.
+Cada servicio del backend expone `GET /health` para monitoreo directo. El gateway expone `GET /health` para su propio estado y `GET /health/services` para agregar el estado de auth, users, posts y chat. Esto ofrece a evaluadores y operadores un único endpoint para verificar la disponibilidad del sistema.
 
 ## Decisiones de Diseño
 Se eligió REST para la comunicación entre servicios porque el flujo actual del backend es de petición/respuesta y el gateway ya actúa como capa de coordinación. Esto mantiene la arquitectura simple y cumple el requisito del módulo sin introducir infraestructura asíncrona que no es necesaria para los casos de uso actuales.

@@ -19,6 +19,7 @@ flowchart LR
   GW[Gateway]
   AU[Servicio Auth]
   US[Servicio Users]
+  PO[Servicio Posts]
   CH[Servicio Chat]
 
   PR[(Prometheus)]
@@ -30,6 +31,7 @@ flowchart LR
   NG --> GW
   GW --> AU
   GW --> US
+  GW --> PO
   GW --> CH
 
   NG -->|/grafana| GR
@@ -38,6 +40,7 @@ flowchart LR
   PR -->|scrape /metrics| GW
   PR -->|scrape /metrics| AU
   PR -->|scrape /metrics| US
+  PR -->|scrape /metrics| PO
   PR -->|scrape /metrics| CH
   PR -->|scrape /metrics| NE
 
@@ -64,7 +67,7 @@ El comportamiento de scrape de Prometheus está definido en la configuración de
 - Intervalo de evaluación de reglas: 15s.
 
 Los jobs de scrape incluyen:
-- nestjs_app: gateway + auth + users + chat.
+- nestjs_app: gateway + auth + users + posts + chat.
 - node_exporter.
 - prometheus (self-scrape).
 
@@ -72,6 +75,7 @@ Endpoints de métricas de aplicación:
 - Gateway expone /metrics y endpoints de salud (/health, /health/services).
 - Servicio auth expone /metrics.
 - Servicio users expone /metrics.
+- Servicio posts expone /metrics.
 - Servicio chat expone /metrics.
 
 Métricas personalizadas de aplicación implementadas actualmente:
@@ -82,7 +86,7 @@ Métricas personalizadas de aplicación implementadas actualmente:
 ## Exporters e Integraciones
 Integraciones implementadas en este repositorio:
 - Node exporter: implementado.
-- Integración NestJS + prom-client: implementada en gateway/auth/users/chat.
+- Integración NestJS + prom-client: implementada en gateway/auth/users/posts/chat.
 
 No implementado en este repositorio:
 - cAdvisor: no presente.
@@ -100,6 +104,7 @@ Dashboards aprovisionados:
 - gateway-dashboard.json (uid: gateway-observability)
 - auth-service-dashboard.json (uid: auth-service-observability)
 - user-service-dashboard.json (uid: users-service-observability)
+- posts-service-dashboard.json (uid: posts-service-observability)
 - chat-service-dashboard.json (uid: chat-service-observability)
 
 La cobertura de dashboards incluye:
@@ -110,7 +115,7 @@ La cobertura de dashboards incluye:
 - Métricas de heap de Node.js.
 - Event loop lag.
 - Throughput de requests y tendencia de 5xx.
-- Latencia p95 de requests en gateway.
+- Latencia p95 de requests en gateway y servicios instrumentados.
 
 Los dashboards incluyen una variable de plantilla Instance para filtrar por objetivo.
 
@@ -145,6 +150,7 @@ Esto proporciona un control de acceso sólido a nivel de módulo sin declarar ca
 | gateway | /metrics | Histograma de duración HTTP, contador de requests, gauge de usuarios activos, métricas Node/proceso |
 | auth-service | /metrics | Histograma de duración HTTP, contador de requests, métricas Node/proceso |
 | users-service | /metrics | Histograma de duración HTTP, contador de requests, métricas Node/proceso |
+| posts-service | /metrics | Histograma de duración HTTP, contador de requests, métricas Node/proceso |
 | chat-service | /metrics | Histograma de duración HTTP, contador de requests, métricas Node/proceso |
 | node-exporter | /metrics | Métricas de host/sistema |
 | prometheus | /metrics | Métricas internas de Prometheus |

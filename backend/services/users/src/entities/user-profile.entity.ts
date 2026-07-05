@@ -41,6 +41,12 @@ export class UserProfileEntity {
 	@Column({ type: 'varchar', length: 255, nullable: true })
 	avatar_url!: string | null;
 
+	@Column({ type: 'bytea', nullable: true, select: false })
+	avatar_image_data!: Buffer | null;
+
+	@Column({ type: 'varchar', length: 100, nullable: true })
+	avatar_image_mime_type!: string | null;
+
 	@Column({ type: 'varchar', length: 120, nullable: true })
 	campus!: string | null;
 

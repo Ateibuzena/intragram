@@ -20,7 +20,7 @@ interface ProfileHeaderProps {
 	canEditProfile?: boolean;
 	activeTheme?: string;
 	onSaveDisplayName?: (name: string) => Promise<void>;
-	onSaveAvatarUrl?: (url: string) => Promise<void>;
+	onSaveAvatarUrl?: (file: File) => Promise<void>;
 	onSaveBackground?: (theme: string) => Promise<void>;
 	showFriendButton?: boolean;
 	relation?: FriendRelation;

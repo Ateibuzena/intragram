@@ -31,9 +31,11 @@ import {
 	Post,
 	ParseIntPipe,
 	Query,
+	Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto, CreateNotificationDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserAvatarDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -151,6 +153,38 @@ export class UsersController {
 				error.message || 'Error al actualizar perfil',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
+		}
+	}
+
+	/**
+	 * Updates the user's profile avatar using the posts-style image pipeline.
+	 */
+	@Patch('users/:id/avatar')
+	async updateAvatar(@Param('id') id: string, @Body() dto: UpdateUserAvatarDto) {
+		try {
+			return await this.usersService.updateAvatar(id, dto);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al actualizar avatar',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Serves the stored avatar image bytes for public rendering.
+	 */
+	@Get('users/:id/avatar')
+	async getAvatar(@Param('id') id: string, @Res() res: Response) {
+		try {
+			const image = await this.usersService.getAvatarImage(id);
+			res.set({
+				'Content-Type': image.mimeType,
+				'Cache-Control': 'public, max-age=31536000, immutable',
+			});
+			res.send(image.data);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.NOT_FOUND);
 		}
 	}
 

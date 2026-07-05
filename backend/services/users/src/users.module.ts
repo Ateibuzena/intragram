@@ -15,6 +15,7 @@ import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { NotificationEntity } from './entities/notification.entity';
 import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUsersSchema';
+import { AddUserAvatarImageColumns1710000001100 } from './migrations/1710000001100-AddUserAvatarImageColumns';
 
 @Module({
 	imports: [
@@ -25,8 +26,8 @@ import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUse
 			username: process.env.DB_USERNAME || 'users_user',
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
-			entities: [UserProfileEntity, UserFriendshipEntity, NotificationEntity],
-			migrations: [InitUsersSchema1710000001000],
+			entities: [UserProfileEntity, UserFriendshipEntity],
+			migrations: [InitUsersSchema1710000001000, AddUserAvatarImageColumns1710000001100],
 			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',

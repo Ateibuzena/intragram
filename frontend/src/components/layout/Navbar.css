@@ -1,5 +1,17 @@
 .navbar {
-	@apply border-b border-ft-border px-4 sm:px-5 py-2.5 items-center justify-between sticky top-0 z-20 flex flex-nowrap gap-2;
+	@apply border-b border-ft-border px-4 sm:px-5 py-2.5 items-center sticky top-0 z-20 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2;
+}
+
+.navbar-left {
+	@apply flex items-center space-x-3 min-w-0 w-full max-w-[420px] justify-self-start;
+}
+
+.navbar-nav {
+	@apply flex items-center justify-self-center bg-ft-hover border border-ft-border rounded-xl p-1 gap-1;
+}
+
+.navbar-right {
+	@apply flex items-center justify-end space-x-3 min-w-0 justify-self-end;
 }
 
 .navbar-logo {
@@ -20,4 +32,18 @@
 
 .nav-btn--default {
 	@apply text-ft-muted hover:text-white hover:bg-ft-faint;
+}
+
+@media (max-width: 640px) {
+	.navbar {
+		@apply px-3 grid-cols-[minmax(0,1fr)_auto_auto];
+	}
+
+	.navbar-left {
+		@apply max-w-none;
+	}
+
+	.navbar-logo {
+		@apply hidden;
+	}
 }

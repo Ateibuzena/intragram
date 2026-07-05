@@ -8,6 +8,7 @@ export interface BackendConversation {
 	updated_at: string;
 	last_message: string | null;
 	last_message_at: string | null;
+	last_message_has_image?: boolean;
 	unread_count: number;
 }
 
@@ -17,6 +18,7 @@ export interface BackendMessage {
 	senderId: string;
 	message: string;
 	attachments: string[];
+	image_mime_type?: string | null;
 	created_at: string;
 }
 
@@ -56,7 +58,8 @@ export const mapConversationToUI = (
 	return {
 		id: conversation.id,
 		user,
-		lastMessage: conversation.last_message ?? 'Sin mensajes',
+		lastMessage: conversation.last_message || (conversation.last_message_has_image ? '' : 'Sin mensajes'),
+		lastMessageHasImage: conversation.last_message_has_image ?? false,
 		timestamp: formatTime(conversation.last_message_at ?? conversation.updated_at),
 		unread: conversation.unread_count ?? 0,
 	};
@@ -65,7 +68,11 @@ export const mapConversationToUI = (
 export const mapMessageToUI = (message: BackendMessage, currentUserId: string | null): Message => ({
 	id: message.id,
 	sender: message.senderId === currentUserId ? 'me' : 'other',
+	type: message.image_mime_type ? 'image' : 'text',
 	text: message.message,
+	imageUrl: message.image_mime_type
+		? `/chat/conversations/${message.conversationId}/messages/${message.id}/image`
+		: null,
 	timestamp: new Date(message.created_at).toLocaleString('es-ES', {
 		dateStyle: 'short',
 		timeStyle: 'short',

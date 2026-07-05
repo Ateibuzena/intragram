@@ -114,9 +114,9 @@ const ChatPage = () => {
 		}
 	};
 
-	const handleSendMessage = async (messageText: string) => {
-		await sendMessage(messageText, (raw) => {
-			updateConversationLastMessage(selectedChatId!, raw.message, raw.created_at);
+	const handleSendMessage = async (messageText: string, imageFile?: File | null) => {
+		await sendMessage(messageText, imageFile, (raw) => {
+			updateConversationLastMessage(selectedChatId!, raw.message, raw.created_at, Boolean(raw.image_mime_type));
 		});
 	};
 

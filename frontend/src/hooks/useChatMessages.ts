@@ -64,17 +64,31 @@ export const useChatMessages = (
 
 	const sendMessage = async (
 		messageText: string,
+		imageFile?: File | null,
 		onSuccess?: (raw: BackendMessage) => void,
 	): Promise<void> => {
 		if (!selectedChatId || !token) return;
+		if (!messageText.trim() && !imageFile) return;
 		setSending(true);
 		setError(null);
 		try {
-			const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ message: messageText, attachments: [] }),
-			});
+			// Multipart only when there's an image attached — the gateway's
+			// FileInterceptor on this route only parses multipart/form-data
+			// bodies, same constraint as /posts/feed.
+			const init = imageFile
+				? (() => {
+						const formData = new FormData();
+						formData.append('message', messageText);
+						formData.append('image', imageFile);
+						return { method: 'POST', body: formData };
+					})()
+				: {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ message: messageText, attachments: [] }),
+					};
+
+			const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token, init);
 			if (!res.ok) throw new Error('No se pudo enviar el mensaje');
 			const data = await res.json() as { message: BackendMessage };
 			setMessages((prev) => [...prev, mapMessageToUI(data.message, currentUserId)]);

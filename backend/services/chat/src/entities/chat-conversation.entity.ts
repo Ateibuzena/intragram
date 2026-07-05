@@ -26,6 +26,11 @@ export class ChatConversationEntity {
 	@Column({ type: 'timestamptz', nullable: true })
 	last_message_at!: Date | null;
 
+	// Lets the frontend render a "📷 Photo" icon/label for the conversation
+	// preview instead of baking that text into last_message.
+	@Column({ type: 'boolean', default: false })
+	last_message_has_image!: boolean;
+
 	@OneToMany(() => ChatMessageEntity, (message: { conversation: any; }) => message.conversation, { cascade: true })
 	messages!: ChatMessageEntity[];
 }

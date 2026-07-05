@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
+import { processImage } from '@intragram/shared/media';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatConversationReadEntity } from './entities/chat-conversation-read.entity';
@@ -102,9 +103,12 @@ export class ChatService {
 	}
 
 	async sendMessage(userId: string, conversationId: string, dto: SendMessageDto) {
-		if (!dto.message?.trim()) {
+		const trimmedText = dto.message?.trim() ?? '';
+		if (!trimmedText && !dto.image_base64) {
 			throw new BadRequestException('Message cannot be empty');
 		}
+
+		const image = dto.image_base64 ? await processImage(dto.image_base64) : null;
 
 		const conversation = await this.getAccessibleConversation(userId, conversationId);
 		const createdAt = new Date();
@@ -112,19 +116,37 @@ export class ChatService {
 			conversation,
 			conversationId: conversation.id,
 			senderId: userId,
-			message: dto.message.trim(),
+			message: trimmedText,
 			attachments: dto.attachments ?? [],
+			image_data: image?.data ?? null,
+			image_mime_type: image?.mimeType ?? null,
 			created_at: createdAt,
 		});
 
 		const savedMessage = await this.messageRepo.save(message);
 
-		conversation.last_message = savedMessage.message;
+		conversation.last_message = trimmedText;
+		conversation.last_message_has_image = Boolean(image);
 		conversation.last_message_at = createdAt;
 		conversation.updated_at = createdAt;
 		await this.conversationRepo.save(conversation);
 
 		return { message: savedMessage, participants: conversation.participants };
+	}
+
+	async getMessageImage(userId: string, conversationId: string, messageId: string): Promise<{ data: Buffer; mimeType: string }> {
+		const conversation = await this.getAccessibleConversation(userId, conversationId);
+
+		const message = await this.messageRepo.findOne({
+			where: { id: messageId, conversationId: conversation.id },
+			select: ['id', 'image_data', 'image_mime_type'],
+		});
+
+		if (!message?.image_data || !message.image_mime_type) {
+			throw new NotFoundException('Este mensaje no tiene imagen');
+		}
+
+		return { data: message.image_data, mimeType: message.image_mime_type };
 	}
 
 	async deleteConversation(userId: string, conversationId: string): Promise<void> {

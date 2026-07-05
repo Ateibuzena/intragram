@@ -40,6 +40,10 @@
     "./posts": {
       "types": "./dist/posts/index.d.ts",
       "default": "./dist/posts/index.js"
+    },
+    "./media": {
+      "types": "./dist/media/index.d.ts",
+      "default": "./dist/media/index.js"
     }
   },
   "files": [
@@ -50,7 +54,9 @@
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1"
+    "class-validator": "^0.15.1",
+    "file-type": "^16.5.4",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

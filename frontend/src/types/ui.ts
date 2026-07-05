@@ -33,7 +33,7 @@ export interface ChatWindowProps {
 	loading?: boolean;
 	error?: string | null;
 	sending?: boolean;
-	onSendMessage: (message: string) => Promise<void>;
+	onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
 	onStartNewConversation?: () => void;
 }
 

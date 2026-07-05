@@ -5,11 +5,16 @@
 
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { json } from 'express';
 import { ChatModule } from './chat.module';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
 	const app = await NestFactory.create(ChatModule);
+
+	// Chat images arrive base64-encoded from the gateway inside the JSON body —
+	// default Express limit (~100kb) is far too small for that (same fix as posts-service).
+	app.use(json({ limit: '12mb' }));
 
 	app.useGlobalPipes(
 		new ValidationPipe({

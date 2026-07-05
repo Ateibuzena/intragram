@@ -39,5 +39,8 @@
     "typescript":     "^5.7.3",
     "@types/node":    "^22.10.7",
     "nodemon":        "^3.0.2"
+  },
+  "overrides": {
+    "file-type": "16.5.4"
   }
 }

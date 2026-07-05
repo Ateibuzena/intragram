@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './ChatWindow.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { PhotoAttachmentButton } from '@/components/media/PhotoAttachmentButton';
 import type { ChatWindowProps } from '@/types/ui';
 import { MessageBubble } from './MessageBubble';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
@@ -64,6 +65,29 @@ export const ChatWindow = ({
 	const [showCodePanel, setShowCodePanel] = useState(false);
 	const [codeSnippet, setCodeSnippet] = useState('');
 	const [codeLang, setCodeLang] = useState('c');
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+	const [imageError, setImageError] = useState<string | null>(null);
+
+	// Revoke the preview object URL whenever it's replaced or the component unmounts.
+	useEffect(() => {
+		return () => {
+			if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		};
+	}, [imagePreviewUrl]);
+
+	const handleImageSelected = (file: File) => {
+		setImageError(null);
+		if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		setImageFile(file);
+		setImagePreviewUrl(URL.createObjectURL(file));
+	};
+
+	const handleRemoveImage = () => {
+		if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+		setImageFile(null);
+		setImagePreviewUrl(null);
+	};
 
 	const handleMessageChange = (value: string) => {
 		setMessageText(value);
@@ -91,9 +115,10 @@ export const ChatWindow = ({
 
 	const handleSend = async () => {
 		const trimmed = messageText.trim();
-		if (!trimmed || sending) return;
-		await onSendMessage(trimmed);
+		if ((!trimmed && !imageFile) || sending) return;
+		await onSendMessage(trimmed, imageFile);
 		setMessageText('');
+		handleRemoveImage();
 		if (inputRef.current) inputRef.current.style.height = 'auto';
 		setTimeout(() => inputRef.current?.focus(), 0);
 	};
@@ -200,6 +225,24 @@ export const ChatWindow = ({
 			</div>
 
 			<div className="chat-input-area">
+				{/* Preview de imagen adjunta */}
+				{imagePreviewUrl && (
+					<div className="mb-2 relative inline-block">
+						<img src={imagePreviewUrl} alt="" className="max-h-32 rounded-xl border border-ft-border object-cover" />
+						<button
+							type="button"
+							onClick={handleRemoveImage}
+							title="Quitar imagen"
+							className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-ft-bg border border-ft-border text-ft-muted hover:text-red-400 hover:border-red-400/40 transition-colors"
+						>
+							✕
+						</button>
+					</div>
+				)}
+				{imageError && (
+					<p className="mb-2 text-xs text-red-400">{imageError}</p>
+				)}
+
 				{/* Panel de código */}
 				{showCodePanel && (
 					<div className="mb-2 border border-ft-cyan/30 rounded-xl overflow-hidden">
@@ -249,12 +292,23 @@ export const ChatWindow = ({
 					<button
 						type="button"
 						onClick={handleToggleCode}
+						title="Insertar código"
 						className={`p-2 rounded-lg transition-colors flex-shrink-0 mb-0.5 ${showCodePanel ? 'bg-ft-cyan/20 text-ft-cyan' : 'hover:bg-ft-hover text-ft-cyan'}`}
 					>
 						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
 						</svg>
 					</button>
+					<PhotoAttachmentButton
+						onSelect={handleImageSelected}
+						onError={setImageError}
+						className={`p-2 rounded-lg transition-colors flex-shrink-0 mb-0.5 ${imageFile ? 'bg-ft-cyan/20 text-ft-cyan' : 'hover:bg-ft-hover text-ft-cyan'}`}
+					>
+						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+							<circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+						</svg>
+					</PhotoAttachmentButton>
 					<div className="chat-input-wrapper">
 						<textarea
 							ref={inputRef}
@@ -274,7 +328,7 @@ export const ChatWindow = ({
 					</div>
 					<button
 						onClick={() => { void handleSend(); }}
-						disabled={sending || !messageText.trim()}
+						disabled={sending || (!messageText.trim() && !imageFile)}
 						className="p-2.5 bg-ft-cyan/15 border border-ft-cyan/35 hover:bg-ft-cyan/25 rounded-full transition-all hover:shadow-ft-glow-sm active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						<svg className="w-5 h-5 text-ft-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">

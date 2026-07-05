@@ -18,7 +18,8 @@
  * - Correct HTTP codes for each error type
  */
 
-import { Body, Controller, Delete, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, HttpCode, Param, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { CreateConversationDto, SendMessageDto } from '@intragram/shared/chat';
 import { ChatService } from './chat.service';
 
@@ -68,6 +69,21 @@ export class ChatController {
 		@Body() dto: SendMessageDto,
 	) {
 		return this.chatService.sendMessage(userId, conversationId, dto);
+	}
+
+	/**
+	 * Returns a message's image bytes. Only accessible to conversation participants.
+	 */
+	@Get('conversations/:conversationId/messages/:messageId/image')
+	async getMessageImage(
+		@Headers('x-user-id') userId: string,
+		@Param('conversationId') conversationId: string,
+		@Param('messageId') messageId: string,
+		@Res() res: Response,
+	): Promise<void> {
+		const { data, mimeType } = await this.chatService.getMessageImage(userId, conversationId, messageId);
+		res.set({ 'Content-Type': mimeType });
+		res.send(data);
 	}
 
 	/**

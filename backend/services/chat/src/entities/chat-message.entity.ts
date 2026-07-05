@@ -28,6 +28,15 @@ export class ChatMessageEntity {
 	@Column('text', { array: true, default: '{}' })
 	attachments!: string[];
 
+	// Excluded from default SELECTs (select: false) so listing/polling messages
+	// never pulls image bytes for every message — only the dedicated image
+	// endpoint queries this column explicitly. Same pattern as PostEntity.
+	@Column({ type: 'bytea', nullable: true, select: false })
+	image_data!: Buffer | null;
+
+	@Column({ type: 'varchar', length: 100, nullable: true })
+	image_mime_type!: string | null;
+
 	@Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
 	created_at!: Date;
 }

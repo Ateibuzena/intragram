@@ -145,10 +145,12 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		});
 	};
 
-	const updateConversationLastMessage = (convId: string, message: string, at: string) => {
+	const updateConversationLastMessage = (convId: string, message: string, at: string, hasImage = false) => {
 		setRawConversations((prev) =>
 			prev.map((c) =>
-				c.id !== convId ? c : { ...c, last_message: message, last_message_at: at, updated_at: new Date().toISOString() },
+				c.id !== convId
+					? c
+					: { ...c, last_message: message, last_message_has_image: hasImage, last_message_at: at, updated_at: new Date().toISOString() },
 			),
 		);
 	};

@@ -97,6 +97,21 @@ export class ChatService {
 	}
 
 	/**
+	 * Fetches a chat message's image bytes from chat-service. Always WebP
+	 * (chat-service re-encodes every upload, same as posts-service).
+	 */
+	async getMessageImage(userId: string, conversationId: string, messageId: string): Promise<Buffer> {
+		try {
+			return await this.httpClient.get<Buffer>(
+				`${this.chatBaseUrl}/chat/conversations/${conversationId}/messages/${messageId}/image`,
+				{ timeoutMs: 5000, responseType: 'arraybuffer', headers: this.buildUserHeaders(userId) },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'obtener imagen del mensaje');
+		}
+	}
+
+	/**
 	 * Deletes a conversation for the user.
 	 */
 	async deleteConversation(userId: string, conversationId: string): Promise<void> {

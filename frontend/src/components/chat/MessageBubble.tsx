@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { RenderedContent } from '@/components/content/RenderedContent';
+import { useAuthenticatedImage } from '@/hooks/useAuthenticatedImage';
 import type { MessageBubbleProps } from '@/types/ui';
 
 const WAVEFORM_BARS = Array.from({ length: 40 }, (_, i) => {
@@ -10,6 +11,38 @@ const WAVEFORM_BARS = Array.from({ length: 40 }, (_, i) => {
 export const MessageBubble = ({ message, showTimestamp }: MessageBubbleProps) => {
 	const isMe = message.sender === 'me';
 	const waveHeights = useMemo(() => WAVEFORM_BARS, []);
+	// A plain <img src> can't send an Authorization header, and chat images
+	// are private (not public like posts) — fetch with the session token and
+	// expose as an object URL, same approach as post images.
+	const imageObjectUrl = useAuthenticatedImage(message.type === 'image' ? message.imageUrl : null);
+
+	if (message.type === 'image') {
+		return (
+			<div>
+				{showTimestamp && (
+					<p className="text-xs text-ft-muted text-center mb-2">{message.timestamp}</p>
+				)}
+				<div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+					<div className={`max-w-[75%] overflow-hidden ${isMe ? 'bg-blue-500/15 border border-blue-400/30' : 'surface-glass border border-ft-border'} rounded-2xl p-1.5`}>
+						{imageObjectUrl ? (
+							<img src={imageObjectUrl} alt="" className="max-h-72 w-full rounded-xl object-cover" />
+						) : (
+							<div className="flex h-40 w-56 items-center justify-center rounded-xl bg-ft-hover">
+								<svg className="w-8 h-8 text-ft-muted animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								</svg>
+							</div>
+						)}
+						{message.text && (
+							<div className={`px-2.5 pt-2 pb-1 text-sm break-words whitespace-pre-wrap ${isMe ? 'text-white' : 'text-ft-text'}`}>
+								<RenderedContent content={message.text} />
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	if (message.type === 'audio') {
 		return (

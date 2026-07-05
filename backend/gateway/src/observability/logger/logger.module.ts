@@ -1,11 +1,7 @@
 /**
- * Módulo de Logger
- * Configura el sistema de logging centralizado para toda la aplicación
- * Proporciona el LoggerService a otros módulos para registro de eventos,
- * errores y trazas de depuración
+ * Logging module of the gateway.
+ * Centralises the configuration of structured logs.
  */
-
-/*Esto es la base: logs estructurados y consistentes*/
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';

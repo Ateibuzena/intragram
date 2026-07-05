@@ -1,0 +1,101 @@
+import { useAuth } from '@/hooks/useAuth';
+import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import {
+	useProfileData,
+	ProfileHeader,
+	SkillsRadar,
+	ProjectsCard,
+	AchievementsCard,
+	AcademicTimeline,
+	ProfileDetails,
+	buildProfileInsights,
+	decodeTokenPayload,
+} from '@/components/profile';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
+
+const ProfilePage = () => {
+	const { token, patchAuthProfile } = useAuth();
+	const { connected } = usePresenceStatus();
+	const { profile, setProfile, loading, error, fallbackLogin, refreshProfile } = useProfileData();
+
+	const tokenPayload = decodeTokenPayload(token);
+
+	const profileLogin = profile?.login ?? fallbackLogin;
+	const displayName = profile?.display_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profileLogin;
+	const profileInitial = displayName.charAt(0).toUpperCase();
+	const canonicalProfileId = tokenPayload?.chat_user_id ?? null;
+	const canEditProfile = Boolean(
+		profile && token && canonicalProfileId && profile.id === canonicalProfileId,
+	);
+
+	const activeTheme = profile?.background_theme ?? 'none';
+
+	const patchProfile = async (body: Record<string, string>) => {
+		if (!token || !canonicalProfileId) return;
+		const res = await fetchWithAuth(`/users/${canonicalProfileId}/profile`, token, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body),
+		});
+		if (!res.ok) throw new Error('No se pudo actualizar el perfil.');
+		const updated = (await res.json()) as typeof profile;
+		setProfile(updated);
+		await refreshProfile({ silent: true });
+	};
+
+	const handleSaveDisplayName = async (name: string) => {
+		await patchProfile({ display_name: name });
+	};
+
+	const handleSaveAvatarUrl = async (url: string) => {
+		await patchProfile({ avatar_url: url });
+	};
+
+	const handleSaveBackground = async (theme: string) => {
+		patchAuthProfile({ background_theme: theme });
+		await patchProfile({ background_theme: theme });
+	};
+
+	const handleRefreshFromOAuth42 = () => {
+		// Re-runs the OAuth42 flow (already authorized, so it round-trips almost
+		// instantly) to re-sync fresh 42 stats — state carries us back to this tab.
+		window.location.href = `/api/auth/42?state=${encodeURIComponent('nav=profile')}`;
+	};
+
+	const insights = buildProfileInsights(profile);
+
+	return (
+		<div className="w-full px-3 md:px-6 lg:px-8">
+			<section className="mx-auto mb-6 max-w-5xl space-y-5">
+				<ProfileHeader
+					profile={profile}
+					displayName={displayName}
+					profileLogin={profileLogin}
+					profileInitial={profileInitial}
+					loading={loading}
+					error={error}
+					online={connected}
+					insights={insights}
+					canEditProfile={canEditProfile}
+					activeTheme={activeTheme}
+					onSaveDisplayName={handleSaveDisplayName}
+					onSaveAvatarUrl={handleSaveAvatarUrl}
+					onSaveBackground={handleSaveBackground}
+					onRefreshProfile={handleRefreshFromOAuth42}
+					className="min-h-[36rem]"
+				/>
+
+				<div className="grid grid-cols-1 gap-4">
+					<SkillsRadar skills={insights.topSkills} className="w-full min-h-[38rem]" />
+					<AchievementsCard insights={insights} className="w-full" />
+					<AcademicTimeline insights={insights} className="w-full" />
+					<ProjectsCard insights={insights} className="w-full min-h-[38rem]" />
+				</div>
+
+				<ProfileDetails profile={profile} insights={insights} />
+			</section>
+		</div>
+	);
+};
+
+export default ProfilePage;

@@ -1,0 +1,7 @@
+.modal-overlay {
+	@apply fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4;
+}
+
+.modal-content {
+	@apply bg-ft-card backdrop-blur-xl border border-ft-border rounded-2xl p-6 w-full max-w-md shadow-2xl;
+}

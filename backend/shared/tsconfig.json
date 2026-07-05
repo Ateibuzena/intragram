@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "ignoreDeprecations": "5.0",
+    "moduleResolution": "node16",
+  },
+  "include": ["index.ts", "auth/**/*", "contracts/**/*", "dto/**/*", "health/**/*", "types/**/*", "users/**/*", "chat/**/*", "posts/**/*"],
+  "exclude": ["dist", "node_modules"]
+}

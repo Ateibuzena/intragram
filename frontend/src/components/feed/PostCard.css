@@ -1,0 +1,31 @@
+.post-card {
+	@apply bg-ft-card backdrop-blur-xl border border-ft-border rounded-2xl p-5 mb-3 hover:border-ft-cyan/20 transition-all duration-200;
+}
+
+.post-card--new {
+	@apply border-ft-cyan/30 shadow-ft-glow-sm;
+}
+
+.post-action-btn {
+	@apply flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 active:scale-95 border;
+}
+
+.post-action-btn--like-active {
+	@apply bg-red-500/10 text-red-400 border-red-500/30;
+}
+
+.post-action-btn--like-default {
+	@apply text-ft-muted hover:text-red-400 hover:bg-red-500/5 border-transparent;
+}
+
+.post-action-btn--save-active {
+	@apply bg-ft-cyan/10 text-ft-cyan border-ft-cyan/30;
+}
+
+.post-action-btn--save-default {
+	@apply text-ft-muted hover:text-ft-cyan hover:bg-ft-cyan/5 border-transparent;
+}
+
+.post-action-btn--comment {
+	@apply text-ft-muted hover:text-ft-cyan hover:bg-ft-cyan/5 hover:border-ft-cyan/20 border-transparent;
+}

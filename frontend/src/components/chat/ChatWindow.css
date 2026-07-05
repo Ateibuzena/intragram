@@ -1,0 +1,23 @@
+.chat-window {
+	@apply flex-1 flex flex-col;
+}
+
+.chat-header {
+	@apply border-b border-ft-border px-5 py-3 flex items-center justify-between;
+}
+
+.chat-messages {
+	@apply flex-1 overflow-y-auto p-5 space-y-3;
+}
+
+.chat-input-area {
+	@apply border-t border-ft-border px-5 py-3;
+}
+
+.chat-input-wrapper {
+	@apply flex-1 flex items-center bg-ft-hover border border-ft-border rounded-2xl px-4 py-2.5 focus-within:border-ft-cyan/50 transition-colors overflow-hidden;
+}
+
+.chat-empty {
+	@apply flex-1 flex flex-col items-center justify-center;
+}

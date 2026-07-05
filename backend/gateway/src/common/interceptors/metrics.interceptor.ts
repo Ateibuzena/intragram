@@ -1,21 +1,16 @@
 /**
- * Interceptor de Métricas
- * Captura y registra métricas de rendimiento de las peticiones HTTP
- * Monitorea tiempos de respuesta, códigos de estado y otros indicadores
- * para observabilidad del sistema
+ * HTTP metrics interceptor.
+ * Records request duration, request count and active users without exposing PII.
  */
-/*Interceptor (medición real)*/
-/*Lo que sí es un riesgo: si alguna vez etiquetas con req.body.userId o req.query.email → estarías exponiendo datos de usuarios a Prometheus. Etiquetas deben ser información segura y agregada, nunca datos individuales identificables.*/
 
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 import { MetricsService } from '../../observability/metrics/metrics.service';
-import { log } from 'console';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
-	constructor(private readonly metrics: MetricsService) { }
+	constructor(private readonly metrics: MetricsService) {}
 
 	intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
 		const start = Date.now();
@@ -23,21 +18,37 @@ export class MetricsInterceptor implements NestInterceptor {
 		const method = request.method;
 		const route = request.route?.path || request.url;
 
+		// increment concurrent requests
+		try {
+			this.metrics.activeUsers.inc();
+		} catch (e) {
+			// ignore metric errors
+		}
+
 		return next.handle().pipe(
 			tap(() => {
+				// no-op here; finalization handles latency and counts
+			}),
+			finalize(() => {
 				const response = context.switchToHttp().getResponse();
-				const statusCode = response.statusCode;
+				const statusCode = response?.statusCode ?? 500;
 				const duration = (Date.now() - start) / 1000;
 
-				this.metrics.httpRequestDuration
-					.labels(method, route, statusCode.toString())
-					.observe(duration);
+				try {
+					this.metrics.httpRequestDuration
+						.labels(method, route, statusCode.toString())
+						.observe(duration);
 
-				this.metrics.incrementRequests(method, route, statusCode.toString());
-				void this.metrics.getTotalRequests().then((totalRequests) => {
-					log(`Request ${method} ${route} completed with status ${statusCode} in ${duration}ms total requests: ${totalRequests}`);
-				});
-				this.metrics.setActiveUsers(1); // Ejemplo: incrementar usuarios activos (en un caso real, esto debería basarse en la lógica de conexión/desconexión de usuarios)
+					this.metrics.incrementRequests(method, route, statusCode.toString());
+				} catch (e) {
+					// swallow metric errors
+				}
+
+				try {
+					this.metrics.activeUsers.dec();
+				} catch (e) {
+					// swallow
+				}
 			})
 		);
 	}

@@ -1,0 +1,21 @@
+{
+  "name": "posts-service",
+  "version": "1.0.0",
+  "description": "Microservicio de publicaciones",
+  "main": "dist/main.js",
+  "scripts": {
+    "build":       "tsc",
+    "start":       "node dist/main.js",
+    "start:dev":   "ts-node -r dotenv/config -r tsconfig-paths/register src/main.ts",
+    "start:watch": "ts-node-dev --poll --respawn --transpile-only -r dotenv/config -r tsconfig-paths/register src/main.ts"
+  },
+  "dependencies": {
+    "@intragram/shared":   "1.0.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "file-type":       "^16.5.4",
+    "pg":              "^8.13.1",
+    "sharp":           "^0.33.5",
+    "typeorm":         "^0.3.20"
+  },
+  "devDependencies": {}
+}

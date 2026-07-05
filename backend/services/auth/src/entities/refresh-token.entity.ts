@@ -1,0 +1,58 @@
+/**
+ * Refresh token entity of the auth-service.
+ * Stores rotatable and revocable sessions with traceability.
+ */
+
+import {
+	Entity,
+	PrimaryGeneratedColumn,
+	Column,
+	CreateDateColumn,
+	Index,
+	ManyToOne,
+	JoinColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+
+@Entity('refresh_tokens')
+export class RefreshTokenEntity {
+	@PrimaryGeneratedColumn('uuid')
+	id!: string;
+
+	/**
+	 * SHA-256 hash of the refresh token.
+	 * The original token is only sent to the client once.
+	 */
+	@Column({ type: 'varchar', length: 255 })
+	@Index('IDX_REFRESH_TOKEN_HASH')
+	token_hash!: string;
+
+	@Column({ type: 'uuid' })
+	@Index('IDX_REFRESH_TOKEN_USER')
+	user_id!: string;
+
+	@ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'user_id' })
+	user!: UserEntity;
+
+	@Column({ type: 'timestamp' })
+	expires_at!: Date;
+
+	@Column({ type: 'boolean', default: false })
+	is_revoked!: boolean;
+
+	/**
+	 * User-Agent of the client that created the session.
+	 */
+	@Column({ type: 'varchar', length: 500, nullable: true })
+	user_agent!: string | null;
+
+	/**
+	 * IP of the client that created the session.
+	 */
+	@Column({ type: 'varchar', length: 45, nullable: true })
+	ip_address!: string | null;
+
+	@CreateDateColumn({ type: 'timestamp' })
+	created_at!: Date;
+}

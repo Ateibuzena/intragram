@@ -13,6 +13,7 @@ import { MetricsInterceptor } from './observability/metrics/metrics.interceptor'
 import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
+import { InitAuthSchema1710000000000 } from './migrations/1710000000000-InitAuthSchema';
 
 @Module({
 	imports: [
@@ -24,6 +25,8 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 			password: process.env.DB_PASSWORD || 'auth_password',
 			database: process.env.DB_DATABASE || 'auth_db',
 			entities: [UserEntity, RefreshTokenEntity],
+			migrations: [InitAuthSchema1710000000000],
+			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {
@@ -40,4 +43,3 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 	exports: [AuthService],
 })
 export class AuthModule {}
-

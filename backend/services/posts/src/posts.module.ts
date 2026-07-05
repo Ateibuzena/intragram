@@ -9,6 +9,7 @@ import { PostLikeEntity } from './entities/post-like.entity';
 import { PostSaveEntity } from './entities/post-save.entity';
 import { MetricsInterceptor } from './observability/metrics/metrics.interceptor';
 import { MetricsModule } from './observability/metrics/metrics.module';
+import { InitPostsSchema1710000003000 } from './migrations/1710000003000-InitPostsSchema';
 
 @Module({
 	imports: [
@@ -20,6 +21,8 @@ import { MetricsModule } from './observability/metrics/metrics.module';
 			password: process.env.DB_PASSWORD || 'posts_password',
 			database: process.env.DB_DATABASE || 'posts_db',
 			entities: [PostEntity, PostCommentEntity, PostLikeEntity, PostSaveEntity],
+			migrations: [InitPostsSchema1710000003000],
+			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {

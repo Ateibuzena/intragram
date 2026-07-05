@@ -13,6 +13,7 @@ import { MetricsInterceptor } from './observability/metrics/metrics.interceptor'
 import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
+import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUsersSchema';
 
 @Module({
 	imports: [
@@ -24,6 +25,8 @@ import { UserFriendshipEntity } from './entities/user-friendship.entity';
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
 			entities: [UserProfileEntity, UserFriendshipEntity],
+			migrations: [InitUsersSchema1710000001000],
+			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',
 			extra: {

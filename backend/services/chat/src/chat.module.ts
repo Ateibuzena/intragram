@@ -15,6 +15,7 @@ import { MetricsModule } from './observability/metrics/metrics.module';
 import { ChatConversationEntity } from './entities/chat-conversation.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatConversationReadEntity } from './entities/chat-conversation-read.entity';
+import { InitChatSchema1710000002000 } from './migrations/1710000002000-InitChatSchema';
 
 @Module({
 	imports: [
@@ -26,7 +27,7 @@ import { ChatConversationReadEntity } from './entities/chat-conversation-read.en
 			password: process.env.DB_PASSWORD || 'chat_password',
 			database: process.env.DB_DATABASE || 'chat_db',
 			entities: [ChatConversationEntity, ChatMessageEntity, ChatConversationReadEntity],
-			migrations: [],
+			migrations: [InitChatSchema1710000002000],
 			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
 			logging: process.env.NODE_ENV === 'development',

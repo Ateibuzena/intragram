@@ -104,11 +104,9 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 						ref={inputRef}
 						type="file"
 						accept="image/*"
-						capture="user"
 						onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
 						className="w-full bg-ft-hover border border-ft-border rounded-xl px-3 py-2 text-xs text-ft-text file:mr-3 file:rounded-lg file:border-0 file:bg-ft-cyan/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ft-cyan focus:outline-none focus:border-ft-cyan/50 transition-colors"
 					/>
-					<p className="text-[10px] text-ft-muted text-center">Sube una foto o usa la cámara del dispositivo.</p>
 					{error && <p className="text-[10px] text-red-400 text-center">{error}</p>}
 					<div className="flex gap-2">
 						<button

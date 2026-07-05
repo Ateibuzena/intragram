@@ -18,7 +18,16 @@ import sharp from 'sharp';
 import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
-import { UpsertOAuth42UserDto, UpdateUserAvatarDto, UpdateUserProfileDto, mapOAuth42MeToUpsertUser } from '@intragram/shared/users';
+import { NotificationEntity } from './entities/notification.entity';
+import {
+	UpsertOAuth42UserDto,
+	UpdateUserAvatarDto,
+	UpdateUserProfileDto,
+	mapOAuth42MeToUpsertUser,
+	CreateNotificationDto,
+	INotification,
+	INotificationsResponse,
+} from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';

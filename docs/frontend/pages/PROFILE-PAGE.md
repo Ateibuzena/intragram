@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ProfilePage` and `UserProfilePage` render the 42 profile as a social and academic dashboard for Intragram.
+`ProfilePage` renders the 42 profile as a social and academic dashboard for Intragram.
 
 The profile is frontend-only in this phase: it consumes the existing user profile payload and derives useful display metrics in the browser. It does not change OAuth 42, backend persistence, or exposed endpoints.
 
@@ -17,7 +17,7 @@ The profile is composed from shared components in `frontend/src/components/profi
 - `ProfileStats`: academic metrics prioritized over raw fields.
 - `ProfileDetails`: lower-priority raw profile details such as email, campus, pool, location, phone, role, last login, and creation date.
 
-Both own profile and public user profile use the same base components. `UserProfilePage` disables profile editing and keeps friend actions separate from the dashboard data.
+The same page handles both contexts. Without a route login it renders the authenticated user's own profile inside the home dashboard; with `/profile/:login` it renders that user's profile as a standalone page. Editing controls are enabled only when the rendered profile belongs to the authenticated user, while friend actions are shown only for other users.
 
 ## Derived Metrics
 
@@ -72,7 +72,7 @@ This page still relies on the existing endpoints:
 - `GET /users/login/:login`
 - profile data loaded through `useProfileData`
 - `PATCH /users/:id/profile` for own display name and avatar edits
-- friend endpoints used only by `UserProfilePage`
+- friend endpoints used only when `ProfilePage` renders another user's profile
 
 No raw 42 profile payload is exposed to the frontend in this phase.
 
@@ -95,7 +95,7 @@ Check these scenarios after profile changes:
 - own profile with complete 42 data;
 - own profile with empty skills;
 - profile with empty projects;
-- public `UserProfilePage`;
+- public `/profile/:login` profile;
 - user without avatar;
 - long names and titles;
 - desktop and mobile-width layouts;

@@ -8,8 +8,8 @@ import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import PrivacyPage from '@/pages/PrivacyPage';
+import ProfilePage from '@/pages/ProfilePage';
 import TermsPage from '@/pages/TermsPage';
-import UserProfilePage from '@/pages/UserProfilePage';
 
 const PresenceManager = ({ children }: { children: React.ReactNode }) => {
 	const { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef } = usePresence();
@@ -103,7 +103,7 @@ const App = () => {
 						path={ROUTES.PROFILE}
 						element={
 							<ProtectedRoute>
-								<UserProfilePage />
+								<ProfilePage />
 							</ProtectedRoute>
 						}
 					/>

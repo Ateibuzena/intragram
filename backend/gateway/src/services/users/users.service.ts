@@ -6,7 +6,14 @@
 
 import { Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import {
+	IUserProfile,
+	UpsertOAuth42UserDto,
+	UpdateUserProfileDto,
+	CreateFriendDto,
+	CreateNotificationDto,
+	INotificationsResponse,
+} from '@intragram/shared/users';
 import { IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/posts';
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
@@ -334,9 +341,9 @@ export class UsersService {
 	/**
 	 * Toggles the like of the authenticated user on a post.
 	 */
-	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
+	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number; author_id: string }> {
 		try {
-			return await this.httpClient.post<{ liked: boolean; likes_count: number }, { postId: string }>(
+			return await this.httpClient.post<{ liked: boolean; likes_count: number; author_id: string }, { postId: string }>(
 				`${this.postsBaseUrl}/posts/feed/like/${userId}`,
 				{ postId },
 				{ timeoutMs: 5000 },
@@ -437,6 +444,42 @@ export class UsersService {
 			);
 		} catch (error) {
 			this.handleHttpError(error, 'delete post');
+		}
+	}
+
+	/**
+	 * Creates a like/comment notification. Best-effort: failures here must
+	 * never break the like/comment action itself, so callers should swallow
+	 * errors rather than let them propagate.
+	 */
+	async createNotification(dto: CreateNotificationDto): Promise<void> {
+		await this.httpClient.post<void, CreateNotificationDto>(
+			`${this.usersBaseUrl}/notifications`,
+			dto,
+			{ timeoutMs: 5000 },
+		);
+	}
+
+	async getNotifications(userId: string): Promise<INotificationsResponse> {
+		try {
+			return await this.httpClient.get<INotificationsResponse>(
+				`${this.usersBaseUrl}/notifications/${userId}`,
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'obtener notificaciones');
+		}
+	}
+
+	async markNotificationsRead(userId: string): Promise<void> {
+		try {
+			await this.httpClient.post<void, undefined>(
+				`${this.usersBaseUrl}/notifications/${userId}/read`,
+				undefined,
+				{ timeoutMs: 5000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'marcar notificaciones como leídas');
 		}
 	}
 

@@ -513,7 +513,7 @@ export class PostsService {
 		return true;
 	}
 
-	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number }> {
+	async toggleLikePost(userId: string, postId: string): Promise<{ liked: boolean; likes_count: number; author_id: string }> {
 		return this.dataSource.transaction(async (manager) => {
 			const postRepo = manager.getRepository(PostEntity);
 			const likeRepo = manager.getRepository(PostLikeEntity);
@@ -528,14 +528,14 @@ export class PostsService {
 				await likeRepo.remove(existing);
 				post.likes_count = Math.max(0, post.likes_count - 1);
 				await postRepo.save(post);
-				return { liked: false, likes_count: post.likes_count };
+				return { liked: false, likes_count: post.likes_count, author_id: post.author_id };
 			}
 
 			const like = likeRepo.create({ user_id: userId, post_id: postId });
 			await likeRepo.save(like);
 			post.likes_count = post.likes_count + 1;
 			await postRepo.save(post);
-			return { liked: true, likes_count: post.likes_count };
+			return { liked: true, likes_count: post.likes_count, author_id: post.author_id };
 		});
 	}
 
@@ -585,7 +585,8 @@ export class PostsService {
 			post.comments_count = post.comments_count + 1;
 			await postRepo.save(post);
 
-			return this.mapCommentToDto(comment);
+			const dto = await this.mapCommentToDto(comment);
+			return { ...dto, post_author_id: post.author_id };
 		});
 	}
 

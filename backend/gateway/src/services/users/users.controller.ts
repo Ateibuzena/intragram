@@ -23,6 +23,7 @@ import {
 	DefaultValuePipe,
 	ForbiddenException,
 	Get,
+	HttpCode,
 	HttpException,
 	HttpStatus,
 	Delete,
@@ -520,6 +521,32 @@ export class UsersController {
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	/**
+	 * Returns like/comment notifications for the authenticated user, with an
+	 * unread count. Must stay declared before the ":id" catch-all route below.
+	 */
+	@UseGuards(AuthGuard)
+	@Get('notifications')
+	async getNotifications(@Req() req: any) {
+		try {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			return await this.usersService.getNotifications(profile.id);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * Marks all of the authenticated user's notifications as read.
+	 */
+	@UseGuards(AuthGuard)
+	@Post('notifications/read')
+	@HttpCode(HttpStatus.NO_CONTENT)
+	async markNotificationsRead(@Req() req: any): Promise<void> {
+		const profile = await this.usersService.findByLogin(req.user.username);
+		await this.usersService.markNotificationsRead(profile.id);
 	}
 
 	/**

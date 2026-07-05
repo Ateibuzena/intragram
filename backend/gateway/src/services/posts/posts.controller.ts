@@ -84,7 +84,24 @@ export class PostsController {
 	@UseGuards(AuthGuard)
 	@Post('feed/like/:postId')
 	async toggleLike(@Param('postId') postId: string, @Req() req: any): Promise<{ liked: boolean; likes_count: number }> {
-		return this.run(async () => this.usersService.toggleLikePost(await this.resolveProfileId(req), postId), 'Error al actualizar like');
+		return this.run(async () => {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			const result = await this.usersService.toggleLikePost(profile.id, postId);
+
+			if (result.liked && result.author_id !== profile.id) {
+				// Best-effort: a failure here must never break the like action itself.
+				this.usersService
+					.createNotification({ recipient_id: result.author_id, actor_id: profile.id, type: 'like', post_id: postId })
+					.catch(() => {});
+				this.realtimeService.emitToUser(result.author_id, 'notification:new', {
+					type: 'like',
+					post_id: postId,
+					actor: { id: profile.id, login: profile.login, display_name: profile.display_name },
+				});
+			}
+
+			return { liked: result.liked, likes_count: result.likes_count };
+		}, 'Error al actualizar like');
 	}
 
 	@UseGuards(AuthGuard)
@@ -141,7 +158,30 @@ export class PostsController {
 		@Body('content') content: string,
 		@Req() req: any,
 	): Promise<IPostComment> {
-		return this.run(async () => this.usersService.addComment(postId, await this.resolveProfileId(req), content), 'Error adding comment');
+		return this.run(async () => {
+			const profile = await this.usersService.findByLogin(req.user.username);
+			const comment = await this.usersService.addComment(postId, profile.id, content);
+
+			if (comment.post_author_id && comment.post_author_id !== profile.id) {
+				this.usersService
+					.createNotification({
+						recipient_id: comment.post_author_id,
+						actor_id: profile.id,
+						type: 'comment',
+						post_id: postId,
+						comment_preview: content.trim().slice(0, 160),
+					})
+					.catch(() => {});
+				this.realtimeService.emitToUser(comment.post_author_id, 'notification:new', {
+					type: 'comment',
+					post_id: postId,
+					comment_preview: content.trim().slice(0, 160),
+					actor: { id: profile.id, login: profile.login, display_name: profile.display_name },
+				});
+			}
+
+			return comment;
+		}, 'Error adding comment');
 	}
 
 	@UseGuards(AuthGuard)

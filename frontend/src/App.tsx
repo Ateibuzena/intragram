@@ -4,6 +4,8 @@ import { AuthContext, useAuth, useAuthState } from '@/hooks/useAuth';
 import { usePresence } from '@/hooks/usePresence';
 import { PresenceContext } from '@/hooks/usePresenceContext';
 import { FriendProvider } from '@/hooks/useFriendContext';
+import { NotificationsProvider } from '@/hooks/useNotificationsContext';
+import { ActivityToast } from '@/components/layout/ActivityToast';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
@@ -16,7 +18,10 @@ const PresenceManager = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef }}>
 			<FriendProvider>
-				{children}
+				<NotificationsProvider>
+					<ActivityToast />
+					{children}
+				</NotificationsProvider>
 			</FriendProvider>
 		</PresenceContext.Provider>
 	);

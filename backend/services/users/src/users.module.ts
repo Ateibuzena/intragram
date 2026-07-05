@@ -13,6 +13,7 @@ import { MetricsInterceptor } from './observability/metrics/metrics.interceptor'
 import { MetricsModule } from './observability/metrics/metrics.module';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
+import { NotificationEntity } from './entities/notification.entity';
 import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUsersSchema';
 
 @Module({
@@ -24,7 +25,7 @@ import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUse
 			username: process.env.DB_USERNAME || 'users_user',
 			password: process.env.DB_PASSWORD || 'users_password',
 			database: process.env.DB_DATABASE || 'users_db',
-			entities: [UserProfileEntity, UserFriendshipEntity],
+			entities: [UserProfileEntity, UserFriendshipEntity, NotificationEntity],
 			migrations: [InitUsersSchema1710000001000],
 			migrationsRun: process.env.NODE_ENV === 'production',
 			synchronize: process.env.NODE_ENV !== 'production',
@@ -35,7 +36,7 @@ import { InitUsersSchema1710000001000 } from './migrations/1710000001000-InitUse
 				statement_timeout: 10000,
 			},
 		}),
-		TypeOrmModule.forFeature([UserProfileEntity, UserFriendshipEntity]),
+		TypeOrmModule.forFeature([UserProfileEntity, UserFriendshipEntity, NotificationEntity]),
 		MetricsModule,
 	],
 	controllers: [UsersController, MetricsController],

@@ -33,7 +33,7 @@ import {
 	Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto, CreateNotificationDto } from '@intragram/shared/users';
 
 @Controller()
 export class UsersController {
@@ -279,5 +279,39 @@ export class UsersController {
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
 		}
+	}
+
+	/**
+	 * Creates a like/comment notification. Internal endpoint — called by the
+	 * gateway right after a like/comment succeeds on posts-service.
+	 */
+	@Post('notifications')
+	@HttpCode(HttpStatus.NO_CONTENT)
+	async createNotification(@Body() dto: CreateNotificationDto) {
+		try {
+			await this.usersService.createNotification(dto);
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al crear notificación',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Returns the like/comment notifications for a user, with an unread count.
+	 */
+	@Get('notifications/:userId')
+	async getNotifications(@Param('userId') userId: string) {
+		return this.usersService.getNotifications(userId);
+	}
+
+	/**
+	 * Marks all of a user's notifications as read.
+	 */
+	@Post('notifications/:userId/read')
+	@HttpCode(HttpStatus.NO_CONTENT)
+	async markNotificationsRead(@Param('userId') userId: string) {
+		await this.usersService.markNotificationsRead(userId);
 	}
 }

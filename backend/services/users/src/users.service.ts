@@ -15,7 +15,15 @@ import { In, Not, Repository } from 'typeorm';
 import axios from 'axios';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
-import { UpsertOAuth42UserDto, UpdateUserProfileDto, mapOAuth42MeToUpsertUser } from '@intragram/shared/users';
+import { NotificationEntity } from './entities/notification.entity';
+import {
+	UpsertOAuth42UserDto,
+	UpdateUserProfileDto,
+	mapOAuth42MeToUpsertUser,
+	CreateNotificationDto,
+	INotification,
+	INotificationsResponse,
+} from '@intragram/shared/users';
 import { createHealthResponse, HealthResponse } from '@intragram/shared/health';
 
 export type IDirectoryRelation = 'none' | 'friends' | 'pending_sent' | 'pending_received';
@@ -56,6 +64,8 @@ export class UsersService {
 		private readonly userProfileRepo: Repository<UserProfileEntity>,
 		@InjectRepository(UserFriendshipEntity)
 		private readonly friendshipRepo: Repository<UserFriendshipEntity>,
+		@InjectRepository(NotificationEntity)
+		private readonly notificationRepo: Repository<NotificationEntity>,
 	) {}
 
 	/**
@@ -661,5 +671,62 @@ export class UsersService {
 		const values: { active: boolean; last_login_at?: Date } = { active };
 		if (active) values.last_login_at = new Date();
 		await this.userProfileRepo.update({ id: userId }, values);
+	}
+
+	// ═══════════════════════════════════════════════
+	//  NOTIFICATIONS (likes & comments on posts)
+	// ═══════════════════════════════════════════════
+
+	async createNotification(input: CreateNotificationDto): Promise<void> {
+		// Never notify yourself (liking/commenting on your own post).
+		if (input.recipient_id === input.actor_id) return;
+
+		const notification = this.notificationRepo.create({
+			recipient_id: input.recipient_id,
+			actor_id: input.actor_id,
+			type: input.type,
+			post_id: input.post_id,
+			comment_preview: input.comment_preview ?? null,
+		});
+		await this.notificationRepo.save(notification);
+	}
+
+	async getNotifications(userId: string, limit = 50): Promise<INotificationsResponse> {
+		const notifications = await this.notificationRepo.find({
+			where: { recipient_id: userId },
+			order: { created_at: 'DESC' },
+			take: limit,
+		});
+
+		if (notifications.length === 0) return { items: [], unread_count: 0 };
+
+		const actorIds = [...new Set(notifications.map((n) => n.actor_id))];
+		const actors = await this.userProfileRepo.find({ where: { id: In(actorIds) } });
+		const actorById = new Map<string, UserProfileEntity>(actors.map((a) => [a.id, a]));
+
+		const items: INotification[] = notifications.map((n) => {
+			const actor = actorById.get(n.actor_id);
+			return {
+				id: n.id,
+				type: n.type,
+				post_id: n.post_id,
+				comment_preview: n.comment_preview,
+				read: n.read,
+				created_at: n.created_at.toISOString(),
+				actor: {
+					id: n.actor_id,
+					login: actor?.login ?? 'unknown',
+					display_name: actor?.display_name ?? null,
+					avatar_url: actor?.avatar_url ?? null,
+				},
+			};
+		});
+
+		const unread_count = notifications.filter((n) => !n.read).length;
+		return { items, unread_count };
+	}
+
+	async markNotificationsRead(userId: string): Promise<void> {
+		await this.notificationRepo.update({ recipient_id: userId, read: false }, { read: true });
 	}
 }

@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useFriendContext, type FriendRelation } from '@/hooks/useFriendContext';
+import { useNotificationsContext } from '@/hooks/useNotificationsContext';
+import { mapApiPostToPost } from '@/utils/postMappers';
+import { formatTime } from '@/utils/formatters';
+import { PostDetailModal } from '@/components/feed/PostDetailModal';
+import type { Post } from '@/types/feed';
 
-type CommunityFilter = 'all' | 'online' | 'campus_location' | 'requests';
+type CommunityFilter = 'all' | 'online' | 'campus_location' | 'requests' | 'notifications';
 
 type DirectoryEntry = {
 	id: string;
@@ -27,6 +32,7 @@ const PILL_COLORS = {
 	green:  { active: 'border-green-400/40 bg-green-500/15 text-green-300',    inactive: 'border-green-400/30 bg-green-500/10 text-green-300 hover:bg-green-500/15' },
 	violet: { active: 'border-violet-400/40 bg-violet-500/15 text-violet-200', inactive: 'border-violet-400/20 bg-violet-500/5 text-violet-300 hover:bg-violet-500/15' },
 	rose:   { active: 'border-rose-400/40 bg-rose-500/15 text-rose-300',       inactive: 'border-rose-400/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500/15' },
+	amber:  { active: 'border-amber-400/40 bg-amber-500/15 text-amber-300',    inactive: 'border-amber-400/20 bg-amber-500/5 text-amber-300 hover:bg-amber-500/15' },
 } as const;
 
 type PillColor = keyof typeof PILL_COLORS;
@@ -54,13 +60,30 @@ export const FriendsSidebar = () => {
 	const { presenceMap } = usePresenceStatus();
 	const { pendingReceived, getRelation, seedRelations, sendRequest, acceptRequest, rejectRequest, removeFriend } =
 		useFriendContext();
+	const { notifications, unreadCount: unreadNotifications, markAllRead } = useNotificationsContext();
 
 	const [entries, setEntries] = useState<DirectoryEntry[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [processing, setProcessing] = useState<Set<string>>(new Set());
 	const [filter, setFilter] = useState<CommunityFilter>('all');
-	const [toast, setToast] = useState<string | null>(null);
-	const prevPendingCount = useRef(0);
+	const [openedPost, setOpenedPost] = useState<Post | null>(null);
+	const [openingPostId, setOpeningPostId] = useState<string | null>(null);
+
+	const handleOpenNotification = async (postId: string) => {
+		if (!token || openingPostId) return;
+		setOpeningPostId(postId);
+		try {
+			const res = await fetchWithAuth(`/posts/feed/post/${postId}`, token);
+			if (res.ok) setOpenedPost(mapApiPostToPost(await res.json()));
+		} finally {
+			setOpeningPostId(null);
+		}
+	};
+
+	const handleSelectNotifications = () => {
+		setFilter('notifications');
+		if (unreadNotifications > 0) void markAllRead();
+	};
 
 	const fetchDirectory = useCallback(async () => {
 		if (!token) return;
@@ -79,23 +102,6 @@ export const FriendsSidebar = () => {
 	}, [token]);
 
 	useEffect(() => { void fetchDirectory(); }, [fetchDirectory]);
-
-	// ── Friend request notifications ───────────────────────────────────────────
-
-	useEffect(() => {
-		const current = pendingReceived.length;
-		if (current > prevPendingCount.current && filter !== 'requests') {
-			const newest = pendingReceived[0];
-			if (newest) setToast(newest.login);
-		}
-		prevPendingCount.current = current;
-	}, [pendingReceived.length]);
-
-	useEffect(() => {
-		if (!toast) return;
-		const t = setTimeout(() => setToast(null), 4000);
-		return () => clearTimeout(t);
-	}, [toast]);
 
 	// ── Processing set helpers ─────────────────────────────────────────────────
 
@@ -156,6 +162,7 @@ export const FriendsSidebar = () => {
 		filter === 'online' ? directoryEntries.filter(isEntryOnline) :
 		filter === 'campus_location' ? directoryEntries.filter(isCampusLocation) :
 		directoryEntries;
+	const showDirectory = filter !== 'requests' && filter !== 'notifications';
 	return (
 		<aside className="border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
 			<div className="mb-4 flex items-start justify-between gap-3">
@@ -166,7 +173,8 @@ export const FriendsSidebar = () => {
 					<FilterPill count={totalUsers} active={filter === 'all'} color="cyan" title="Mostrar todos los perfiles" onClick={() => setFilter('all')} />
 					<FilterPill count={onlineUsers} active={filter === 'online'} color="green" title="Mostrar perfiles online" onClick={() => setFilter('online')} />
 					{myCampus && <FilterPill count={campusLocationUsers} active={filter === 'campus_location'} color="violet" title={`Usuarios de ${myCampus} en campus ahora`} onClick={() => setFilter('campus_location')} />}
-					<FilterPill count={pendingReceived.length} active={filter === 'requests'} color="rose" title="Solicitudes de amistad" onClick={() => { setFilter('requests'); setToast(null); }} />
+					<FilterPill count={pendingReceived.length} active={filter === 'requests'} color="rose" title="Solicitudes de amistad" onClick={() => setFilter('requests')} />
+					<FilterPill count={unreadNotifications} active={filter === 'notifications'} color="amber" title="Me gusta y comentarios" onClick={handleSelectNotifications} />
 				</div>
 			</div>
 
@@ -202,8 +210,49 @@ export const FriendsSidebar = () => {
 				</ul>
 			)}
 
+			{/* ── Vista: me gusta y comentarios ── */}
+			{filter === 'notifications' && notifications.length === 0 && (
+				<div className="rounded-xl border border-dashed border-ft-border px-4 py-5 text-center">
+					<p className="text-xs font-semibold text-ft-text">No tienes notificaciones todavía</p>
+				</div>
+			)}
+			{filter === 'notifications' && notifications.length > 0 && (
+				<ul className="-mx-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
+					{notifications.map((n) => (
+						<li key={n.id}>
+							<button
+								type="button"
+								disabled={openingPostId === n.postId}
+								onClick={() => void handleOpenNotification(n.postId)}
+								className={`w-full flex items-start gap-2.5 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-ft-hover disabled:opacity-50 ${!n.read ? 'bg-amber-500/5' : ''}`}
+							>
+								<Avatar login={n.actor.login} imageUrl={n.actor.avatarUrl} size="sm" />
+								<div className="min-w-0 flex-1">
+									<p className="text-xs text-ft-text">
+										<span className="font-semibold">{n.actor.displayName || n.actor.login}</span>{' '}
+										{n.type === 'like' ? (
+											<span className="text-ft-muted">le dio like a tu publicación</span>
+										) : (
+											<span className="text-ft-muted">comentó: "{n.commentPreview}"</span>
+										)}
+									</p>
+									<p className="mt-0.5 text-[10px] text-ft-muted">{formatTime(n.createdAt)}</p>
+								</div>
+								<svg className={`mt-0.5 h-4 w-4 flex-shrink-0 ${n.type === 'like' ? 'text-rose-400' : 'text-ft-cyan'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									{n.type === 'like' ? (
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+									) : (
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+									)}
+								</svg>
+							</button>
+						</li>
+					))}
+				</ul>
+			)}
+
 			{/* ── Vista: directorio de comunidad ── */}
-			{filter !== 'requests' && loading && (
+			{showDirectory && loading && (
 				<div className="space-y-2">
 					{Array.from({ length: 3 }, (_, index) => (
 						<div key={index} className="flex items-center gap-2.5 rounded-xl px-2 py-2.5">
@@ -216,7 +265,7 @@ export const FriendsSidebar = () => {
 					))}
 				</div>
 			)}
-			{filter !== 'requests' && !loading && visibleEntries.length === 0 && (
+			{showDirectory && !loading && visibleEntries.length === 0 && (
 				<div className="rounded-xl border border-dashed border-ft-border px-4 py-5 text-center">
 					<div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-ft-border bg-ft-hover/40">
 						<svg className="h-5 w-5 text-ft-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,7 +281,7 @@ export const FriendsSidebar = () => {
 					</p>
 				</div>
 			)}
-			{filter !== 'requests' && visibleEntries.length > 0 && (
+			{showDirectory && visibleEntries.length > 0 && (
 				<ul className="-mx-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
 					{visibleEntries.map((entry) => {
 						const rel = getRelation(entry.id);
@@ -317,30 +366,15 @@ export const FriendsSidebar = () => {
 				</ul>
 			)}
 
-			{/* Toast de nueva solicitud — position:fixed, DOM position no importa */}
-			{toast && (
-				<div className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-2xl border border-rose-400/30 bg-ft-card px-4 py-3 shadow-lg">
-					<div className="flex-1 min-w-0">
-						<p className="text-xs font-semibold text-white">Nueva solicitud de amistad</p>
-						<p className="text-[10px] text-ft-muted mt-0.5 truncate">{toast} quiere ser tu amigo</p>
-					</div>
-					<button
-						type="button"
-						onClick={() => { setToast(null); setFilter('requests'); }}
-						className="flex-shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-ft-cyan/15 text-ft-cyan border border-ft-cyan/30 hover:bg-ft-cyan/25 transition-colors"
-					>
-						Ver
-					</button>
-					<button
-						type="button"
-						onClick={() => setToast(null)}
-						className="flex-shrink-0 text-ft-muted hover:text-white transition-colors"
-					>
-						<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</button>
-				</div>
+			{openedPost && (
+				<PostDetailModal
+					post={openedPost}
+					likes={openedPost.likes}
+					liked={openedPost.liked}
+					initialCommentCount={openedPost.comments}
+					onClose={() => setOpenedPost(null)}
+					onCommentCountChange={() => {}}
+				/>
 			)}
 		</aside>
 	);

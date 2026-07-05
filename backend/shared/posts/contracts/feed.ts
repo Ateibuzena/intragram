@@ -37,4 +37,6 @@ export interface IPostComment {
 	content: string;
 	created_at: string;
 	author: IFeedPostAuthorSummary;
+	/** Only set on the addComment response, to notify the post's author. */
+	post_author_id?: string;
 }

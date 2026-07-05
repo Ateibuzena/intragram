@@ -169,12 +169,6 @@
 }
 
 /* ===== GLOBAL LAYOUT CONSTRAINTS ===== */
-html,
-body,
-#root {
-	min-width: 720px;
-}
-
 body {
 	overflow-x: hidden;
 }

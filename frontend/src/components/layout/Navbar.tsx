@@ -94,7 +94,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 	return (
 		<header className="navbar flex">
 			{/* Logo + buscador */}
-			<div className="flex items-center space-x-3 flex-1 min-w-[260px] max-w-[420px]">
+			<div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 max-w-[420px]">
 				<div className="flex items-center space-x-2 shrink-0">
 						<img src="/logo.png" alt="Intragram logo" className="w-8 h-8 rounded-lg object-contain shrink-0" />
 					<span className="navbar-logo">Intra<span className="text-white">gram</span></span>
@@ -169,7 +169,7 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 
 			<div className="flex items-center justify-end space-x-3 flex-shrink-0">
 			{/* Avatar del usuario */}
-				<div className="flex items-center space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-3 py-1.5">
+				<div className="flex items-center space-x-1.5 sm:space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-1.5 sm:px-3 py-1.5">
 					<div className="relative flex-shrink-0">
 						<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black overflow-hidden">
 							{profile?.avatar_url ? (

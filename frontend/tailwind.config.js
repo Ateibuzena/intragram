@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: '480px',
+      },
       colors: {
         'ft-bg': '#050816',
         'ft-card': 'rgba(17, 24, 39, 0.06)',

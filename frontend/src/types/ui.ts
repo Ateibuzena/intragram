@@ -35,11 +35,13 @@ export interface ChatWindowProps {
 	sending?: boolean;
 	onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
 	onStartNewConversation?: () => void;
+	onBack?: () => void;
 }
 
 export interface SidebarProps {
 	activeFilter: FilterKey;
 	setActiveFilter: (filter: FilterKey) => void;
+	onOpenCommunity?: () => void;
 }
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

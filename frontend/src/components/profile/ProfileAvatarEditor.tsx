@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { UserProfileEntityDto } from '@/types/profile';
+import { resolveMediaUrl } from '@/utils/media';
 
 const PencilIcon = ({ className }: { className?: string }) => (
 	<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -11,12 +12,13 @@ const PencilIcon = ({ className }: { className?: string }) => (
 interface ProfileAvatarEditorModalProps {
 	avatarUrl: string | null;
 	profileInitial: string;
-	onSave: (url: string) => Promise<void>;
+	onSave: (file: File) => Promise<void>;
 	onClose: () => void;
 }
 
 export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, onClose }: ProfileAvatarEditorModalProps) => {
-	const [input, setInput] = useState(avatarUrl ?? '');
+	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,10 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 			document.body.style.overflow = previousOverflow;
 		};
 	}, []);
+
+	useEffect(() => () => {
+		if (previewUrl) URL.revokeObjectURL(previewUrl);
+	}, [previewUrl]);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -48,25 +54,29 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 		}
 	};
 
+	const handleFileChange = (file: File | null) => {
+		if (previewUrl) URL.revokeObjectURL(previewUrl);
+		setError(null);
+		setSelectedFile(file);
+		setPreviewUrl(file ? URL.createObjectURL(file) : null);
+	};
+
 	const save = async () => {
-		const trimmed = input.trim();
-		if (trimmed) {
-			try {
-				const parsed = new URL(trimmed);
-				if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error();
-			} catch {
-				setError('Introduce una URL válida (http/https).');
-				return;
-			}
+		if (!selectedFile) {
+			setError('Selecciona una imagen antes de guardar.');
+			return;
 		}
+
 		setSaving(true);
 		try {
-			await onSave(trimmed);
+			await onSave(selectedFile);
 			onClose();
 		} finally {
 			setSaving(false);
 		}
 	};
+
+	const currentPreview = previewUrl ?? resolveMediaUrl(avatarUrl);
 
 	return createPortal(
 		<div
@@ -83,10 +93,8 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 			<div className="flex w-full max-w-md flex-col items-center justify-center gap-5 rounded-2xl border border-ft-border surface-glass p-6 shadow-2xl shadow-black/50">
 				<h3 id="profile-avatar-editor-title" className="text-sm font-bold text-white">Cambiar foto de perfil</h3>
 				<div className="w-28 h-28 rounded-2xl overflow-hidden bg-ft-hover flex-shrink-0">
-					{input ? (
-						<img src={input} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
-					) : avatarUrl ? (
-						<img src={avatarUrl} alt="actual" className="w-full h-full object-cover" />
+					{currentPreview ? (
+						<img src={currentPreview} alt="preview" className="w-full h-full object-cover" />
 					) : (
 						<span className="w-full h-full flex items-center justify-center text-2xl font-black text-black bg-ft-cyan">{profileInitial}</span>
 					)}
@@ -94,12 +102,13 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 				<div className="w-full space-y-3">
 					<input
 						ref={inputRef}
-						type="url"
-						value={input}
-						onChange={(e) => { setInput(e.target.value); setError(null); }}
-						placeholder="https://example.com/foto.jpg"
-						className="w-full bg-ft-hover border border-ft-border rounded-xl px-3 py-2 text-xs text-ft-text placeholder-ft-muted focus:outline-none focus:border-ft-cyan/50 transition-colors"
+						type="file"
+						accept="image/*"
+						capture="user"
+						onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+						className="w-full bg-ft-hover border border-ft-border rounded-xl px-3 py-2 text-xs text-ft-text file:mr-3 file:rounded-lg file:border-0 file:bg-ft-cyan/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ft-cyan focus:outline-none focus:border-ft-cyan/50 transition-colors"
 					/>
+					<p className="text-[10px] text-ft-muted text-center">Sube una foto o usa la cámara del dispositivo.</p>
 					{error && <p className="text-[10px] text-red-400 text-center">{error}</p>}
 					<div className="flex gap-2">
 						<button
@@ -117,6 +126,16 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 							className="flex-1 py-2 text-xs font-semibold bg-ft-cyan/10 text-ft-cyan border border-ft-cyan/30 rounded-xl hover:bg-ft-cyan/20 disabled:opacity-40 transition-all"
 						>
 							{saving ? 'Guardando...' : 'Guardar'}
+						</button>
+					</div>
+					<div className="text-center">
+						<button
+							type="button"
+							onClick={() => handleFileChange(null)}
+							disabled={saving}
+							className="text-[10px] font-medium text-ft-muted hover:text-white disabled:opacity-40"
+						>
+							Quitar selección
 						</button>
 					</div>
 				</div>
@@ -145,8 +164,8 @@ export const ProfileAvatarDisplay = ({
 }: ProfileAvatarDisplayProps) => (
 	<div className="relative group/avatar shrink-0">
 		<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
-			{profile?.avatar_url ? (
-				<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+			{resolveMediaUrl(profile?.avatar_url) ? (
+				<img src={resolveMediaUrl(profile?.avatar_url) ?? undefined} alt={displayName} className="w-full h-full object-cover" />
 			) : (
 				<span>{profileInitial}</span>
 			)}

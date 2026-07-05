@@ -6,7 +6,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserAvatarDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
 import { IFeedPost, IPostComment, CreateFeedPostDto } from '@intragram/shared/posts';
 import { SERVICE_URLS } from '../../config/microservices.config';
 import { GatewayHttpClientService } from '../../common/http/gateway-http.client';
@@ -124,6 +124,35 @@ export class UsersService {
 	}
 
 	/**
+	 * Updates the user's avatar image using the users-service image pipeline.
+	 */
+	async updateAvatar(id: string, dto: UpdateUserAvatarDto): Promise<IUserProfile> {
+		try {
+			return await this.httpClient.patch<IUserProfile, UpdateUserAvatarDto>(
+				`${this.usersBaseUrl}/users/${id}/avatar`,
+				dto,
+				{ timeoutMs: 10000 },
+			);
+		} catch (error) {
+			this.handleHttpError(error, 'actualizar avatar de usuario');
+		}
+	}
+
+	/**
+	 * Returns the stored avatar image bytes for public rendering.
+	 */
+	async getAvatarImage(id: string): Promise<Uint8Array> {
+		try {
+			return await this.httpClient.get<Uint8Array>(`${this.usersBaseUrl}/users/${id}/avatar`, {
+				timeoutMs: 5000,
+				responseType: 'arraybuffer',
+			});
+		} catch (error) {
+			this.handleHttpError(error, 'obtener avatar de usuario');
+		}
+	}
+
+	/**
 	 * Refreshes a user's profile from the 42 API.
 	 */
 	async refreshProfileFromOAuth42(userId: string, oauth42AccessToken: string): Promise<IUserProfile> {
@@ -232,9 +261,9 @@ export class UsersService {
 	 * re-encodes every upload), so the caller can set Content-Type without
 	 * needing to inspect a header here.
 	 */
-	async getPostImage(postId: string, userId: string): Promise<Buffer> {
+	async getPostImage(postId: string, userId: string): Promise<Uint8Array> {
 		try {
-			return await this.httpClient.get<Buffer>(
+			return await this.httpClient.get<Uint8Array>(
 				`${this.postsBaseUrl}/posts/feed/post/${postId}/image?userId=${encodeURIComponent(userId)}`,
 				{ timeoutMs: 5000, responseType: 'arraybuffer' },
 			);

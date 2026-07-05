@@ -8,6 +8,7 @@ import { usePresenceStatus } from '@/hooks/usePresenceContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
+import { resolveMediaUrl } from '@/utils/media';
 
 type UserSearchResult = {
 	id: string;
@@ -130,8 +131,8 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 									onClick={() => handleResultClick(result)}
 								>
 									<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0 overflow-hidden">
-										{result.avatar_url
-											? <img src={result.avatar_url} alt={result.login} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+										{resolveMediaUrl(result.avatar_url)
+											? <img src={resolveMediaUrl(result.avatar_url) ?? undefined} alt={result.login} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
 											: result.login.charAt(0).toUpperCase()
 										}
 									</div>
@@ -172,8 +173,8 @@ export const Navbar = ({ activeNav, setActiveNav, search, setSearch }: NavbarPro
 				<div className="flex items-center space-x-2.5 bg-ft-hover border border-ft-border rounded-xl px-3 py-1.5">
 					<div className="relative flex-shrink-0">
 						<div className="w-6 h-6 rounded-full bg-ft-cyan flex items-center justify-center text-xs font-bold text-black overflow-hidden">
-							{profile?.avatar_url ? (
-								<img src={profile.avatar_url} alt={displayLogin} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+							{resolveMediaUrl(profile?.avatar_url) ? (
+								<img src={resolveMediaUrl(profile?.avatar_url) ?? undefined} alt={displayLogin} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
 							) : (
 								avatarLetter
 							)}

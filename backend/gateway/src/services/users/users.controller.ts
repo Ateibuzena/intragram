@@ -26,22 +26,29 @@ import {
 	HttpException,
 	HttpStatus,
 	Delete,
+    BadRequestException,
 	Param,
 	Patch,
 	Post,
 	ParseIntPipe,
 	Query,
 	Req,
+	Res,
 	UseGuards,
+	UploadedFile,
+	UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import type { IDirectoryEntry, IDirectoryFilters, IDirectoryScope } from './users.service';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserAvatarDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
 import { IPostComment, IFeedPost, CreateFeedPostDto } from '@intragram/shared/posts';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
 import { RealtimeService } from '../realtime/realtime.service';
+
+const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 @Controller('users')
 export class UsersController {
@@ -144,6 +151,53 @@ export class UsersController {
 				error.message || 'Error al actualizar perfil',
 				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
 			);
+		}
+	}
+
+	/**
+	 * Uploads and stores the authenticated user's avatar image.
+	 */
+	@UseGuards(AuthGuard)
+	@Patch(':id/avatar')
+	@UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_UPLOAD_BYTES } }))
+	async updateAvatar(
+		@Param('id') id: string,
+		@UploadedFile() image: any,
+		@Req() req: any,
+	): Promise<IUserProfile> {
+		const authenticatedProfileId = await this.resolveAuthenticatedProfileId(req);
+		if (!authenticatedProfileId || authenticatedProfileId !== id) {
+			throw new ForbiddenException('You can only update your own profile');
+		}
+
+		if (!image) {
+			throw new BadRequestException('image is required');
+		}
+
+		try {
+			return await this.usersService.updateAvatar(id, { image_base64: image.buffer.toString('base64') });
+		} catch (error: any) {
+			throw new HttpException(
+				error.message || 'Error al actualizar avatar',
+				error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	/**
+	 * Serves the stored avatar image bytes.
+	 */
+	@Get(':id/avatar')
+	async getAvatar(@Param('id') id: string, @Res() res: any): Promise<void> {
+		try {
+			const buffer = await this.usersService.getAvatarImage(id);
+			res.set({
+				'Content-Type': 'image/webp',
+				'Cache-Control': 'public, max-age=31536000, immutable',
+			});
+			res.send(buffer);
+		} catch (error: any) {
+			throw new HttpException(error.message, error.statusCode || HttpStatus.NOT_FOUND);
 		}
 	}
 

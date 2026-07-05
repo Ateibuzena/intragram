@@ -1,6 +1,7 @@
 import './Avatar.css';
 import { getGradient } from '@/utils/theme';
 import type { AvatarProps } from '@/types/ui';
+import { resolveMediaUrl } from '@/utils/media';
 
 export const Avatar = ({ login, imageUrl = null, size = 'md', online }: AvatarProps) => (
 	<div className="relative flex-shrink-0">
@@ -8,9 +9,9 @@ export const Avatar = ({ login, imageUrl = null, size = 'md', online }: AvatarPr
 			className={`avatar avatar-${size}`}
 			style={{ background: `linear-gradient(135deg, ${getGradient(login)})` }}
 		>
-			{imageUrl ? (
+			{resolveMediaUrl(imageUrl) ? (
 				<img
-					src={imageUrl}
+					src={resolveMediaUrl(imageUrl) ?? undefined}
 					alt={login}
 					className="avatar-image"
 					referrerPolicy="no-referrer"

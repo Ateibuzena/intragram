@@ -107,8 +107,22 @@ const ProfilePage = () => {
 		await patchProfile({ display_name: name });
 	};
 
-	const handleSaveAvatarUrl = async (url: string) => {
-		await patchProfile({ avatar_url: url });
+	const handleSaveAvatarUrl = async (file: File) => {
+		if (!token || !canonicalProfileId) return;
+		const formData = new FormData();
+		formData.append('image', file);
+		const res = await fetchWithAuth(`/users/${canonicalProfileId}/avatar`, token, {
+			method: 'PATCH',
+			body: formData,
+		});
+		if (!res.ok) throw new Error('No se pudo actualizar la foto de perfil.');
+		const updated = (await res.json()) as typeof profile;
+		if (isStandaloneProfile) {
+			setRouteProfile(updated);
+		} else {
+			ownProfile.setProfile(updated);
+		}
+		await ownProfile.refreshProfile({ silent: true });
 	};
 
 	const handleSaveBackground = async (theme: string) => {

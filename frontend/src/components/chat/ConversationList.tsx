@@ -31,6 +31,22 @@ export const ConversationList = ({
 	const [contextMenu, setContextMenu] = useState<ContextMenu>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const contextMenuRef = useRef<HTMLDivElement>(null);
+	// null on the very first run so we don't yank the tab on initial load —
+	// only when a request we hadn't seen before shows up later (polling).
+	const knownRequestIdsRef = useRef<Set<string> | null>(null);
+
+	// A message from someone who isn't your friend lands in "Solicitudes", not
+	// "Mensajes" — jump there automatically so it isn't missed, especially
+	// when "Mensajes" has nothing in it to draw attention.
+	useEffect(() => {
+		const currentIds = new Set(requestConversations.map((c) => String(c.id)));
+		const previousIds = knownRequestIdsRef.current;
+		if (previousIds) {
+			const hasNewRequest = [...currentIds].some((id) => !previousIds.has(id));
+			if (hasNewRequest) setActiveTab('solicitudes');
+		}
+		knownRequestIdsRef.current = currentIds;
+	}, [requestConversations]);
 
 	const filtered = conversations.filter((c) =>
 		c.user.login.toLowerCase().includes(searchQuery.toLowerCase()),

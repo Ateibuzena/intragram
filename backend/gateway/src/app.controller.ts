@@ -17,6 +17,7 @@ type ServicesHealth = {
 	gateway: 'ok';
 	auth: 'ok' | 'down';
 	users: 'ok' | 'down';
+	posts: 'ok' | 'down';
 	chat: 'ok' | 'down';
 };
 
@@ -46,13 +47,18 @@ export class AppController {
 	@UseGuards(PublicRateLimitGuard)
 	@PublicRateLimit(120, 60_000, 'app:health-services')
 	async getServicesHealth(): Promise<ServicesHealth> {
-		const [auth, users, chat] = await Promise.allSettled([
+		const [auth, users, posts, chat] = await Promise.allSettled([
 			this.httpClient.get<{ status: 'ok' }>(`${SERVICE_URLS.auth}/health`, {
 				timeoutMs: 1500,
 				retries: 0,
 				retryable: false,
 			}),
 			this.httpClient.get<{ status: 'ok' }>(`${SERVICE_URLS.users}/health`, {
+				timeoutMs: 1500,
+				retries: 0,
+				retryable: false,
+			}),
+			this.httpClient.get<{ status: 'ok' }>(`${SERVICE_URLS.posts}/health`, {
 				timeoutMs: 1500,
 				retries: 0,
 				retryable: false,
@@ -68,6 +74,7 @@ export class AppController {
 			gateway: 'ok',
 			auth: auth.status === 'fulfilled' && auth.value.status === 'ok' ? 'ok' : 'down',
 			users: users.status === 'fulfilled' && users.value.status === 'ok' ? 'ok' : 'down',
+			posts: posts.status === 'fulfilled' && posts.value.status === 'ok' ? 'ok' : 'down',
 			chat: chat.status === 'fulfilled' && chat.value.status === 'ok' ? 'ok' : 'down',
 		};
 	}

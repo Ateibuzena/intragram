@@ -37,6 +37,7 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
 
 - autenticación
 - usuarios
+- publicaciones/feed
 - chat
 - tipos y contratos exportados a varios paquetes
 
@@ -111,6 +112,7 @@ Scripts destacados en `backend/package.json`:
 - `npm run dev:gateway`
 - `npm run dev:auth`
 - `npm run dev:users`
+- `npm run dev:posts`
 - `npm run dev:chat`
 
 ## What Is Implemented Today
@@ -138,7 +140,8 @@ Scripts destacados en `backend/package.json`:
 
 - [AUTH-SERVICE](services/AUTH-SERVICE.md)
 - [USERS-SERVICE](services/USERS-SERVICE.md)
+- [POSTS-SERVICE](services/POSTS-SERVICE.md)
 - [CHAT-SERVICE](services/CHAT-SERVICE.md)
 - [GATEWAY-SERVICE](services/GATEWAY-SERVICE.md)
 - [NGINX-SERVICE](services/NGINX-SERVICE.md)
-- [METRICS](services/METRICS.md)
+- [METRICS-SERVICE](services/METRICS-SERVICE.md)

@@ -10,7 +10,7 @@ scrape_configs:
   - job_name: 'nestjs_app'
     metrics_path: /metrics
     static_configs:
-      - targets: ['gateway:3000', 'auth-service:3003', 'users-service:3006', 'chat-service:3009']
+      - targets: ['gateway:3000', 'auth-service:3003', 'users-service:3006', 'posts-service:3007', 'chat-service:3009']
 
   - job_name: 'node_exporter'
     metrics_path: /metrics

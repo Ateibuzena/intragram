@@ -5,10 +5,15 @@
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { json } from 'express';
 import { UsersModule } from './users.module';
 
 async function bootstrap() {
 	const app = await NestFactory.create(UsersModule);
+
+	// Avatar images arrive base64-encoded from the gateway inside the JSON body —
+	// default Express limit (~100kb) is far too small for that (same fix as posts/chat-service).
+	app.use(json({ limit: '12mb' }));
 
 	app.useGlobalPipes(new ValidationPipe({
 		whitelist: true,

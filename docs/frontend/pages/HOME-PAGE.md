@@ -15,7 +15,7 @@
   - `Feed` cuando la pestaña activa es `home`
   - `ChatPage` cuando la pestaña activa es `chat`
   - `ProfilePage` cuando la pestaña activa es `profile`
-  - `FriendsList` en escritorio ancho
+  - `FriendsSidebar` en escritorio ancho (lista de amigos + campana de notificaciones)
 
 ## Data Used
 
@@ -44,11 +44,10 @@ La lógica del filtro se apoya en el backend y en el componente `Feed`.
 - `frontend/src/pages/HomePage.tsx`
 - `frontend/src/components/layout/Navbar.tsx`
 - `frontend/src/components/layout/Sidebar.tsx`
-- `frontend/src/components/layout/FriendsList.tsx`
+- `frontend/src/components/layout/FriendsSidebar.tsx`
 - `frontend/src/components/feed/Feed.tsx`
 - `frontend/src/pages/ChatPage.tsx`
 
 ## Current Limitations
 
-- No usa rutas separadas para cada subpantalla; la navegación es interna por estado.
-- El perfil mostrado desde `ProfilePage` es todavía un placeholder.
+- No usa rutas separadas para cada subpantalla (feed/chat/perfil-propio); la navegación entre ellas es interna por estado. `/profile/:login` sí es una ruta real para ver el perfil de otro usuario.

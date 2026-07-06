@@ -115,8 +115,7 @@ Prometheus scrapea `posts-service:3007` y Grafana provisiona `posts-service-dash
 
 ## Current Limitations
 
-- No hay notificaciones al recibir comentarios o likes.
-- No hay bus de eventos entre servicios; la comunicacion actual es HTTP sincrona.
+- No hay bus de eventos entre servicios; la comunicacion actual es HTTP sincrona. (El gateway sí empuja notificaciones y actualizaciones en vivo a los clientes por WebSocket a partir de la respuesta HTTP de este servicio — ver [GATEWAY-SERVICE](GATEWAY-SERVICE.md#real-time-websocket) — pero eso es una capa distinta a la comunicación entre microservicios.)
 - Los snapshots de autor se actualizan al construir feed, pero no hay proceso asincrono de rehidratacion historica.
 
 ## Relevant Files

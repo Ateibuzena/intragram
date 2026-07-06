@@ -11,6 +11,7 @@ El frontend de Intragram está construido con React, TypeScript y Vite. Su respo
 - Resolver la URL base de la API según el entorno.
 - Renderizar navegación, feed, chat, perfil y componentes reutilizables.
 - Consumir endpoints protegidos del backend mediante `fetch`.
+- Mantener una conexión WebSocket única (Socket.IO) para recibir en vivo mensajes de chat, likes/comentarios, nuevas publicaciones, notificaciones y presencia online — con reconexión automática y un poll de baja frecuencia como red de reconciliación.
 
 ## Structure
 
@@ -33,10 +34,14 @@ El frontend de Intragram está construido con React, TypeScript y Vite. Su respo
   - Pantalla pública de acceso.
 - `/`
   - Pantalla principal protegida.
+- `/profile/:login`
+  - Perfil de un usuario como página independiente.
+- `/privacy`, `/terms`
+  - Política de privacidad y términos de servicio.
 - Rutas no reconocidas
   - Redirigen a `/login` o `/` según haya sesión.
 
-Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en la implementación actual la navegación real se maneja internamente dentro de `HomePage` mediante pestañas.
+Chat y notificaciones no tienen ruta propia: el chat vive como pestaña interna de `HomePage`, y las notificaciones se muestran desde la campana de `FriendsSidebar` (lista + toasts globales), no como una pantalla separada.
 
 ## Authentication Flow
 
@@ -66,11 +71,16 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
   - `GET /users/:id`
   - `GET /users/search?q=...`
   - `GET /users/friends/me`
+- Notificaciones
+  - `GET /users/notifications`
+  - `POST /users/notifications/read`
 - Chat
   - `GET /chat/conversations`
   - `POST /chat/conversations`
   - `GET /chat/conversations/:id/messages`
   - `POST /chat/conversations/:id/messages`
+- WebSocket (Socket.IO, vía `/api/socket.io`)
+  - `chat:new-message`, `chat:typing`, `feed:new-post`, `post:like`, `post:comment-added`, `post:comment-removed`, `post:deleted`, `notification:new`, `friend:*`, `online:users`, `user:status`
 
 ## Main Screens
 
@@ -81,18 +91,20 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 - `ChatPage`
   - Gestión de conversaciones, mensajes y creación de chat nuevo.
 - `ProfilePage`
-  - Placeholder actual para perfil.
-- `NotificationsPage`
-  - Placeholder actual para notificaciones.
+  - Perfil real (propio o ajeno) con datos en vivo de OAuth 42: header, progreso de common core, skills, proyectos, logros, línea de tiempo académica.
+
+Las notificaciones no tienen pantalla propia: viven en la campana de `FriendsSidebar` (lista con no-leídos) y como toasts globales (`ActivityToast`) montados una vez en la raíz de la app.
 
 ## Reusable Components
 
 - `components/feed`
-  - `Feed`, `CreatePost`, `PostCard`, `PostSkeleton`
+  - `Feed`, `CreatePost`, `PostCard`, `PostDetailModal`, `PostSkeleton`
 - `components/chat`
   - `ConversationList`, `ChatWindow`, `MessageBubble`
+- `components/profile`
+  - `ProfileHeader`, `SkillsRadar`, `ProjectsCard`, `AchievementsCard`, `AcademicTimeline`, `ProfileDetails`
 - `components/layout`
-  - `Navbar`, `Sidebar`, `FriendsList`, `BottomBar`
+  - `Navbar`, `Sidebar`, `FriendsSidebar`, `ActivityToast`, `ConnectionBanner`
 - `components/ui`
   - `Avatar`, `Button`, `Input`, `Badge`, `Modal`, `Card`
 
@@ -105,11 +117,9 @@ Aunque existen constantes para `/chat`, `/notifications` y `/profile/:login`, en
 
 ## Current Limitations
 
-- `ProfilePage` no está conectada a datos reales.
-- `NotificationsPage` es estática.
 - El buscador del navbar todavía no dispara una búsqueda real.
-- Los likes y comentarios del feed ya se persisten en backend, aunque todavía faltan mejoras de integridad y UX.
-- Los adjuntos de posts y chat todavía no están implementados.
+- Los adjuntos de chat/posts soportan imagen; otros tipos de adjunto siguen sin implementar.
+- No hay recibos de lectura por mensaje individual (solo no-leído por conversación).
 
 ## How To Run Frontend In Context
 

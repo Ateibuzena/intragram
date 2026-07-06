@@ -5,6 +5,7 @@ import { PhotoAttachmentButton } from '@/components/media/PhotoAttachmentButton'
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { resolveMediaUrl } from '@/utils/media';
 import { LANGUAGES } from '@/constants/languages';
 
 interface CreatePostProps {
@@ -23,7 +24,7 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 	const { token, user, profile } = useAuth();
 	const { connected } = usePresenceStatus();
 	const initial = (profile?.login || user?.username || '?').charAt(0).toUpperCase();
-	const avatarUrl = profile?.avatar_url ?? null;
+	const avatarUrl = resolveMediaUrl(profile?.avatar_url);
 
 	// Revoke the preview object URL whenever it's replaced or the component unmounts.
 	useEffect(() => {

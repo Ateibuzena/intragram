@@ -35,7 +35,7 @@
 2. Recupera la lista de conversaciones.
 3. Para cada participante que no sea el usuario actual, busca su perfil en `users-service`.
 4. Mantiene la conversación seleccionada en estado local.
-5. Lanza polling periódico para conversaciones y mensajes.
+5. Recibe mensajes nuevos, contador de no-leídos y typing en vivo por WebSocket (`chat:new-message`, `chat:typing`); un poll de ~25s corre solo como red de reconciliación por si se perdió algún evento.
 6. Permite crear un chat nuevo desde un modal de búsqueda.
 
 ## UI Composition
@@ -49,9 +49,8 @@
 
 ## Current Limitations
 
-- Usa polling, no WebSocket real en frontend.
-- Los adjuntos están previstos pero no implementados.
-- No hay presencia online real ni recibos de lectura.
+- Los adjuntos de imagen ya funcionan; otros tipos de adjunto siguen sin implementar.
+- Hay estado de no-leído por conversación, pero no recibos de lectura por mensaje individual (checks de "visto").
 
 ## Dependencies
 

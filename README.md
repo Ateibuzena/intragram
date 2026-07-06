@@ -287,8 +287,11 @@ Relación principal:
   - Consulta de amigos aceptados desde el backend.
   - Team members: Ateibuzena
 - **Private chat**
-  - Listado de conversaciones, creación de conversación y envío/lectura de mensajes.
+  - Listado de conversaciones, creación de conversación y envío/lectura de mensajes en tiempo real (WebSocket), con typing indicator y contador de no-leídos.
   - Team members: Ateibuzena, Mariano Fernández Rodero
+- **Real-time updates (WebSocket)**
+  - Chat, likes/comentarios, nuevas publicaciones, notificaciones y presencia online se empujan en vivo a todos los clientes conectados; adapter de Redis para que funcione con más de una réplica del gateway.
+  - Team members: Mariano Fernández Rodero
 - **Gateway API**
   - Punto único de acceso con validación de tokens y proxy a microservicios.
   - Team members: Mariano Fernández Rodero, santiago_UT
@@ -301,11 +304,10 @@ Relación principal:
 
 ### Partially Implemented Or UI-Only
 
-- Perfil frontend todavía es una vista placeholder.
-- Notificaciones es una vista estática.
 - El feed ya vive en `posts-service`; queda la validación runtime completa en Docker y la posible evolución de contrato/UX.
 - Búsqueda global del navbar todavía no dispara consultas reales.
-- Adjuntos del chat y del creador de publicaciones siguen preparados solo a nivel de interfaz.
+- Adjuntos de imagen funcionan en chat y posts; otros tipos de adjunto siguen sin implementar.
+- No hay recibos de lectura por mensaje individual (solo no-leído por conversación).
 
 ## Modules
 
@@ -325,8 +327,8 @@ El repositorio no contiene una matriz oficial de módulos `Major/Minor` cerrada 
   - Team members: Ateibuzena, Mariano Fernández Rodero
 - **Private messaging**
   - Proposed weight: Major = 2 pts
-  - Justification: añade comunicación en tiempo real diferido/polling entre usuarios.
-  - Implementation: `chat-service`, endpoints del gateway y `ChatPage`.
+  - Justification: añade comunicación en tiempo real por WebSocket entre usuarios (mensajes, typing, no-leídos).
+  - Implementation: `chat-service`, endpoints del gateway, `PresenceGateway` y `ChatPage`.
   - Team members: Ateibuzena, Mariano Fernández Rodero
 - **Observability**
   - Proposed weight: Minor = 1 pt

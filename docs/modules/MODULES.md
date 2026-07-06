@@ -77,11 +77,11 @@ Usar un framework tanto para frontend como para backend.
 - Usar un framework de backend (Express, NestJS, Django, Flask, Ruby on Rails, etc.).
 - Los frameworks full-stack (Next.js, Nuxt.js, SvelteKit) cuentan como ambos si usas tanto su capacidad frontend como backend.
 
-### Funcionalidades en Tiempo Real
+### Funcionalidades en Tiempo Real ✅
 Implementar funcionalidades en tiempo real usando WebSockets o tecnología similar.
-- Actualizaciones en tiempo real entre clientes.
-- Manejar conexión/desconexión de forma correcta.
-- Difusión de mensajes eficiente.
+- Actualizaciones en tiempo real entre clientes: chat, likes/comentarios, nuevas publicaciones, notificaciones y presencia online/offline, todo vía WebSocket (Socket.IO) — ver [GATEWAY-SERVICE](../backend/services/GATEWAY-SERVICE.md#real-time-websocket).
+- Manejar conexión/desconexión de forma correcta: `handleConnection`/`handleDisconnect` en `PresenceGateway`, reconexión con backoff exponencial en el cliente, presencia con conteo de conexiones (soporta múltiples pestañas/dispositivos).
+- Difusión de mensajes eficiente: eventos dirigidos a una sala por usuario (`emitToUser`), no un broadcast ciego; adapter de Redis para que funcione igual con más de una réplica del gateway.
 
 ### Interacción entre Usuarios ✅
 Permitir que los usuarios interactúen con otros usuarios. Requisitos mínimos:

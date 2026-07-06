@@ -39,7 +39,7 @@ Esta separación mejora el mantenimiento porque los cambios en un dominio no req
 ## Comunicación entre Servicios
 La comunicación entre servicios se realiza mediante APIs REST. El gateway orquesta las peticiones hacia los servicios auth, users, posts y chat usando llamadas HTTP síncronas. Los DTOs y contratos compartidos en `backend/shared` definen los datos intercambiados entre fronteras de servicio y mantienen consistentes las estructuras de request y response.
 
-La arquitectura actual satisface el requisito del módulo de usar APIs REST o colas de mensajes para la comunicación. Actualmente usamos APIs REST e intencionalmente no usamos un message broker porque nuestros casos de uso actuales son síncronos.
+La arquitectura actual satisface el requisito del módulo de usar APIs REST o colas de mensajes para la comunicación. Actualmente usamos APIs REST e intencionalmente no usamos un message broker entre servicios porque nuestros casos de uso actuales son síncronos. La única pieza de Redis en el stack es interna al gateway (adapter de Socket.IO y presencia compartida entre réplicas, ver [GATEWAY-SERVICE](../backend/services/GATEWAY-SERVICE.md#real-time-websocket)); no es un bus de eventos de dominio ni reemplaza la comunicación REST entre microservicios.
 
 El gateway usa un cliente HTTP centralizado con timeouts de petición y reintentos con backoff exponencial, lo que mantiene las llamadas entre servicios consistentes y más fáciles de mantener.
 

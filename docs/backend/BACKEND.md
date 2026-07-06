@@ -20,6 +20,8 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
   - Gestiona conversaciones y mensajes.
 - `nginx`
   - Reverse proxy HTTPS y punto único de entrada.
+- `redis`
+  - Backing store del adapter de Socket.IO y de la presencia compartida del gateway (ver [GATEWAY-SERVICE](services/GATEWAY-SERVICE.md)).
 - `prometheus` y `grafana`
   - Observabilidad.
 
@@ -27,8 +29,9 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
 
 - Nginx recibe el tráfico HTTPS.
 - `/` se reenvía al frontend.
-- `/api/` se reenvía al gateway.
+- `/api/` se reenvía al gateway (HTTP y WebSocket, mismo upstream).
 - El gateway habla por HTTP con `auth-service`, `users-service`, `posts-service` y `chat-service`.
+- El gateway también mantiene conexiones WebSocket directas con los clientes (chat, notificaciones, presencia, likes/comentarios en vivo) y usa `redis` para que esos eventos lleguen a un cliente sin importar a qué réplica del gateway esté conectado.
 - Cada servicio usa su propia base de datos PostgreSQL.
 
 ## Shared Package
@@ -39,6 +42,7 @@ El backend de Intragram sigue una arquitectura de microservicios HTTP sobre Nest
 - usuarios
 - publicaciones/feed
 - chat
+- eventos de tiempo real (Socket.IO) compartidos entre gateway y frontend
 - tipos y contratos exportados a varios paquetes
 
 Esto reduce inconsistencias entre gateway, servicios y frontend.
@@ -105,7 +109,7 @@ Variables importantes:
 
 ## Run Model
 
-El backend está pensado para ejecutarse junto al resto del stack con `docker-compose.yml` de la raíz. También existe un workspace `backend/` con scripts por servicio para desarrollo.
+El backend está pensado para ejecutarse junto al resto del stack con `docker-compose.dev.yml`/`docker-compose.prod.yml` de la raíz. También existe un workspace `backend/` con scripts por servicio para desarrollo.
 
 Scripts destacados en `backend/package.json`:
 
@@ -127,6 +131,9 @@ Scripts destacados en `backend/package.json`:
 - Favoritos.
 - Lista de amigos con solicitudes pendientes, aceptar y rechazar.
 - Chat persistido en PostgreSQL con soporte de snippets de código.
+- Sistema de notificaciones (likes, comentarios, nuevas publicaciones de amigos, solicitudes de amistad) con campana, toasts y contador de no-leídos.
+- Actualizaciones en tiempo real por WebSocket: mensajes de chat, typing, likes/comentarios en el feed, presencia online/offline y notificaciones — todo empujado al cliente en vez de depender solo de polling. El polling que queda es una red de reconciliación de baja frecuencia, no el mecanismo principal.
+- Gateway horizontalmente escalable: adapter de Redis para Socket.IO y presencia compartida entre réplicas.
 - Métricas y dashboards.
 
 ## Current Gaps
@@ -134,7 +141,6 @@ Scripts destacados en `backend/package.json`:
 - Falta una suite de tests visible.
 - El perfil editable todavía está poco desarrollado en frontend.
 - La búsqueda global todavía está poco explotada desde la interfaz.
-- No hay sistema de notificaciones (ni polling ni WebSocket).
 
 ## Related Documentation
 

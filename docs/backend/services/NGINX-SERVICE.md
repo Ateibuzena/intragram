@@ -31,7 +31,7 @@
 
 ## WebSocket Readiness
 
-La configuración ya incluye headers `Upgrade` y `Connection` para soportar tráfico compatible con WebSocket tanto en la raíz como en `/api/`.
+La configuración incluye headers `Upgrade` y `Connection` para soportar tráfico WebSocket tanto en la raíz como en `/api/`. El upstream del gateway usa `ip_hash` para fijar cada cliente a la misma réplica durante toda la sesión de Socket.IO — necesario porque el handshake empieza con HTTP polling antes de subir a WebSocket, y esas peticiones tienen que llegar siempre a la misma instancia. Es inofensivo con una sola réplica (el caso por defecto hoy) y necesario en cuanto el gateway escale a más de una.
 
 ## Operational Notes
 
@@ -42,4 +42,5 @@ La configuración ya incluye headers `Upgrade` y `Connection` para soportar trá
 
 - `backend/nginx/config/nginx.conf`
 - `backend/nginx/Dockerfile`
-- `docker-compose.yml`
+- `docker-compose.dev.yml`
+- `docker-compose.prod.yml`

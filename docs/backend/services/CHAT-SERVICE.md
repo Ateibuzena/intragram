@@ -54,10 +54,10 @@ x-user-id
 
 ## Frontend Integration
 
-El frontend usa polling para refrescar:
+Este servicio solo expone REST; no sabe nada de WebSocket. El tiempo real (mensaje nuevo, typing, contador de no-leídos) lo maneja el gateway sobre estos mismos datos — ver [GATEWAY-SERVICE](GATEWAY-SERVICE.md#real-time-websocket). El frontend:
 
-- conversaciones cada pocos segundos,
-- mensajes de la conversación seleccionada.
+- recibe conversaciones y mensajes nuevos al instante vía socket (`chat:new-message`) en vez de esperar un fetch,
+- igual mantiene un poll de conversaciones/mensajes de baja frecuencia (~25s) como red de reconciliación por si se perdió algún evento durante una reconexión.
 
 Además, cuando hace falta mostrar el otro participante, consulta `users-service` a través del gateway para obtener login y avatar.
 
@@ -69,9 +69,8 @@ Además, cuando hace falta mostrar el otro participante, consulta `users-service
 
 ## Current Limitations
 
-- No hay WebSocket funcional expuesto al frontend en la implementación actual.
+- Este servicio en sí no expone WebSocket — el push en tiempo real vive enteramente en el gateway, que consume la API REST de `chat-service` y la reenvía por socket a los clientes conectados.
 - Los adjuntos están definidos como `text[]`, pero la UI todavía no los usa.
-- El estado de usuarios conectados es básico y no representa presencia real completa.
 
 ## Relevant Files
 

@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { UserProfileEntityDto } from '@/types/profile';
 import { resolveMediaUrl } from '@/utils/media';
+import { PhotoAttachmentButton } from '@/components/media/PhotoAttachmentButton';
 
 const PencilIcon = ({ className }: { className?: string }) => (
 	<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+	</svg>
+);
+
+const CameraIcon = ({ className }: { className?: string }) => (
+	<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
 	</svg>
 );
 
@@ -21,12 +29,10 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		const previousOverflow = document.body.style.overflow;
 		document.body.style.overflow = 'hidden';
-		inputRef.current?.focus();
 
 		return () => {
 			document.body.style.overflow = previousOverflow;
@@ -100,13 +106,14 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 					)}
 				</div>
 				<div className="w-full space-y-3">
-					<input
-						ref={inputRef}
-						type="file"
-						accept="image/*"
-						onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-						className="w-full bg-ft-hover border border-ft-border rounded-xl px-3 py-2 text-xs text-ft-text file:mr-3 file:rounded-lg file:border-0 file:bg-ft-cyan/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ft-cyan focus:outline-none focus:border-ft-cyan/50 transition-colors"
-					/>
+					<PhotoAttachmentButton
+						onSelect={handleFileChange}
+						onError={setError}
+						className="w-full flex items-center justify-center gap-2 bg-ft-hover border border-ft-border rounded-xl px-3 py-2.5 text-xs font-semibold text-ft-cyan hover:bg-ft-hover/70 focus:outline-none focus:border-ft-cyan/50 transition-colors"
+					>
+						<CameraIcon className="w-4 h-4" />
+						{selectedFile ? 'Cambiar foto' : 'Tomar foto o elegir de galería'}
+					</PhotoAttachmentButton>
 					{error && <p className="text-[10px] text-red-400 text-center">{error}</p>}
 					<div className="flex gap-2">
 						<button
@@ -183,8 +190,8 @@ export const ProfileAvatarDisplay = ({
 		)}
 
 		<div className="w-28 h-28 xs:w-36 xs:h-36 md:w-44 md:h-44 rounded-full md:rounded-2xl bg-ft-cyan text-black font-black text-5xl xs:text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
-			{profile?.avatar_url ? (
-				<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+			{resolveMediaUrl(profile?.avatar_url) ? (
+				<img src={resolveMediaUrl(profile?.avatar_url) ?? undefined} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
 			) : (
 				<span>{profileInitial}</span>
 			)}

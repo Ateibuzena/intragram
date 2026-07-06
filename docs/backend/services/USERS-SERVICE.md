@@ -160,7 +160,6 @@ Guarda relaciones entre usuarios con estado:
 
 ## Current Limitations
 
-- No hay notificaciones al recibir solicitudes de amistad.
 - El perfil editable existe en backend pero el frontend lo explota de forma básica.
 
 ## Relevant Files

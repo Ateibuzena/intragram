@@ -13,6 +13,8 @@ The profile is composed from shared components in `frontend/src/components/profi
 - `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, current 42 campus login status, pool, Intragram online state, friend/edit controls when allowed, common-core progress ring, and academic stat pills.
 - `SkillsRadar`: radar chart generated from the top 7 skills by level, plus exact skill bars.
 - `ProjectsCard`: project counters, status filters, status badges, final marks, best mark, and an enriched project list.
+- `AchievementsCard`: earned achievements/titles.
+- `AcademicTimeline`: chronological view of cursus/level milestones.
 - `ProfileDetails`: lower-priority raw profile details such as email, campus, pool, location, phone, role, last login, and creation date.
 
 The same page handles both contexts. Without a route login it renders the authenticated user's own profile inside the home dashboard; with `/profile/:login` it renders that user's profile as a standalone page. Editing controls are enabled only when the rendered profile belongs to the authenticated user, while friend actions are shown only for other users.
@@ -22,7 +24,7 @@ The same page handles both contexts. Without a route login it renders the authen
 The derived profile layer lives in:
 
 ```text
-frontend/src/components/profile/profileUtils.ts
+frontend/src/utils/profile.ts
 ```
 
 `buildProfileInsights(profile)` derives:
@@ -78,7 +80,6 @@ No raw 42 profile payload is exposed to the frontend in this phase.
 
 Potential backend/API enrichments:
 
-- achievements;
 - project start/end dates;
 - multiple campuses;
 - richer cursus selection;

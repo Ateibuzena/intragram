@@ -97,7 +97,7 @@ export const ProfileHeader = ({
 			<div className="relative flex min-h-[36rem] w-full items-center justify-center overflow-visible px-4 py-14 md:min-h-[34rem] md:px-10 md:py-16">
 				{insights && (
 					<div
-						className="pointer-events-none absolute inset-x-0 top-3 z-0 w-full md:top-6"
+						className="pointer-events-none absolute inset-x-10 top-3 z-0 sm:inset-x-16 md:top-10 lg:inset-x-24"
 						aria-hidden="true"
 					>
 						<svg viewBox="0 0 900 430" className="h-auto w-full overflow-visible">

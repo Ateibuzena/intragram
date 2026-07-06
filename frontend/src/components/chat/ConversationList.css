@@ -1,5 +1,5 @@
 .conversation-list {
-	@apply w-96 h-full border-r border-ft-border flex flex-col flex-shrink-0;
+	@apply w-full md:w-96 h-full border-r border-ft-border flex flex-col flex-shrink-0;
 }
 
 .conv-tab {

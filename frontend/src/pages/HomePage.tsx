@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { FriendsSidebar } from '@/components/layout/FriendsSidebar';
 import { Feed } from '@/components/feed/Feed';
+import { Modal } from '@/components/ui/Modal';
 import type { FilterKey } from '@/types/feed';
 import type { NavKey } from '@/types/ui';
 import ChatPage from './ChatPage';
@@ -23,6 +24,7 @@ const HomePage = () => {
 
 	const [activeFilter, setActiveFilter] = useState<FilterKey>('reciente');
 	const [search, setSearch] = useState('');
+	const [showCommunity, setShowCommunity] = useState(false);
 	const { user, profile } = useAuth();
 	const currentLogin = profile?.login || user?.username || '';
 	const hideSidebar = activeNav !== 'home';
@@ -39,7 +41,11 @@ const HomePage = () => {
 			<div className="flex flex-1 min-h-0">
 				{!hideSidebar && (
 					<div className="block flex-shrink-0">
-						<Sidebar activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+						<Sidebar
+							activeFilter={activeFilter}
+							setActiveFilter={setActiveFilter}
+							onOpenCommunity={() => setShowCommunity(true)}
+						/>
 					</div>
 				)}
 
@@ -68,6 +74,12 @@ const HomePage = () => {
 					)}
 				</main>
 			</div>
+
+			{showCommunity && (
+				<Modal title="Comunidad" onClose={() => setShowCommunity(false)}>
+					<FriendsSidebar embedded />
+				</Modal>
+			)}
 		</div>
 	);
 };

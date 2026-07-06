@@ -54,7 +54,11 @@ const FilterPill = ({ count, active, color, title, onClick }: {
 	</button>
 );
 
-export const FriendsSidebar = () => {
+interface FriendsSidebarProps {
+	embedded?: boolean;
+}
+
+export const FriendsSidebar = ({ embedded = false }: FriendsSidebarProps) => {
 	const { token, profile } = useAuth();
 	const navigate = useNavigate();
 	const { presenceMap } = usePresenceStatus();
@@ -164,7 +168,7 @@ export const FriendsSidebar = () => {
 		directoryEntries;
 	const showDirectory = filter !== 'requests' && filter !== 'notifications';
 	return (
-		<aside className="border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200">
+		<aside className={embedded ? '' : 'border border-ft-border rounded-2xl bg-transparent p-4 mb-4 hover:border-ft-cyan/20 transition-all duration-200'}>
 			<div className="mb-4 flex items-start justify-between gap-3">
 				<div>
 					<h2 className="text-xs font-bold text-ft-muted uppercase tracking-wider">Comunidad</h2>

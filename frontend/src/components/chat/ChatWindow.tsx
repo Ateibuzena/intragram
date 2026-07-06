@@ -21,6 +21,7 @@ export const ChatWindow = ({
 	sending = false,
 	onSendMessage,
  	onStartNewConversation,
+	onBack,
 }: ChatWindowProps) => {
 	const { presenceMap, socketRef, emit, connected } = usePresenceStatus();
 	const navigate = useNavigate();
@@ -166,7 +167,19 @@ export const ChatWindow = ({
 	return (
 		<div className="chat-window">
 			<div className="chat-header">
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-2 sm:gap-3">
+					{onBack && (
+						<button
+							type="button"
+							onClick={onBack}
+							title="Volver a conversaciones"
+							className="md:hidden flex-shrink-0 p-1.5 -ml-1.5 rounded-lg text-ft-muted hover:text-white hover:bg-ft-hover transition-colors"
+						>
+							<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+							</svg>
+						</button>
+					)}
 					{(() => {
 						const isOnline = selectedChat.user.id
 							? (presenceMap[String(selectedChat.user.id)] ?? selectedChat.user.online)

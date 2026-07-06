@@ -167,25 +167,30 @@ const ChatPage = () => {
 
 	return (
 		<div className="flex h-full">
-			<ConversationList
-				conversations={friendConversations}
-				requestConversations={requestConversations}
-				loading={loadingConversations}
-				error={conversationsError}
-				selectedChat={selectedChat}
-				onSelectChat={(conv) => setSelectedChatId(String(conv.id))}
-				onStartNewConversation={handleStartNewConversation}
-				onDeleteChat={handleDeleteChat}
-			/>
-			<ChatWindow
-				selectedChat={selectedChat}
-				messages={messages}
-				loading={loadingMessages || creatingConversation}
-				error={messagesError ?? createError}
-				sending={sendingMessage}
-				onSendMessage={handleSendMessage}
-				onStartNewConversation={handleStartNewConversation}
-			/>
+			<div className={`${selectedChatId ? 'hidden md:flex' : 'flex'} w-full md:w-auto`}>
+				<ConversationList
+					conversations={friendConversations}
+					requestConversations={requestConversations}
+					loading={loadingConversations}
+					error={conversationsError}
+					selectedChat={selectedChat}
+					onSelectChat={(conv) => setSelectedChatId(String(conv.id))}
+					onStartNewConversation={handleStartNewConversation}
+					onDeleteChat={handleDeleteChat}
+				/>
+			</div>
+			<div className={`${selectedChatId ? 'flex' : 'hidden md:flex'} flex-1 w-full`}>
+				<ChatWindow
+					selectedChat={selectedChat}
+					messages={messages}
+					loading={loadingMessages || creatingConversation}
+					error={messagesError ?? createError}
+					sending={sendingMessage}
+					onSendMessage={handleSendMessage}
+					onStartNewConversation={handleStartNewConversation}
+					onBack={() => setSelectedChatId(null)}
+				/>
+			</div>
 
 			{showUserPicker && (
 				<Modal title="Nuevo mensaje" onClose={() => setShowUserPicker(false)}>

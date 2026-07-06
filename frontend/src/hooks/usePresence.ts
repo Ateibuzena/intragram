@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import type { ClientToServerEvents, ServerToClientEvents } from '@intragram/shared/realtime';
 import { useAuth } from './useAuth';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
+export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
 export const usePresence = () => {
 	const { token } = useAuth();
-	const socketRef = useRef<Socket | null>(null);
+	const socketRef = useRef<AppSocket | null>(null);
 	const [connected, setConnected] = useState(false);
+	// True only while socket.io is actively retrying after a drop — lets the UI
+	// show "Reconectando…" instead of silently going stale.
+	const [reconnecting, setReconnecting] = useState(false);
 	const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
 	const [unreadChats, setUnreadChats] = useState(0);
 	// Tracks which conversation is currently open so we don't badge it
@@ -47,18 +53,23 @@ export const usePresence = () => {
 
 		if (socketRef.current?.connected) return;
 
-		const socket = io(window.location.origin, {
+		const socket: AppSocket = io(window.location.origin, {
 			path: '/api/socket.io',
 			auth: { token },
 			reconnection: true,
-			reconnectionDelay: 5000,
-			reconnectionAttempts: 10,
+			// Real exponential backoff (1s → 15s) and unlimited attempts: a
+			// network blip (tunnel, wifi handoff, backgrounded tab) should never
+			// permanently kill real-time — only a token change or unmount should.
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 15000,
+			reconnectionAttempts: Infinity,
 			transports: ['polling', 'websocket'],
 		});
 
-		socket.on('connect', () => setConnected(true));
+		socket.on('connect', () => { setConnected(true); setReconnecting(false); });
 		socket.on('disconnect', () => setConnected(false));
 		socket.on('connect_error', () => setConnected(false));
+		socket.io.on('reconnect_attempt', () => setReconnecting(true));
 
 		socket.on('online:users', (userIds: string[]) => {
 			const next: Record<string, boolean> = {};
@@ -86,13 +97,14 @@ export const usePresence = () => {
 			socket.disconnect();
 			socketRef.current = null;
 			setConnected(false);
+			setReconnecting(false);
 			setPresenceMap({});
 		};
 	}, [token, syncUnreadChats]);
 
-	const emit = (event: string, data: unknown) => {
+	const emit = <E extends keyof ClientToServerEvents>(event: E, data: Parameters<ClientToServerEvents[E]>[0]) => {
 		socketRef.current?.emit(event, data);
 	};
 
-	return { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef };
+	return { connected, reconnecting, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef };
 };

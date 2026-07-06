@@ -10,11 +10,9 @@ The profile is frontend-only in this phase: it consumes the existing user profil
 
 The profile is composed from shared components in `frontend/src/components/profile`:
 
-- `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, current 42 campus login status, pool, Intragram online state, and friend/edit controls when allowed.
-- `CommonCoreProgress`: current common-core level, progress percentage toward the next integer level, grade, and next-level context.
+- `ProfileHeader`: avatar, display name, login, selected 42 title, campus, role, current 42 campus login status, pool, Intragram online state, friend/edit controls when allowed, common-core progress ring, and academic stat pills.
 - `SkillsRadar`: radar chart generated from the top 7 skills by level, plus exact skill bars.
 - `ProjectsCard`: project counters, status filters, status badges, final marks, best mark, and an enriched project list.
-- `ProfileStats`: academic metrics prioritized over raw fields.
 - `ProfileDetails`: lower-priority raw profile details such as email, campus, pool, location, phone, role, last login, and creation date.
 
 The same page handles both contexts. Without a route login it renders the authenticated user's own profile inside the home dashboard; with `/profile/:login` it renders that user's profile as a standalone page. Editing controls are enabled only when the rendered profile belongs to the authenticated user, while friend actions are shown only for other users.

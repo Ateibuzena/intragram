@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ChatNewMessagePayload } from '@intragram/shared/realtime';
 import type { User } from '@/types/chat';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
+import { usePolledResource } from '@/hooks/usePolledResource';
 import {
 	type BackendConversation,
 	type ChatUserProfile,
@@ -8,7 +11,10 @@ import {
 	mapChatUserProfileToUser,
 } from '@/utils/chatMappers';
 
-const CONVERSATIONS_POLL_INTERVAL_MS = 3000;
+// The conversation list is patched live via 'chat:new-message' below — this
+// poll is only a reconciliation fallback for events missed during a
+// reconnect gap, so it can afford to be slow.
+const CONVERSATIONS_RECONCILE_INTERVAL_MS = 25_000;
 
 export const useChatConversations = (token: string | null, currentUserId: string | null) => {
 	const [rawConversations, setRawConversations] = useState<BackendConversation[]>([]);
@@ -79,58 +85,61 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		return list[0].id;
 	};
 
-	useEffect(() => {
-		if (!token) {
-			setRawConversations([]);
-			setSelectedChatId(null);
-			return;
+	// Only the first load shows the loading/error state — the reconciliation
+	// poll stays silent, same as before.
+	const isInitialLoadRef = useRef(true);
+	useEffect(() => { isInitialLoadRef.current = true; }, [token]);
+
+	const fetchConversations = async (): Promise<BackendConversation[] | null> => {
+		if (!token) return null;
+		const showLoading = isInitialLoadRef.current;
+		if (showLoading) { setLoading(true); setError(null); }
+		try {
+			const res = await fetchWithAuth('/chat/conversations', token);
+			if (!res.ok) {
+				if (showLoading) setError('No se pudieron cargar las conversaciones');
+				return null;
+			}
+			return await res.json() as BackendConversation[];
+		} catch (err) {
+			if (showLoading) setError(err instanceof Error ? err.message : 'No se pudieron cargar las conversaciones');
+			return null;
+		} finally {
+			if (showLoading) { setLoading(false); isInitialLoadRef.current = false; }
 		}
+	};
 
-		let cancelled = false;
+	usePolledResource<BackendConversation[]>({
+		enabled: !!token,
+		fetcher: fetchConversations,
+		onData: (list) => {
+			setRawConversations(list);
+			setSelectedChatId((cur) => pickSelectedId(list, cur));
+			void loadMissingUsers(list);
+		},
+		onDisabled: () => { setRawConversations([]); setSelectedChatId(null); },
+		intervalMs: CONVERSATIONS_RECONCILE_INTERVAL_MS,
+		deps: [currentUserId],
+	});
 
-		const load = async () => {
-			setLoading(true);
-			setError(null);
-			try {
-				const res = await fetchWithAuth('/chat/conversations', token);
-				if (!res.ok) throw new Error('No se pudieron cargar las conversaciones');
-				const list = await res.json() as BackendConversation[];
-				if (cancelled) return;
-				setRawConversations(list);
-				setSelectedChatId((cur) => pickSelectedId(list, cur));
-				if (!cancelled) await loadMissingUsers(list);
-			} catch (err) {
-				if (!cancelled) setError(err instanceof Error ? err.message : 'No se pudieron cargar las conversaciones');
-			} finally {
-				if (!cancelled) setLoading(false);
-			}
-		};
-
-		void load();
-		return () => { cancelled = true; };
-	}, [token, currentUserId]);
-
-	useEffect(() => {
-		if (!token) return;
-		let disposed = false;
-
-		const poll = async () => {
-			try {
-				const res = await fetchWithAuth('/chat/conversations', token);
-				if (!res.ok || disposed) return;
-				const list = await res.json() as BackendConversation[];
-				if (disposed) return;
-				setRawConversations(list);
-				setSelectedChatId((cur) => pickSelectedId(list, cur));
-				await loadMissingUsers(list);
-			} catch {
-				// silent poll
-			}
-		};
-
-		const interval = setInterval(() => { void poll(); }, CONVERSATIONS_POLL_INTERVAL_MS);
-		return () => { disposed = true; clearInterval(interval); };
-	}, [token, currentUserId, usersById]);
+	// Real-time: the gateway only emits 'chat:new-message' to the recipient
+	// (never the sender, see chat.controller.ts), so any event received here
+	// is always an incoming message — patch the preview immediately and bump
+	// unread unless this is the conversation currently open.
+	useSocketEvent('chat:new-message', (payload: ChatNewMessagePayload) => {
+		setRawConversations((prev) => prev.map((c) => {
+			if (c.id !== payload.conversationId) return c;
+			const isOpen = c.id === selectedChatId;
+			return {
+				...c,
+				last_message: payload.message,
+				last_message_has_image: payload.has_image,
+				last_message_at: payload.created_at,
+				updated_at: payload.created_at,
+				unread_count: isOpen ? 0 : c.unread_count + 1,
+			};
+		}));
+	});
 
 	const removeConversation = (convId: string) => {
 		setRawConversations((prev) => prev.filter((c) => c.id !== convId));
@@ -159,13 +168,6 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		setUsersById((prev) => ({ ...prev, [userId]: user }));
 	};
 
-	const updateUserOnlineStatus = (userId: string, online: boolean) => {
-		setUsersById((prev) => {
-			if (!prev[userId]) return prev;
-			return { ...prev, [userId]: { ...prev[userId], online } };
-		});
-	};
-
 	const markConversationRead = useCallback(async (conversationId: string): Promise<void> => {
 		if (!token) return;
 		setRawConversations((prev) => prev.map((conversation) =>
@@ -191,7 +193,6 @@ export const useChatConversations = (token: string | null, currentUserId: string
 		removeConversation,
 		updateConversationLastMessage,
 		addUser,
-		updateUserOnlineStatus,
 		markConversationRead,
 	};
 };

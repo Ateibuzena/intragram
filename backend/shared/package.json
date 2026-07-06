@@ -13,21 +13,9 @@
       "types": "./dist/auth/index.d.ts",
       "default": "./dist/auth/index.js"
     },
-    "./contracts": {
-      "types": "./dist/contracts/index.d.ts",
-      "default": "./dist/contracts/index.js"
-    },
-    "./dto": {
-      "types": "./dist/dto/index.d.ts",
-      "default": "./dist/dto/index.js"
-    },
     "./health": {
       "types": "./dist/health/index.d.ts",
       "default": "./dist/health/index.js"
-    },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/types/index.js"
     },
     "./users": {
       "types": "./dist/users/index.d.ts",
@@ -44,6 +32,10 @@
     "./media": {
       "types": "./dist/media/index.d.ts",
       "default": "./dist/media/index.js"
+    },
+    "./realtime": {
+      "types": "./dist/realtime/index.d.ts",
+      "default": "./dist/realtime/index.js"
     }
   },
   "files": [

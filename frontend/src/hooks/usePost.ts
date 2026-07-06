@@ -1,6 +1,6 @@
 // Utility hook for managing post interaction state
 // (likes, saving, and small associated animations) in the frontend.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const usePost = (initialLiked: boolean, initialLikes: number, initialSaved = false) => {
 	const [liked, setLiked] = useState(initialLiked);
@@ -8,6 +8,13 @@ export const usePost = (initialLiked: boolean, initialLikes: number, initialSave
 	const [saved, setSaved] = useState(initialSaved);
 	const [animatingLike, setAnimatingLike] = useState(false);
 	const [animatingSave, setAnimatingSave] = useState(false);
+
+	// Resync when the parent's count changes — e.g. Feed patching it live from
+	// a 'post:like' broadcast triggered by someone else (or by our own action
+	// echoing back once the server confirms it). Doesn't fight the optimistic
+	// toggle below: this only fires when the incoming value actually changes.
+	useEffect(() => { setLikes(initialLikes); }, [initialLikes]);
+	useEffect(() => { setLiked(initialLiked); }, [initialLiked]);
 
 	const handleLike = () => {
 		setAnimatingLike(true);

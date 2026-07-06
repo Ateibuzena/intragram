@@ -586,11 +586,11 @@ export class PostsService {
 			await postRepo.save(post);
 
 			const dto = await this.mapCommentToDto(comment);
-			return { ...dto, post_author_id: post.author_id };
+			return { ...dto, post_author_id: post.author_id, comments_count: post.comments_count };
 		});
 	}
 
-	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
+	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean; comments_count: number }> {
 		return this.dataSource.transaction(async (manager) => {
 			const commentRepo = manager.getRepository(PostCommentEntity);
 			const postRepo = manager.getRepository(PostEntity);
@@ -603,7 +603,7 @@ export class PostsService {
 			post.comments_count = Math.max(0, post.comments_count - 1);
 			await postRepo.save(post);
 
-			return { deleted: true };
+			return { deleted: true, comments_count: post.comments_count };
 		});
 	}
 

@@ -6,6 +6,7 @@ import { PresenceContext } from '@/hooks/usePresenceContext';
 import { FriendProvider } from '@/hooks/useFriendContext';
 import { NotificationsProvider } from '@/hooks/useNotificationsContext';
 import { ActivityToast } from '@/components/layout/ActivityToast';
+import { ConnectionBanner } from '@/components/layout/ConnectionBanner';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
@@ -14,12 +15,13 @@ import ProfilePage from '@/pages/ProfilePage';
 import TermsPage from '@/pages/TermsPage';
 
 const PresenceManager = ({ children }: { children: React.ReactNode }) => {
-	const { connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef } = usePresence();
+	const { connected, reconnecting, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef } = usePresence();
 	return (
-		<PresenceContext.Provider value={{ connected, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef }}>
+		<PresenceContext.Provider value={{ connected, reconnecting, presenceMap, socketRef, emit, unreadChats, setUnreadChats, syncUnreadChats, currentChatRef }}>
 			<FriendProvider>
 				<NotificationsProvider>
 					<ActivityToast />
+					<ConnectionBanner />
 					{children}
 				</NotificationsProvider>
 			</FriendProvider>

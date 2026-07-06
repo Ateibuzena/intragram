@@ -112,7 +112,7 @@ export class PostsController {
 	}
 
 	@Delete('posts/feed/post/comments/:commentId/by/:userId')
-	async deleteComment(@Param('commentId') commentId: string, @Param('userId') userId: string): Promise<{ deleted: boolean }> {
+	async deleteComment(@Param('commentId') commentId: string, @Param('userId') userId: string): Promise<{ deleted: boolean; comments_count: number }> {
 		return this.run(() => this.postsService.deleteComment(commentId, userId), 'Error deleting comment');
 	}
 

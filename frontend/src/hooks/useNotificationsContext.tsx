@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
+import { usePolledResource } from '@/hooks/usePolledResource';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { mapNotificationToUI, type BackendNotificationsResponse } from '@/utils/notificationMappers';
 import type { NotificationItem } from '@/types/notifications';
@@ -24,46 +25,38 @@ const NOTIFICATIONS_POLL_INTERVAL_MS = 30_000;
 
 export const NotificationsProvider = ({ children }: { children: React.ReactNode }) => {
 	const { token } = useAuth();
-	const { socketRef, connected } = usePresenceStatus();
 
 	const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 	const [unreadCount, setUnreadCount] = useState(0);
 
-	const fetchNotifications = useCallback(async () => {
-		if (!token) return;
+	const fetchNotifications = useCallback(async (): Promise<BackendNotificationsResponse | null> => {
+		if (!token) return null;
 		try {
 			const res = await fetchWithAuth('/users/notifications', token);
-			if (!res.ok) return;
-			const data = (await res.json()) as BackendNotificationsResponse;
-			setNotifications(data.items.map(mapNotificationToUI));
-			setUnreadCount(data.unread_count);
+			if (!res.ok) return null;
+			return (await res.json()) as BackendNotificationsResponse;
 		} catch {
-			// Retain last known state on network error.
+			return null;
 		}
 	}, [token]);
 
-	// Initial load + fallback poll, exactly like useFriendContext's pending requests.
-	useEffect(() => {
-		if (!token) {
-			setNotifications([]);
-			setUnreadCount(0);
-			return;
-		}
-		void fetchNotifications();
-		const id = setInterval(() => { void fetchNotifications(); }, NOTIFICATIONS_POLL_INTERVAL_MS);
-		return () => clearInterval(id);
-	}, [token, fetchNotifications]);
+	const applyNotifications = useCallback((data: BackendNotificationsResponse) => {
+		setNotifications(data.items.map(mapNotificationToUI));
+		setUnreadCount(data.unread_count);
+	}, []);
+
+	// Initial load + fallback reconciliation poll, exactly like useFriendContext's pending requests.
+	const { refetch: refetchNotifications } = usePolledResource<BackendNotificationsResponse>({
+		enabled: !!token,
+		fetcher: fetchNotifications,
+		onData: applyNotifications,
+		onDisabled: () => { setNotifications([]); setUnreadCount(0); },
+		intervalMs: NOTIFICATIONS_POLL_INTERVAL_MS,
+	});
 
 	// Real-time: 'notification:new' only pings us to refetch (same pattern as
 	// chat:new-message → syncUnreadChats), it doesn't carry the full list.
-	useEffect(() => {
-		if (!connected) return;
-		const socket = socketRef.current;
-		if (!socket) return;
-		const handler = () => { void fetchNotifications(); };
-		socket.on('notification:new', handler);
-		return () => { socket.off('notification:new', handler); };
-	}, [connected, socketRef, fetchNotifications]);
+	useSocketEvent('notification:new', () => { void refetchNotifications(); });
 
 	const markAllRead = useCallback(async () => {
 		if (!token) return;

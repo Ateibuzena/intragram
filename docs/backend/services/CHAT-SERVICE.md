@@ -14,7 +14,7 @@
 
 ## Exposed Endpoints
 
-- `GET /chat/health`
+- `GET /health`
 - `GET /chat/conversations`
 - `POST /chat/conversations`
 - `GET /chat/conversations/:conversationId/messages`
@@ -65,7 +65,7 @@ Además, cuando hace falta mostrar el otro participante, consulta `users-service
 
 - Puerto esperado: `3009`
 - Base de datos: `chat-db`
-- Healthcheck Docker: `http://chat-service:3009/chat/health`
+- Healthcheck Docker: `http://chat-service:3009/health`
 
 ## Current Limitations
 

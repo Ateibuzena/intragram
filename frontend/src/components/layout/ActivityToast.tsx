@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { usePresenceStatus } from '@/hooks/usePresenceContext';
-import { useFriendContext } from '@/hooks/useFriendContext';
+import type { FriendRequestPayload, NotificationPushPayload } from '@intragram/shared/realtime';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { ROUTES } from '@/constants/routes';
 
 interface ToastData {
@@ -13,20 +13,11 @@ interface ToastData {
 
 const TOAST_DURATION_MS = 4000;
 
-interface FriendRequestPayload {
-	from: { id: string; login: string; display_name: string | null };
-}
-
-interface NotificationPayload {
-	type: 'like' | 'comment';
-	post_id: string;
-	comment_preview?: string;
-	actor: { id: string; login: string; display_name: string | null };
-}
-
-interface NewPostPayload {
-	author?: { id: string; login: string; display_name: string | null };
-}
+const NOTIFICATION_TITLES: Record<NotificationPushPayload['type'], string> = {
+	like: 'Nuevo like',
+	comment: 'Nuevo comentario',
+	post: 'Nueva publicación',
+};
 
 /**
  * Single global "something happened" toast — friend requests, likes/comments
@@ -36,12 +27,11 @@ interface NewPostPayload {
  * (and therefore only showed up on the home page).
  */
 export const ActivityToast = () => {
-	const { socketRef, connected } = usePresenceStatus();
-	const { getRelation } = useFriendContext();
 	const navigate = useNavigate();
 	const [queue, setQueue] = useState<ToastData[]>([]);
 
 	const current = queue[0] ?? null;
+	const pushToast = (toast: ToastData) => setQueue((q) => [...q, toast]);
 
 	useEffect(() => {
 		if (!current) return;
@@ -49,56 +39,26 @@ export const ActivityToast = () => {
 		return () => clearTimeout(timer);
 	}, [current?.id]);
 
-	useEffect(() => {
-		if (!connected) return;
-		const socket = socketRef.current;
-		if (!socket) return;
+	useSocketEvent('friend:request', (payload: FriendRequestPayload) => {
+		pushToast({
+			id: `friend-${payload.from.id}-${Date.now()}`,
+			title: 'Nueva solicitud de amistad',
+			message: `${payload.from.display_name || payload.from.login} quiere ser tu amigo`,
+		});
+	});
 
-		const pushToast = (toast: ToastData) => setQueue((q) => [...q, toast]);
-
-		const handleFriendRequest = (payload: FriendRequestPayload) => {
-			pushToast({
-				id: `friend-${payload.from.id}-${Date.now()}`,
-				title: 'Nueva solicitud de amistad',
-				message: `${payload.from.display_name || payload.from.login} quiere ser tu amigo`,
-			});
-		};
-
-		const handleNotification = (payload: NotificationPayload) => {
-			const name = payload.actor.display_name || payload.actor.login;
-			pushToast({
-				id: `notif-${payload.post_id}-${payload.actor.id}-${Date.now()}`,
-				title: payload.type === 'like' ? 'Nuevo like' : 'Nuevo comentario',
-				message: payload.type === 'like'
-					? `${name} le dio like a tu publicación`
-					: `${name} comentó: "${payload.comment_preview ?? ''}"`,
-			});
-		};
-
-		const handleNewPost = (post: NewPostPayload) => {
-			const authorId = post.author?.id;
-			if (!authorId) return;
-			// Only friends — a public post from a stranger would be noisy on a
-			// campus-wide feed; the feed's own "N new posts" banner still covers
-			// everyone once you're actually looking at it.
-			if (getRelation(authorId) !== 'friends') return;
-			const name = post.author?.display_name || post.author?.login;
-			pushToast({
-				id: `post-${authorId}-${Date.now()}`,
-				title: 'Nueva publicación',
-				message: `${name} ha publicado algo nuevo`,
-			});
-		};
-
-		socket.on('friend:request', handleFriendRequest);
-		socket.on('notification:new', handleNotification);
-		socket.on('feed:new-post', handleNewPost);
-		return () => {
-			socket.off('friend:request', handleFriendRequest);
-			socket.off('notification:new', handleNotification);
-			socket.off('feed:new-post', handleNewPost);
-		};
-	}, [connected, socketRef, getRelation]);
+	useSocketEvent('notification:new', (payload: NotificationPushPayload) => {
+		const name = payload.actor.display_name || payload.actor.login;
+		const message =
+			payload.type === 'like' ? `${name} le dio like a tu publicación` :
+			payload.type === 'comment' ? `${name} comentó: "${payload.comment_preview ?? ''}"` :
+			`${name} ha publicado algo nuevo`;
+		pushToast({
+			id: `notif-${payload.post_id}-${payload.actor.id}-${Date.now()}`,
+			title: NOTIFICATION_TITLES[payload.type],
+			message,
+		});
+	});
 
 	if (!current) return null;
 

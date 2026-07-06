@@ -8,7 +8,7 @@
 
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
-export type NotificationType = 'like' | 'comment';
+export type NotificationType = 'like' | 'comment' | 'post';
 
 @Entity('notifications')
 export class NotificationEntity {

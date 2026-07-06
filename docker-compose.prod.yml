@@ -154,6 +154,21 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # Backs the Socket.IO adapter (cross-instance broadcast) and shared presence
+  # state — lets the gateway scale to more than one replica without losing
+  # real-time events. Ephemeral: presence/pubsub data doesn't need persistence.
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    networks:
+      - service-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # ==============================
   # MICROSERVICIOS
   # ==============================
@@ -176,7 +191,7 @@ services:
       chat-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://chat-service:3009/chat/health"]
+      test: ["CMD", "curl", "-f", "http://chat-service:3009/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -270,7 +285,8 @@ services:
   # API GATEWAY (solo interno)
   # ==============================
   gateway:
-    container_name: gateway
+    # No fixed container_name: `docker compose up --scale gateway=N` needs to
+    # mint N container names, which a fixed name would conflict with.
     build:
       context: ./backend
       dockerfile: gateway/Dockerfile.prod
@@ -286,6 +302,7 @@ services:
       POSTS_SERVICE_URL: ${POSTS_SERVICE_URL}
       CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       GRAFANA_URL: ${GRAFANA_URL}
+      REDIS_URL: ${REDIS_URL}
     networks:
       - backend-net
       - service-net
@@ -294,6 +311,7 @@ services:
       - users-service
       - chat-service
       - posts-service
+      - redis
     healthcheck:
       test: ["CMD", "curl", "-f", "http://gateway:3000/health"]
       interval: 30s

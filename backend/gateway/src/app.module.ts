@@ -13,9 +13,11 @@ import { UsersModule } from './services/users/users.module';
 import { PostsModule } from './services/posts/posts.module';
 import { ChatModule } from './services/chat/chat.module';
 import { PresenceModule } from './services/presence/presence.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
 	imports: [
+		RedisModule,
 		MetricsModule,
 		GatewayHttpModule,
 		AuthModule,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { ChatTypingPayload } from '@intragram/shared/realtime';
 import './ChatWindow.css';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +9,7 @@ import { PhotoAttachmentButton } from '@/components/media/PhotoAttachmentButton'
 import type { ChatWindowProps } from '@/types/ui';
 import { MessageBubble } from './MessageBubble';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import { LANGUAGES } from '@/constants/languages';
 
 const TYPING_DEBOUNCE_MS = 400;
@@ -23,7 +25,7 @@ export const ChatWindow = ({
  	onStartNewConversation,
 	onBack,
 }: ChatWindowProps) => {
-	const { presenceMap, socketRef, emit, connected } = usePresenceStatus();
+	const { presenceMap, emit } = usePresenceStatus();
 	const navigate = useNavigate();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -37,25 +39,16 @@ export const ChatWindow = ({
 	}, [messages]);
 
 	// Listen for typing events from the other user.
-	// connected is a dependency so the effect re-runs once the socket actually connects.
-	useEffect(() => {
-		const socket = socketRef.current;
-		if (!socket || !connected || !selectedChat) return;
+	useSocketEvent('chat:typing', ({ conversationId, login }: ChatTypingPayload) => {
+		if (!selectedChat || String(conversationId) !== String(selectedChat.id)) return;
+		setTypingLogin(login);
+		if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+		typingClearTimer.current = setTimeout(() => setTypingLogin(null), TYPING_CLEAR_MS);
+	});
 
-		const handler = ({ conversationId, login }: { conversationId: string; login: string }) => {
-			if (String(conversationId) !== String(selectedChat.id)) return;
-			setTypingLogin(login);
-			if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
-			typingClearTimer.current = setTimeout(() => setTypingLogin(null), TYPING_CLEAR_MS);
-		};
-
-		socket.on('chat:typing', handler);
-		return () => {
-			socket.off('chat:typing', handler);
-			if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
-		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [connected, selectedChat?.id]);
+	useEffect(() => () => {
+		if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+	}, []);
 
 	// Clear typing when conversation switches or a message arrives
 	useEffect(() => { setTypingLogin(null); }, [selectedChat?.id]);

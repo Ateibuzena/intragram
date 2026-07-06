@@ -436,9 +436,9 @@ export class UsersService {
 	/**
 	 * Deletes a comment by its owner.
 	 */
-	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean }> {
+	async deleteComment(commentId: string, userId: string): Promise<{ deleted: boolean; comments_count: number }> {
 		try {
-			return await this.httpClient.delete<{ deleted: boolean }>(
+			return await this.httpClient.delete<{ deleted: boolean; comments_count: number }>(
 					`${this.postsBaseUrl}/posts/feed/post/comments/${commentId}/by/${userId}`,
 				{ timeoutMs: 5000 },
 			);

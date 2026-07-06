@@ -13,6 +13,8 @@
     "@nestjs/axios":              "^4.0.1",
     "@nestjs/platform-socket.io": "^11.1.14",
     "@nestjs/websockets":         "^11.1.14",
+    "@socket.io/redis-adapter":   "^8.3.0",
+    "ioredis":       "^5.4.1",
     "nestjs-pino":   "^4.6.0",
     "pino":          "^10.3.1",
     "pino-http":     "^11.0.0",

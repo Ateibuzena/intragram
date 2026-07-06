@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { IFeedPost } from '@intragram/shared/posts';
+import type { PostLikePayload, PostCommentAddedPayload, PostCommentRemovedPayload, PostDeletedPayload } from '@intragram/shared/realtime';
 import type { FilterKey, Post } from '@/types/feed';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { useAuth } from '@/hooks/useAuth';
-import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 
 import { mapApiPostToPost } from '@/utils/postMappers';
 import { CreatePost } from './CreatePost';
@@ -18,7 +19,6 @@ interface FeedProps {
 
 export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps) => {
 	const { token, profile: authProfile } = useAuth();
-	const { socketRef, connected } = usePresenceStatus();
 	const [items, setItems] = useState<Post[]>([]);
 	const [pendingCount, setPendingCount] = useState(0);
 	const pendingRef = useRef<Post[]>([]);
@@ -97,26 +97,39 @@ export const Feed = ({ activeFilter, currentLogin, loading = false }: FeedProps)
 	}, [token, activeFilter, refreshKey]);
 
 	// Real-time: new post from another user
-	useEffect(() => {
-		const socket = socketRef.current;
-		if (!socket || !connected) return;
+	useSocketEvent('feed:new-post', (newPost: IFeedPost) => {
+		// Own posts already appear via CreatePost's onPostCreated refresh
+		if (newPost.author?.login === myLoginRef.current) return;
+		// Only show banner in feeds where other users' posts appear
+		const filter = activeFilterRef.current;
+		if (filter === 'perfil' || filter === 'favoritos' || filter === 'trending') return;
 
-		const handler = (newPost: IFeedPost) => {
-			// Own posts already appear via CreatePost's onPostCreated refresh
-			if (newPost.author?.login === myLoginRef.current) return;
-			// Only show banner in feeds where other users' posts appear
-			const filter = activeFilterRef.current;
-			if (filter === 'perfil' || filter === 'favoritos' || filter === 'trending') return;
+		const mapped = mapApiPostToPost(newPost);
+		pendingRef.current = [mapped, ...pendingRef.current.filter((p: Post) => p.id !== mapped.id)];
+		setPendingCount(pendingRef.current.length);
+	});
 
-			const mapped = mapApiPostToPost(newPost);
-			pendingRef.current = [mapped, ...pendingRef.current.filter((p) => p.id !== mapped.id)];
-			setPendingCount(pendingRef.current.length);
-		};
+	// Real-time: engagement on any visible post — likes/comments counters
+	// update live for everyone looking at the feed, not just the actor.
+	useSocketEvent('post:like', (payload: PostLikePayload) => {
+		setItems((prev) => prev.map((p) => (String(p.id) === payload.post_id ? { ...p, likes: payload.likes_count } : p)));
+	});
 
-		socket.on('feed:new-post', handler);
-		return () => { socket.off('feed:new-post', handler); };
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [connected]);
+	useSocketEvent('post:comment-added', (payload: PostCommentAddedPayload) => {
+		setItems((prev) => prev.map((p) => (String(p.id) === payload.post_id ? { ...p, comments: payload.comments_count } : p)));
+	});
+
+	useSocketEvent('post:comment-removed', (payload: PostCommentRemovedPayload) => {
+		setItems((prev) => prev.map((p) => (String(p.id) === payload.post_id ? { ...p, comments: payload.comments_count } : p)));
+	});
+
+	// Real-time: a post got deleted by its author — drop it for everyone else
+	// still looking at the feed instead of leaving a stale card until reload.
+	useSocketEvent('post:deleted', (payload: PostDeletedPayload) => {
+		setItems((prev) => prev.filter((p) => String(p.id) !== payload.post_id));
+		pendingRef.current = pendingRef.current.filter((p) => String(p.id) !== payload.post_id);
+		setPendingCount(pendingRef.current.length);
+	});
 
 	// Clear pending and highlights when filter changes
 	useEffect(() => {

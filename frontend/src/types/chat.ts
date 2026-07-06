@@ -32,8 +32,6 @@ export interface Conversation {
 	unread: number;
 }
 
-export type ChatTab = 'mensajes' | 'solicitudes';
-
 export interface PendingFriendRequest {
 	id: string;
 	login: string;

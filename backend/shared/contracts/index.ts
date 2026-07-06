@@ -1,1 +1,0 @@
-export * from '../auth/contracts/auth-response';

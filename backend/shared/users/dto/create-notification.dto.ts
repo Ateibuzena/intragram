@@ -7,8 +7,8 @@ export class CreateNotificationDto {
 	@IsUUID()
 	actor_id!: string;
 
-	@IsIn(['like', 'comment'])
-	type!: 'like' | 'comment';
+	@IsIn(['like', 'comment', 'post'])
+	type!: 'like' | 'comment' | 'post';
 
 	@IsUUID()
 	post_id!: string;

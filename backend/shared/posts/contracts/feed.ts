@@ -39,4 +39,6 @@ export interface IPostComment {
 	author: IFeedPostAuthorSummary;
 	/** Only set on the addComment response, to notify the post's author. */
 	post_author_id?: string;
+	/** Only set on the addComment response, to broadcast the post's new total. */
+	comments_count?: number;
 }

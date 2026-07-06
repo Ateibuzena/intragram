@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChatNewMessagePayload } from '@intragram/shared/realtime';
 import type { Message } from '@/types/chat';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { type BackendMessage, mapMessageToUI } from '@/utils/chatMappers';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
+import { usePolledResource } from '@/hooks/usePolledResource';
 
-const MESSAGES_POLL_INTERVAL_MS = 2000;
+// Messages are delivered live via the 'chat:new-message' socket event below —
+// this poll is only a reconciliation fallback for events missed during a
+// reconnect gap, so it can afford to be slow.
+const MESSAGES_RECONCILE_INTERVAL_MS = 25_000;
 
 export const useChatMessages = (
 	token: string | null,
@@ -15,52 +21,59 @@ export const useChatMessages = (
 	const [sending, setSending] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		if (!token || !selectedChatId) {
-			setMessages([]);
-			return;
+	// Only the first load for a given conversation shows the loading/error
+	// state — the reconciliation poll below stays silent, same as before.
+	const isInitialLoadRef = useRef(true);
+	useEffect(() => { isInitialLoadRef.current = true; }, [token, selectedChatId]);
+
+	const fetchMessages = async (): Promise<Message[] | null> => {
+		if (!token || !selectedChatId) return null;
+		const showLoading = isInitialLoadRef.current;
+		if (showLoading) { setLoading(true); setError(null); }
+		try {
+			const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token);
+			if (!res.ok) {
+				if (showLoading) setError('No se pudieron cargar los mensajes');
+				return null;
+			}
+			const raw = await res.json() as BackendMessage[];
+			return raw.map((m) => mapMessageToUI(m, currentUserId));
+		} catch (err) {
+			if (showLoading) setError(err instanceof Error ? err.message : 'No se pudieron cargar los mensajes');
+			return null;
+		} finally {
+			if (showLoading) { setLoading(false); isInitialLoadRef.current = false; }
 		}
+	};
 
-		let cancelled = false;
+	usePolledResource<Message[]>({
+		enabled: !!token && !!selectedChatId,
+		fetcher: fetchMessages,
+		onData: setMessages,
+		onDisabled: () => setMessages([]),
+		intervalMs: MESSAGES_RECONCILE_INTERVAL_MS,
+		deps: [token, selectedChatId, currentUserId],
+	});
 
-		const load = async () => {
-			setLoading(true);
-			setError(null);
-			try {
-				const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token);
-				if (!res.ok) throw new Error('No se pudieron cargar los mensajes');
-				const raw = await res.json() as BackendMessage[];
-				if (!cancelled) setMessages(raw.map((m) => mapMessageToUI(m, currentUserId)));
-			} catch (err) {
-				if (!cancelled) setError(err instanceof Error ? err.message : 'No se pudieron cargar los mensajes');
-			} finally {
-				if (!cancelled) setLoading(false);
-			}
-		};
-
-		void load();
-		return () => { cancelled = true; };
-	}, [token, selectedChatId, currentUserId]);
-
-	useEffect(() => {
-		if (!token || !selectedChatId) return;
-		let disposed = false;
-
-		const poll = async () => {
-			try {
-				const res = await fetchWithAuth(`/chat/conversations/${selectedChatId}/messages`, token);
-				if (!res.ok || disposed) return;
-				const raw = await res.json() as BackendMessage[];
-				if (disposed) return;
-				setMessages(raw.map((m) => mapMessageToUI(m, currentUserId)));
-			} catch {
-				// silent poll
-			}
-		};
-
-		const interval = setInterval(() => { void poll(); }, MESSAGES_POLL_INTERVAL_MS);
-		return () => { disposed = true; clearInterval(interval); };
-	}, [token, selectedChatId, currentUserId]);
+	// Real-time: append the message as soon as it arrives instead of waiting
+	// for the next reconciliation poll. Ignores events for a conversation that
+	// isn't the one currently open, and de-dupes by id against the poll/optimistic add.
+	useSocketEvent('chat:new-message', (payload: ChatNewMessagePayload) => {
+		if (payload.conversationId !== selectedChatId) return;
+		setMessages((prev) => {
+			if (prev.some((m) => String(m.id) === payload.id)) return prev;
+			const backendMessage: BackendMessage = {
+				id: payload.id,
+				conversationId: payload.conversationId,
+				senderId: payload.senderId,
+				message: payload.message,
+				attachments: [],
+				image_mime_type: payload.has_image ? 'image/webp' : null,
+				created_at: payload.created_at,
+			};
+			return [...prev, mapMessageToUI(backendMessage, currentUserId)];
+		});
+	});
 
 	const sendMessage = async (
 		messageText: string,

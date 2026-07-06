@@ -32,7 +32,7 @@ El servicio users es propietario de los datos de perfil y sociales. Gestiona per
 
 El servicio posts es propietario de las publicaciones y sus interacciones. Gestiona el feed, publicaciones, favoritos, likes y comentarios. Expone rutas como `/posts/*` y `/health`. Su base de datos almacena el contenido social y snapshots mínimos del autor.
 
-El servicio chat es propietario del comportamiento de mensajería. Gestiona conversaciones y mensajes a través de rutas como `/chat/conversations`, `/chat/conversations/:conversationId/messages` y `/chat/health`. Su base de datos almacena conversaciones y mensajes del chat.
+El servicio chat es propietario del comportamiento de mensajería. Gestiona conversaciones y mensajes a través de rutas como `/chat/conversations`, `/chat/conversations/:conversationId/messages` y `/health`. Su base de datos almacena conversaciones y mensajes del chat.
 
 Esta separación mejora el mantenimiento porque los cambios en un dominio no requieren cambios coordinados en dominios no relacionados.
 

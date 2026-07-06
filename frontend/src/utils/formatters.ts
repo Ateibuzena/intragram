@@ -8,6 +8,3 @@ export const formatTime = (date: Date | string): string => {
 	if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
 	return `hace ${Math.floor(diff / 86400)} d`;
 };
-
-export const truncate = (str: string, maxLength: number): string =>
-	str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;

@@ -19,6 +19,9 @@ export const PostCard = ({ post, onDelete, isNew = false }: PostCardProps) => {
 	const { liked, likes, saved, animatingLike, animatingSave, handleLike, handleSave } = usePost(post.liked, post.likes, post.saved ?? false);
 
 	const [commentsCount, setCommentsCount] = useState(post.comments);
+	// Resync when Feed patches it live from a 'post:comment-added'/'-removed'
+	// broadcast (see usePost's identical liked/likes effect for why this is safe).
+	useEffect(() => { setCommentsCount(post.comments); }, [post.comments]);
 	const [showModal, setShowModal] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);

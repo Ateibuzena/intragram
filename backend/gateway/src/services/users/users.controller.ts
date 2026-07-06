@@ -42,8 +42,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import type { IDirectoryEntry, IDirectoryFilters, IDirectoryScope } from './users.service';
-import { IUserProfile, UpsertOAuth42UserDto, UpdateUserAvatarDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
-import { IPostComment, IFeedPost, CreateFeedPostDto } from '@intragram/shared/posts';
+import { IUserProfile, UpsertOAuth42UserDto, UpdateUserProfileDto, CreateFriendDto } from '@intragram/shared/users';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { PublicRateLimit } from '../../common/decorators/public-rate-limit.decorator';
 import { PublicRateLimitGuard } from '../../common/guards/public-rate-limit.guard';
@@ -248,91 +247,6 @@ export class UsersController {
 	}
 
 	/**
-	 * Returns the "Recent" feed of the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed')
-	async getRecentFeed(@Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getRecentFeed(profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Returns the authenticated user's own feed ("My profile").
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed/me')
-	async getMyFeed(@Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getMyFeed(profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Returns posts from the authenticated user's friends.
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed/friends')
-	async getFriendsFeed(@Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getFriendsFeed(profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Returns the "Trending" feed of the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed/trending')
-	async getTrendingFeed(@Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getTrendingFeed(profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Returns the saved (favourite) posts feed of the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed/favorites')
-	async getFavoritesFeed(@Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getFavoritesFeed(profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Toggles the favourite state of a post for the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Post('feed/favorites/:postId')
-	async toggleFavorite(@Param('postId') postId: string, @Req() req: any) {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			const saved = await this.usersService.toggleFavoritePost(profile.id, postId);
-			return { saved };
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
 	 * Returns friend suggestions for the authenticated user (ordered by campus → country → worldwide).
 	 */
 	@UseGuards(AuthGuard)
@@ -419,7 +333,7 @@ export class UsersController {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			const result = await this.usersService.removeFriend(profile.id, friendId);
 			this.realtimeService.emitToUser(friendId, result.wasAccepted ? 'friend:removed' : 'friend:rejected', {
-				by: { id: profile.id, login: profile.login, displayName: profile.display_name },
+				by: { id: profile.id, login: profile.login, display_name: profile.display_name },
 			});
 			return result;
 		} catch (error: any) {
@@ -438,7 +352,7 @@ export class UsersController {
 			const result = await this.usersService.addFriend(profile.id, dto);
 			if (result.status === 'pending') {
 				this.realtimeService.emitToUser(result.friend.id, 'friend:request', {
-					from: { id: profile.id, login: profile.login, displayName: profile.display_name },
+					from: { id: profile.id, login: profile.login, display_name: profile.display_name },
 				});
 			}
 			return result;
@@ -471,107 +385,9 @@ export class UsersController {
 			const profile = await this.usersService.findByLogin(req.user.username);
 			const result = await this.usersService.acceptFriendRequest(profile.id, requesterId);
 			this.realtimeService.emitToUser(requesterId, 'friend:accepted', {
-				by: { id: profile.id, login: profile.login, displayName: profile.display_name },
+				by: { id: profile.id, login: profile.login, display_name: profile.display_name },
 			});
 			return result;
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Toggles the like of the authenticated user on a post.
-	 */
-	@UseGuards(AuthGuard)
-	@Post('feed/like/:postId')
-	async toggleLike(@Param('postId') postId: string, @Req() req: any): Promise<{ liked: boolean; likes_count: number }> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.toggleLikePost(profile.id, postId);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Creates a new post in the feed of the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Post('feed')
-	async createPost(@Body() dto: CreateFeedPostDto, @Req() req: any): Promise<IFeedPost> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			const post = await this.usersService.createPost(profile.id, dto);
-			this.realtimeService.emitToAll('feed:new-post', post);
-			return post;
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Returns all comments for a post.
-	 */
-	@UseGuards(AuthGuard)
-	@Get('feed/post/:postId')
-	async getPostById(@Param('postId') postId: string, @Req() req: any): Promise<IFeedPost> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getPostById(postId, profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	@UseGuards(AuthGuard)
-	@Get('feed/post/:postId/comments')
-	async getPostComments(@Param('postId') postId: string, @Req() req: any): Promise<IPostComment[]> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.getPostComments(postId, profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Adds a comment to a post for the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Post('feed/post/:postId/comments')
-	async addComment(
-		@Param('postId') postId: string,
-		@Body('content') content: string,
-		@Req() req: any,
-	): Promise<IPostComment> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.addComment(postId, profile.id, content);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	/**
-	 * Deletes a comment owned by the authenticated user.
-	 */
-	@UseGuards(AuthGuard)
-	@Delete('feed/post/:postId/comments/:commentId')
-	async deleteComment(@Param('commentId') commentId: string, @Req() req: any): Promise<{ deleted: boolean }> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.deleteComment(commentId, profile.id);
-		} catch (error: any) {
-			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	@UseGuards(AuthGuard)
-	@Delete('feed/post/:postId')
-	async deletePost(@Param('postId') postId: string, @Req() req: any): Promise<{ deleted: boolean }> {
-		try {
-			const profile = await this.usersService.findByLogin(req.user.username);
-			return await this.usersService.deletePost(postId, profile.id);
 		} catch (error: any) {
 			throw new HttpException(error.message, error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR);
 		}

@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
+import { usePolledResource } from '@/hooks/usePolledResource';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import type { PendingFriendRequest } from '@/types/chat';
 
@@ -46,7 +47,6 @@ export const useFriendContext = (): FriendContextType => {
 
 export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	const { token } = useAuth();
-	const { socketRef, connected } = usePresenceStatus();
 
 	const [pendingReceived, setPendingReceived] = useState<PendingFriendRequest[]>([]);
 	const [relationCache, setRelationCache] = useState<Record<string, FriendRelation>>({});
@@ -72,34 +72,34 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 
 	// ── Pending requests ───────────────────────────────────────────────────────
 
-	const fetchPending = useCallback(async () => {
-		if (!token) return;
+	const fetchPending = useCallback(async (): Promise<PendingFriendRequest[] | null> => {
+		if (!token) return null;
 		try {
 			const res = await fetchWithAuth('/users/friends/pending', token);
-			if (!res.ok) return;
-			const data = (await res.json()) as PendingFriendRequest[];
-			setPendingReceived(data);
-			// Seed cache so any component can read these relations immediately.
-			const updates: Record<string, FriendRelation> = {};
-			data.forEach((r) => { updates[r.id] = 'pending_received'; });
-			patchCache(updates);
+			if (!res.ok) return null;
+			return (await res.json()) as PendingFriendRequest[];
 		} catch {
-			// Retain last known state on network error.
+			return null;
 		}
-	}, [token, patchCache]);
+	}, [token]);
 
-	// Initial load + single 30 s poll — replaces duplicate polls that existed
-	// across usePresence and usePendingFriendRequests.
-	useEffect(() => {
-		if (!token) {
-			setPendingReceived([]);
-			setRelationCache({});
-			return;
-		}
-		void fetchPending();
-		const id = setInterval(() => { void fetchPending(); }, 30_000);
-		return () => clearInterval(id);
-	}, [token, fetchPending]);
+	const applyPending = useCallback((data: PendingFriendRequest[]) => {
+		setPendingReceived(data);
+		// Seed cache so any component can read these relations immediately.
+		const updates: Record<string, FriendRelation> = {};
+		data.forEach((r) => { updates[r.id] = 'pending_received'; });
+		patchCache(updates);
+	}, [patchCache]);
+
+	// Initial load + single 30 s reconciliation poll — replaces duplicate polls
+	// that existed across usePresence and usePendingFriendRequests.
+	const { refetch: refetchPending } = usePolledResource<PendingFriendRequest[]>({
+		enabled: !!token,
+		fetcher: fetchPending,
+		onData: applyPending,
+		onDisabled: () => { setPendingReceived([]); setRelationCache({}); },
+		intervalMs: 30_000,
+	});
 
 	// ── Real-time: friend:* socket events ───────────────────────────────────────
 
@@ -107,8 +107,8 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 	// full PendingFriendRequest object (including avatar_url) without needing
 	// the server to embed it in the socket payload.
 	const handleFriendRequest = useCallback(() => {
-		void fetchPending();
-	}, [fetchPending]);
+		void refetchPending();
+	}, [refetchPending]);
 
 	// The other three events only ever flip a single relation, so a direct
 	// cache patch is enough — no need to re-fetch anything.
@@ -124,21 +124,10 @@ export const FriendProvider = ({ children }: { children: React.ReactNode }) => {
 		patchCache({ [payload.by.id]: 'none' });
 	}, [patchCache]);
 
-	useEffect(() => {
-		if (!connected) return;
-		const socket = socketRef.current;
-		if (!socket) return;
-		socket.on('friend:request', handleFriendRequest);
-		socket.on('friend:accepted', handleFriendAccepted);
-		socket.on('friend:removed', handleFriendRemoved);
-		socket.on('friend:rejected', handleFriendRejected);
-		return () => {
-			socket.off('friend:request', handleFriendRequest);
-			socket.off('friend:accepted', handleFriendAccepted);
-			socket.off('friend:removed', handleFriendRemoved);
-			socket.off('friend:rejected', handleFriendRejected);
-		};
-	}, [connected, socketRef, handleFriendRequest, handleFriendAccepted, handleFriendRemoved, handleFriendRejected]);
+	useSocketEvent('friend:request', handleFriendRequest);
+	useSocketEvent('friend:accepted', handleFriendAccepted);
+	useSocketEvent('friend:removed', handleFriendRemoved);
+	useSocketEvent('friend:rejected', handleFriendRejected);
 
 	// ── Relation fetch ─────────────────────────────────────────────────────────
 

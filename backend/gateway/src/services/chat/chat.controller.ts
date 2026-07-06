@@ -67,6 +67,7 @@ export class ChatController {
 		const recipients = result.participants.filter((id) => id !== senderId);
 		for (const recipientId of recipients) {
 			this.realtimeService.emitToUser(recipientId, 'chat:new-message', {
+				id: result.message.id,
 				conversationId,
 				senderId,
 				message: result.message.message,

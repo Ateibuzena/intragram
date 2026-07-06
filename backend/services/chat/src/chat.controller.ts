@@ -5,7 +5,6 @@
  * Protects routes with AuthGuard and forwards the user context.
  *
  * Endpoints:
- * - GET  /chat/health                             → Health check of the chat-service
  * - GET  /chat/conversations                    → Lists conversations of the user
  * - POST /chat/conversations                    → Creates a new conversation
  * - GET  /chat/conversations/:id/messages       → Lists messages of a conversation
@@ -26,14 +25,6 @@ import { ChatService } from './chat.service';
 @Controller('chat')
 export class ChatController {
 	constructor(private readonly chatService: ChatService) {}
-
-	/**
-	 * Health check of the chat-service.
-	 */
-	@Get('health')
-	getHealth() {
-		return this.chatService.getHealth();
-	}
 
 	/**
 	 * Lists the conversations visible to the user.

@@ -29,7 +29,6 @@ const ChatPage = () => {
 	}, [token]);
 
 	const {
-		rawConversations,
 		conversations,
 		selectedChatId,
 		setSelectedChatId,
@@ -40,7 +39,6 @@ const ChatPage = () => {
 		removeConversation,
 		updateConversationLastMessage,
 		addUser,
-		updateUserOnlineStatus,
 		markConversationRead,
 	} = useChatConversations(token, currentUserId);
 
@@ -71,31 +69,6 @@ const ChatPage = () => {
 	const [searchLoading, setSearchLoading] = useState(false);
 	const [searchError, setSearchError] = useState<string | null>(null);
 	const [createError, setCreateError] = useState<string | null>(null);
-
-	// Refresh online status for the selected conversation partner
-	useEffect(() => {
-		if (!token || !selectedChatId) return;
-		const conv = rawConversations.find((c: BackendConversation) => c.id === selectedChatId);
-		const otherId = conv?.participants.find((p: string) => p !== currentUserId);
-		if (!otherId) return;
-
-		let disposed = false;
-
-		const refresh = async () => {
-			try {
-				const res = await fetchWithAuth(`/users/${otherId}`, token);
-				if (!res.ok || disposed) return;
-				const profile = await res.json() as ChatUserProfile;
-				if (!disposed) updateUserOnlineStatus(otherId, profile.active ?? false);
-			} catch {
-				// ignore
-			}
-		};
-
-		void refresh();
-		const interval = setInterval(() => { void refresh(); }, 30_000);
-		return () => { disposed = true; clearInterval(interval); };
-	}, [token, selectedChatId, currentUserId]);
 
 	const friendConversations = conversations.filter(
 		(c) => c.user.id && getRelation(String(c.user.id)) === 'friends',

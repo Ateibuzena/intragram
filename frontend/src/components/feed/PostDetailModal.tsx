@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import type { PostCommentAddedPayload, PostCommentRemovedPayload, PostDeletedPayload } from '@intragram/shared/realtime';
 import { Avatar } from '@/components/ui/Avatar';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { RenderedContent } from '@/components/content/RenderedContent';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthenticatedImage } from '@/hooks/useAuthenticatedImage';
 import { usePresenceStatus } from '@/hooks/usePresenceContext';
+import { useSocketEvent } from '@/hooks/useSocketEvent';
 import type { Post, PostComment } from '@/types/feed';
 
 interface PostDetailModalProps {
@@ -75,6 +77,27 @@ export const PostDetailModal = ({
 	useEffect(() => {
 		commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [comments]);
+
+	// Real-time: append/remove comments live for anyone else with this same
+	// post open — the payload carries the full comment (like chat:new-message
+	// carries the full message), not just a ping to refetch. De-dupe by id
+	// since our own submit/delete already applied the change optimistically
+	// above, and this same broadcast reaches the actor too (emitToAll).
+	useSocketEvent('post:comment-added', (payload: PostCommentAddedPayload) => {
+		if (payload.post_id !== String(post.id)) return;
+		setComments((prev) => (prev.some((c) => c.id === payload.comment.id) ? prev : [...prev, payload.comment]));
+	});
+
+	useSocketEvent('post:comment-removed', (payload: PostCommentRemovedPayload) => {
+		if (payload.post_id !== String(post.id)) return;
+		setComments((prev) => prev.filter((c) => c.id !== payload.comment_id));
+	});
+
+	// The post itself got deleted (by its author, from another tab/device) —
+	// don't leave the modal open on content that no longer exists.
+	useSocketEvent('post:deleted', (payload: PostDeletedPayload) => {
+		if (payload.post_id === String(post.id)) onClose();
+	});
 
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };

@@ -102,11 +102,6 @@ Una API pública para interactuar con la base de datos con API key segura, rate 
 - Los usuarios pueden agregar a otros usuarios como amigos y ver su estado en línea.
 - Los usuarios tienen una página de perfil con su información.
 
-### WAF/ModSecurity + HashiCorp Vault
-Implementar WAF/ModSecurity (endurecido) + HashiCorp Vault para secretos:
-- Configurar ModSecurity/WAF estricto.
-- Gestionar secretos en Vault (API keys, credenciales, variables de entorno), cifrados y aislados.
-
 ### Sistema de Monitoreo ✅
 Sistema de monitoreo con Prometheus y Grafana.
 - Configurar Prometheus para recolectar métricas.
@@ -122,25 +117,15 @@ Sistema de monitoreo con Prometheus y Grafana.
 
 Ver más documentación en [MICROSERVICES](MICROSERVICES.md)
 
-### Dashboard de Analítica Avanzada
-Dashboard de analítica avanzada con visualización de datos.
-- Gráficos interactivos (línea, barras, torta, etc.).
-- Actualizaciones en tiempo real.
-- Funcionalidad de exportación (PDF, CSV, etc.).
-- Rangos de fecha y filtros personalizables.
-
 ---
 
 ## 🟡 Módulos Menores
 
-### Sistema de Diseño Personalizado
+### Sistema de Diseño Personalizado ✅
 Sistema de diseño propio con componentes reutilizables, incluyendo una paleta de colores adecuada, tipografía e íconos (mínimo: 10 componentes reutilizables).
 
-### Búsqueda Avanzada
+### Búsqueda Avanzada ✅
 Implementar funcionalidad de búsqueda avanzada con filtros, ordenamiento y paginación.
 
-### OAuth 2.0
+### OAuth 2.0 ✅
 Implementar autenticación remota con OAuth 2.0 (Google, GitHub, 42, etc.).
-
-### Analítica de Actividad de Usuario
-Dashboard de analítica e insights de actividad de usuarios.

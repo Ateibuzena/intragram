@@ -333,61 +333,47 @@ Relación principal:
 
 ## Modules
 
-El repositorio no contiene una matriz oficial de módulos `Major/Minor` cerrada por el equipo. Para no inventar una verdad que no esté documentada, aquí se deja una **propuesta razonada** basada en lo que sí existe en código.
+La matriz detallada de requisitos y módulos vive en [docs/modules/MODULES.md](docs/modules/MODULES.md). Resumen de módulos implementados:
 
-### Implemented Requirement Blocks
+### Major Modules
 
-- **OAuth 42 authentication**
-  - Proposed weight: Major = 2 pts
-  - Justification: es un bloque central de acceso y base de toda la app.
-  - Implementation: `auth-service` + `gateway` + `useAuth` en frontend.
-  - Team members: Ateibuzena, Mariano Fernández Rodero
-- **User management and social feed**
-  - Proposed weight: Major = 2 pts
-  - Justification: concentra perfiles, posts, favoritos y relaciones.
-  - Implementation: `users-service` para perfiles/amistades y `posts-service` para el feed.
-  - Team members: Ateibuzena, Mariano Fernández Rodero
-- **Private messaging**
-  - Proposed weight: Major = 2 pts
-  - Justification: añade comunicación en tiempo real por WebSocket entre usuarios (mensajes, typing, no-leídos).
-  - Implementation: `chat-service`, endpoints del gateway, `PresenceGateway` y `ChatPage`.
-  - Team members: Ateibuzena, Mariano Fernández Rodero
-- **Observability**
-  - Proposed weight: Minor = 1 pt
-  - Justification: no es la funcionalidad principal de usuario, pero aporta valor técnico claro.
-  - Implementation: Prometheus, Grafana y métricas del gateway.
-  - Team members: santiago_UT, Ateibuzena
-- **HTTPS unified entry point**
-  - Proposed weight: Minor = 1 pt
-  - Justification: simplifica despliegue local y acceso seguro.
-  - Implementation: Nginx con proxy a frontend, gateway, Prometheus y Grafana.
-  - Team members: santiago_UT
+- **Frameworks (Frontend y Backend)**: React en frontend y NestJS en backend.
+- **Funcionalidades en Tiempo Real**: WebSockets/Socket.IO para chat, likes/comentarios, nuevas publicaciones, notificaciones y presencia.
+- **Interacción entre Usuarios**: chat privado, perfiles de usuario y sistema de amistades.
+- **API Pública**: API expuesta por el gateway con endpoints REST para los dominios principales.
+- **Gestión Estándar de Usuarios y Autenticación**: perfil editable, avatar, amistades, estado online y página de perfil.
+- **Sistema de Monitoreo**: Prometheus, Grafana, métricas y dashboards.
+- **Backend como Microservicios**: gateway, auth-service, users-service, posts-service y chat-service desacoplados.
 
-### Proposed Total
+### Minor Modules
 
-- 3 bloques Major: `6 pts`
-- 2 bloques Minor: `2 pts`
-- Total propuesto documentado aquí: `8 pts`
+- **Sistema de Diseño Personalizado**: componentes reutilizables, paleta, tipografía e iconografía propia.
+- **Búsqueda Avanzada**: filtros, ordenamiento y paginación donde aplica.
+- **OAuth 2.0**: autenticación remota integrada con 42.
+
+### Documented Total
+
+- 7 módulos mayores.
+- 3 módulos menores.
 
 ## Individual Contributions
 
-### Ateibuzena
+### Ana Zubieta Peña (azubieta)
 
 - Diseño e implementación de gran parte del frontend.
 - Integración del feed, favoritos, friends list y navegación principal.
 - Participación en chat y documentación funcional.
 - Ajustes de UI, identidad visual y experiencia de usuario.
 
-### Mariano Fernández Rodero
+### Mariano Fernández Rodero (marianof)
 
 - Integración entre frontend y backend.
 - Trabajo en gateway, auth-service y users-service.
 - Ajustes en `useAuth`, `apiBase`, `ChatPage` y contratos compartidos.
 
-### santiago_UT
+### Pedro Gonzalez Cepeda (pgonzal2)
 
-- Contribuciones observables en backend temprano, servicios y documentación.
-- Participación en la base de observabilidad e infraestructura.
+### Carlos Eduardo Marques Frederiksen (carmarqu)
 
 ### Challenges And How They Were Solved
 
@@ -404,6 +390,7 @@ El repositorio no contiene una matriz oficial de módulos `Major/Minor` cerrada 
 
 - Frontend general: [docs/frontend/FRONTEND.md](docs/frontend/FRONTEND.md)
 - Backend general: [docs/backend/BACKEND.md](docs/backend/BACKEND.md)
+- Requisitos y módulos: [docs/modules/MODULES.md](docs/modules/MODULES.md)
 - Servicios backend:
   - [AUTH-SERVICE](docs/backend/services/AUTH-SERVICE.md)
   - [USERS-SERVICE](docs/backend/services/USERS-SERVICE.md)

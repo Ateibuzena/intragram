@@ -47,11 +47,12 @@ El objetivo es construir una aplicación web moderna, desplegable con Docker, qu
   - `OAUTH_42_REDIRECT_URI`
   - `AUTH_DB_USER`, `AUTH_DB_PASSWORD`, `AUTH_DB_NAME`
   - `USERS_DB_USER`, `USERS_DB_PASSWORD`, `USERS_DB_NAME`
+  - `POSTS_DB_USER`, `POSTS_DB_PASSWORD`, `POSTS_DB_NAME`
   - `CHAT_DB_USER`, `CHAT_DB_PASSWORD`, `CHAT_DB_NAME`
   - `GATEWAY_PORT`
   - `NGINX_HTTPS_PORT`
   - `CORS_ORIGIN`
-  - `AUTH_SERVICE_URL`, `USERS_SERVICE_URL`, `CHAT_SERVICE_URL`
+  - `AUTH_SERVICE_URL`, `USERS_SERVICE_URL`, `POSTS_SERVICE_URL`, `CHAT_SERVICE_URL`
   - `GRAFANA_URL`
 
 ### Run Step By Step
@@ -169,7 +170,7 @@ La siguiente información mezcla evidencia verificable del repositorio con una i
 
 ### Major Technical Choices
 
-- **Microservices**: separan autenticación, usuarios y chat, reduciendo acoplamiento.
+- **Microservices**: separan gateway, autenticación, usuarios, publicaciones y chat, reduciendo acoplamiento.
 - **Gateway HTTP**: centraliza autenticación, validación y exposición pública de la API.
 - **PostgreSQL**: encaja bien con entidades relacionales, filtros de feed y consistencia de datos.
 - **Nginx con TLS**: simplifica entrada única para frontend, API y observabilidad.
@@ -177,7 +178,7 @@ La siguiente información mezcla evidencia verificable del repositorio con una i
 
 ## Database Schema
 
-El sistema usa tres bases de datos PostgreSQL, una por dominio principal.
+El sistema usa cuatro bases de datos PostgreSQL, una por dominio principal.
 
 ### Auth Database
 
@@ -217,26 +218,47 @@ Relación principal:
   - `correction_point: int`
   - `last_login_at: timestamp | null`
   - `raw_profile: jsonb | null`
-- `posts`
-  - `id: uuid`
-  - `author_id: uuid`
-  - `content: text`
-  - `visibility: varchar`
-  - `likes_count: int`
-  - `comments_count: int`
 - `user_friendships`
   - `id: uuid`
   - `user_id: uuid`
   - `friend_id: uuid`
   - `status: pending | accepted | blocked`
+
+Relaciones principales:
+- `user_friendships` modela relaciones entre perfiles.
+
+### Posts Database
+
+- `posts`
+  - `id: uuid`
+  - `author_id: uuid`
+  - `author_login: varchar`
+  - `author_display_name: varchar | null`
+  - `author_avatar_url: varchar | null`
+  - `content: text`
+  - `visibility: public | friends | private`
+  - `image_data: bytea | null`
+  - `image_mime_type: varchar | null`
+  - `likes_count: int`
+  - `comments_count: int`
+- `post_comments`
+  - `id: uuid`
+  - `post_id: uuid`
+  - `author_id: uuid`
+  - `content: text`
+- `post_likes`
+  - `id: uuid`
+  - `user_id: uuid`
+  - `post_id: uuid`
 - `post_saves`
   - `id: uuid`
   - `user_id: uuid`
   - `post_id: uuid`
 
 Relaciones principales:
+- `post_comments.post_id -> posts.id`
+- `post_likes.post_id -> posts.id`
 - `post_saves.post_id -> posts.id`
-- `user_friendships` modela relaciones entre perfiles.
 
 ### Chat Database
 
@@ -385,6 +407,7 @@ El repositorio no contiene una matriz oficial de módulos `Major/Minor` cerrada 
 - Servicios backend:
   - [AUTH-SERVICE](docs/backend/services/AUTH-SERVICE.md)
   - [USERS-SERVICE](docs/backend/services/USERS-SERVICE.md)
+  - [POSTS-SERVICE](docs/backend/services/POSTS-SERVICE.md)
   - [CHAT-SERVICE](docs/backend/services/CHAT-SERVICE.md)
   - [GATEWAY-SERVICE](docs/backend/services/GATEWAY-SERVICE.md)
   - [NGINX-SERVICE](docs/backend/services/NGINX-SERVICE.md)

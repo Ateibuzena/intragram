@@ -133,6 +133,7 @@ interface ProfileAvatarDisplayProps {
 	online?: boolean;
 	canEdit: boolean;
 	onStartEdit: () => void;
+	progressPercentage?: number;
 }
 
 export const ProfileAvatarDisplay = ({
@@ -142,9 +143,29 @@ export const ProfileAvatarDisplay = ({
 	online,
 	canEdit,
 	onStartEdit,
+	progressPercentage,
 }: ProfileAvatarDisplayProps) => (
 	<div className="relative group/avatar shrink-0">
-		<div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl bg-ft-cyan text-black font-black text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
+		{/* Mobile-only progress ring — sized off the avatar box itself, so it can never
+		    drift out of proportion with it the way the wide desktop arc did. */}
+		{progressPercentage !== undefined && (
+			<div className="absolute -inset-3 md:hidden pointer-events-none" aria-hidden="true">
+				<svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+					<circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="5" className="text-ft-border/70" />
+					<circle
+						cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="5"
+						strokeLinecap="round" pathLength={100}
+						strokeDasharray={`${progressPercentage} 100`}
+						className="text-ft-cyan drop-shadow-[0_0_10px_rgba(0,212,255,0.55)]"
+					/>
+				</svg>
+				<div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full border border-ft-cyan/30 bg-ft-card px-2 py-0.5 text-[10px] font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm">
+					{progressPercentage}%
+				</div>
+			</div>
+		)}
+
+		<div className="w-28 h-28 xs:w-36 xs:h-36 md:w-44 md:h-44 rounded-full md:rounded-2xl bg-ft-cyan text-black font-black text-5xl xs:text-6xl flex items-center justify-center overflow-hidden shadow-ft-glow-sm">
 			{profile?.avatar_url ? (
 				<img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
 			) : (
@@ -156,7 +177,7 @@ export const ProfileAvatarDisplay = ({
 			<button
 				type="button"
 				onClick={onStartEdit}
-				className="absolute inset-0 rounded-2xl bg-black/25 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+				className="absolute inset-0 rounded-full md:rounded-2xl bg-black/25 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
 			>
 				<PencilIcon className="w-8 h-8 text-white drop-shadow" />
 			</button>

@@ -79,41 +79,64 @@ export const ProfileBackgroundSelector = ({ activeTheme, onSave }: ProfileBackgr
 	};
 
 	return (
-		<div className="absolute top-4 right-4 z-20" ref={containerRef}>
-			<button
-				type="button"
-				onClick={() => setOpen((v) => !v)}
-				title="Cambiar fondo"
-				className="flex items-center gap-1 rounded-full border border-ft-border bg-ft-card/80 backdrop-blur-sm px-1.5 py-1 text-ft-muted hover:text-white hover:border-ft-cyan/40 transition-colors"
-			>
-				<span className="relative w-6 h-4 rounded overflow-hidden border border-white/30 flex-shrink-0">
-					<ThemeSwatch themeKey={activeTheme} />
-				</span>
-				<svg className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 20 20" stroke="currentColor">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 7l5 5 5-5" />
-				</svg>
-			</button>
+		<>
+			{/* Desktop: original always-visible row */}
+			<div className="absolute top-4 right-4 z-20 hidden items-center gap-2 md:flex">
+				{BG_THEMES.map(({ key, label }) => {
+					const isActive = activeTheme === key;
+					return (
+						<button
+							key={key}
+							title={label}
+							onClick={() => void onSave(key)}
+							className={`relative w-8 h-5 rounded-md overflow-hidden flex-shrink-0 transition-all duration-200
+								${isActive
+									? 'border-2 border-ft-cyan scale-110 shadow-[0_0_6px_rgba(0,186,188,0.6)]'
+									: 'border border-white/30 hover:border-white/70 hover:scale-105'}`}
+						>
+							<ThemeSwatch themeKey={key} />
+						</button>
+					);
+				})}
+			</div>
 
-			{open && (
-				<div className="absolute right-0 top-full mt-2 flex items-center gap-2 rounded-xl border border-ft-border bg-ft-card p-2 shadow-lg backdrop-blur-xl">
-					{BG_THEMES.map(({ key, label }) => {
-						const isActive = activeTheme === key;
-						return (
-							<button
-								key={key}
-								title={label}
-								onClick={() => void handleSelect(key)}
-								className={`relative w-8 h-5 rounded-md overflow-hidden flex-shrink-0 transition-all duration-200
-									${isActive
-										? 'border-2 border-ft-cyan scale-110 shadow-[0_0_6px_rgba(0,186,188,0.6)]'
-										: 'border border-white/30 hover:border-white/70 hover:scale-105'}`}
-							>
-								<ThemeSwatch themeKey={key} />
-							</button>
-						);
-					})}
-				</div>
-			)}
-		</div>
+			{/* Mobile/responsive: collapsed into a single toggle button */}
+			<div className="absolute top-4 right-4 z-20 md:hidden" ref={containerRef}>
+				<button
+					type="button"
+					onClick={() => setOpen((v) => !v)}
+					title="Cambiar fondo"
+					className="flex items-center gap-1 rounded-full border border-ft-border bg-ft-card/80 backdrop-blur-sm px-1.5 py-1 text-ft-muted hover:text-white hover:border-ft-cyan/40 transition-colors"
+				>
+					<span className="relative w-6 h-4 rounded overflow-hidden border border-white/30 flex-shrink-0">
+						<ThemeSwatch themeKey={activeTheme} />
+					</span>
+					<svg className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 20 20" stroke="currentColor">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 7l5 5 5-5" />
+					</svg>
+				</button>
+
+				{open && (
+					<div className="absolute right-0 top-full mt-2 flex items-center gap-2 rounded-xl border border-ft-border bg-ft-card p-2 shadow-lg backdrop-blur-xl">
+						{BG_THEMES.map(({ key, label }) => {
+							const isActive = activeTheme === key;
+							return (
+								<button
+									key={key}
+									title={label}
+									onClick={() => void handleSelect(key)}
+									className={`relative w-8 h-5 rounded-md overflow-hidden flex-shrink-0 transition-all duration-200
+										${isActive
+											? 'border-2 border-ft-cyan scale-110 shadow-[0_0_6px_rgba(0,186,188,0.6)]'
+											: 'border border-white/30 hover:border-white/70 hover:scale-105'}`}
+								>
+									<ThemeSwatch themeKey={key} />
+								</button>
+							);
+						})}
+					</div>
+				)}
+			</div>
+		</>
 	);
 };

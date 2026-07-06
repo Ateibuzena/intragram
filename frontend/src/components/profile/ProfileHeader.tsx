@@ -60,7 +60,7 @@ export const ProfileHeader = ({
 
 	const progressPercentage = Math.max(0, Math.min(100, Math.round(insights?.progressPercentage ?? 0)));
 	const progressAngle = Math.PI - (progressPercentage / 100) * Math.PI;
-	const progressLabelRadius = 328;
+	const progressLabelRadius = 415;
 	const progressLabelLeft = ((450 + progressLabelRadius * Math.cos(progressAngle)) / 900) * 100;
 	const progressLabelTop = ((390 - progressLabelRadius * Math.sin(progressAngle)) / 430) * 100;
 
@@ -94,10 +94,10 @@ export const ProfileHeader = ({
 			)}
 
 			{/* ── Main content ── */}
-			<div className="relative flex min-h-[36rem] w-full items-center justify-center overflow-visible px-4 py-14 md:min-h-[34rem] md:px-10 md:py-16">
+			<div className="relative flex min-h-[26rem] w-full items-center justify-center overflow-visible px-4 py-14 md:min-h-[34rem] md:px-10 md:py-16">
 				{insights && (
 					<div
-						className="pointer-events-none absolute inset-x-10 top-3 z-0 sm:inset-x-16 md:top-10 lg:inset-x-24"
+						className="pointer-events-none absolute inset-x-0 top-6 z-0 hidden w-full md:block"
 						aria-hidden="true"
 					>
 						<svg viewBox="0 0 900 430" className="h-auto w-full overflow-visible">
@@ -130,7 +130,7 @@ export const ProfileHeader = ({
 					</div>
 				)}
 
-				<div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 pt-32 xl:pt-40">
+				<div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 pt-4 md:pt-32 xl:pt-40">
 					<div className="flex w-full max-w-[700px] flex-col items-center gap-6 xl:flex-row xl:justify-center">
 
 						<ProfileAvatarDisplay
@@ -140,6 +140,7 @@ export const ProfileHeader = ({
 							online={online}
 							canEdit={canEditProfile && !!onSaveAvatarUrl}
 							onStartEdit={() => setEditingAvatar(true)}
+							progressPercentage={insights ? progressPercentage : undefined}
 						/>
 
 						<div className="min-w-0 max-w-[500px] text-center xl:text-left">

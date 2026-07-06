@@ -122,6 +122,9 @@ const ProfilePage = () => {
 		} else {
 			ownProfile.setProfile(updated);
 		}
+		if (updated) {
+			patchAuthProfile({ avatar_url: updated.avatar_url });
+		}
 		await ownProfile.refreshProfile({ silent: true });
 	};
 

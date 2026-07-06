@@ -13,12 +13,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import axios from 'axios';
-import { Buffer } from 'buffer';
-import sharp from 'sharp';
-import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { UserProfileEntity } from './entities/user-profile.entity';
 import { UserFriendshipEntity } from './entities/user-friendship.entity';
 import { NotificationEntity } from './entities/notification.entity';
+import { processImage } from '@intragram/shared/media';
 import {
 	UpsertOAuth42UserDto,
 	UpdateUserAvatarDto,
@@ -59,10 +57,6 @@ export interface IDirectoryEntry {
 
 const asJsonArray = <T extends object>(value?: T[]): Record<string, unknown>[] | null =>
 	value ? value as unknown as Record<string, unknown>[] : null;
-
-const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const IMAGE_MAX_DIMENSION = 1600;
 
 const avatarRoute = (userId: string): string => `/users/${userId}/avatar?v=${Date.now()}`;
 
@@ -297,7 +291,7 @@ export class UsersService {
 
 	async updateAvatar(id: string, dto: UpdateUserAvatarDto): Promise<UserProfileEntity> {
 		const user = await this.findById(id);
-		const image = await this.processImage(dto.image_base64);
+		const image = await processImage(dto.image_base64);
 
 		user.avatar_image_data = image.data;
 		user.avatar_image_mime_type = image.mimeType;
@@ -324,29 +318,6 @@ export class UsersService {
 	 */
 	async getHealth(): Promise<HealthResponse> {
 		return createHealthResponse('users');
-	}
-
-	private async processImage(base64: string): Promise<{ data: Buffer; mimeType: string }> {
-		const raw = Buffer.from(base64, 'base64');
-		if (raw.length === 0) {
-			throw Object.assign(new Error('Imagen vacía'), { statusCode: 400 });
-		}
-		if (raw.length > MAX_IMAGE_BYTES) {
-			throw Object.assign(new Error('La imagen supera el tamaño máximo permitido (8MB)'), { statusCode: 400 });
-		}
-
-		const detected = await fileTypeFromBuffer(raw);
-		if (!detected || !ALLOWED_IMAGE_MIME_TYPES.has(detected.mime)) {
-			throw Object.assign(new Error('Formato de imagen no soportado'), { statusCode: 400 });
-		}
-
-		const data = await sharp(raw)
-			.rotate()
-			.resize({ width: IMAGE_MAX_DIMENSION, height: IMAGE_MAX_DIMENSION, fit: 'inside', withoutEnlargement: true })
-			.webp({ quality: 82 })
-			.toBuffer();
-
-		return { data, mimeType: 'image/webp' };
 	}
 
 	private static matchesDirectoryFilters(user: UserProfileEntity, filters: IDirectoryFilters): boolean {

@@ -77,6 +77,8 @@ export const ProfileAvatarEditorModal = ({ avatarUrl, profileInitial, onSave, on
 		try {
 			await onSave(selectedFile);
 			onClose();
+		} catch {
+			setError('No se pudo actualizar la foto de perfil.');
 		} finally {
 			setSaving(false);
 		}

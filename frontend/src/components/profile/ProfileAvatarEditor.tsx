@@ -159,7 +159,7 @@ export const ProfileAvatarDisplay = ({
 						className="text-ft-cyan drop-shadow-[0_0_10px_rgba(0,212,255,0.55)]"
 					/>
 				</svg>
-				<div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full border border-ft-cyan/30 bg-ft-card px-2 py-0.5 text-[10px] font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm">
+				<div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full border border-ft-cyan/30 bg-ft-card px-2 py-0.5 text-[10px] font-black text-ft-cyan shadow-ft-glow-sm backdrop-blur-sm">
 					{progressPercentage}%
 				</div>
 			</div>

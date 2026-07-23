@@ -1,4 +1,4 @@
-FROM grafana/grafana:10.2.0
+FROM grafana/grafana:latest
 
 # Copiar configuración de datasources y dashboards
 COPY datasource.yml /etc/grafana/provisioning/datasources/
